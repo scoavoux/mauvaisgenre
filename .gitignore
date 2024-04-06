@@ -1,0 +1,5 @@
+*.Rproj
+.Rhistory
+.Rproj.user
+_targets
+artists.csv
