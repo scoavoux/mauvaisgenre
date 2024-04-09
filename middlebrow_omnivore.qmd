@@ -1,0 +1,56 @@
+---
+title: "Omnivorousness as bonne volonté culturelle"
+format: 
+  html:
+    embed-resources: true
+editor: source
+---
+
+```{r, include=FALSE}
+#| label: setup
+library(knitr)
+opts_chunk$set(echo = FALSE, 
+               warning = FALSE, 
+               error = FALSE,
+               message = FALSE)
+
+```
+
+```{r packages}
+#| label: packages
+library(targets)
+library(tidyverse)
+```
+
+# Outliers on the ISEI sd distribution
+
+The degree of eclecticism of an artist can be approached by the standard 
+deviation of their ISEI score.
+
+```{r}
+#| label: outliers on the isei/sd distribution
+tar_load("artists_filtered")
+# artists_filtered %>% 
+#   filter(n_users_total > 1000) %>% 
+#   arrange(endo_isei_sd_pond) %>% 
+#   slice(1:10, (n()-9):n()) %>% 
+#   select(artist_name, endo_isei_sd_pond, endo_isei_mean_pond) %>% 
+#   kable()
+```
+
+```{r}
+x <- lm(endo_isei_sd_pond ~ endo_isei_mean_pond, data=artists_filtered)
+artists_filtered <- artists_filtered %>% 
+  mutate(endo_isei_resid = x$residuals)
+# Positive if true value of sd is higher than predicted value
+# => more diverse than expected; negative in the other case
+artists_filtered %>% 
+  arrange(endo_isei_resid) %>% 
+  filter(n_users_total > 800, genre != "metal") %>% 
+  select(artist_name, genre, endo_isei_resid, endo_isei_mean_pond, endo_isei_sd_pond) %>% 
+  group_by(genre) %>% 
+  slice(1:4, (n()-3):n()) %>% 
+  kable()
+```
+
+

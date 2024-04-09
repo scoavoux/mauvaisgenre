@@ -41,9 +41,10 @@ list(
   tar_target(tb_leg_variance, table_leg_variance(artists_filtered)),
   
   # Report Omni1
-  tar_quarto(mauvais_genre_report, "mauvais_genre.qmd")
+  tar_quarto(mauvais_genre_report, "mauvais_genre.qmd"),
   
   # Prepare user data ------  
   
   # Analysis Omni 2 ------
+  tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
 )
