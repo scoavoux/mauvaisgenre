@@ -1,0 +1,92 @@
+---
+title: "Mauvais genre"
+format: 
+  html:
+    standalone: true
+editor: source
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(echo = FALSE, 
+               warning = FALSE, 
+               error = FALSE,
+               message = FALSE)
+
+```
+
+```{r packages}
+library(targets)
+library(tidyverse)
+```
+
+```{r}
+#| label: gg_endoleg_bygenre
+tar_load(gg_endoleg_bygenre)
+gg_endoleg_bygenre
+```
+
+```{r}
+#| label: gg_exoleg_bygenre
+tar_load(gg_exoleg_bygenre)
+gg_exoleg_bygenre
+```
+
+```{r}
+#| label: gg_endoexo_bygenre_scatterplot
+tar_load(gg_endoexo_bygenre_scatterplot)
+print(gg_endoexo_bygenre_scatterplot)
+```
+
+```{r}
+#| label: gg_endoexo_corrplot
+tar_load(gg_endoexo_corrplot)
+print(gg_endoexo_corrplot)
+```
+
+```{r}
+#| label: tb_leg_variance
+tar_load(tb_leg_variance)
+kable(tb_leg_variance)
+```
+
+```{r}
+tar_load(artists_filtered)
+
+x <- artists_filtered %>% 
+  select(genre, starts_with("sc")) %>% 
+  pivot_longer(-genre) %>% 
+  filter(!is.na(value)) %>% 
+  group_by(genre, name) %>% 
+  summarize(m = mean(value)) %>% 
+  arrange(name, desc(m)) %>% 
+  group_by(name) %>% 
+  mutate(rank = row_number()) %>% 
+  select(-m) %>% 
+  pivot_wider(names_from = name, values_from = rank)
+
+kable(x)
+```
+
+```{r}
+y <- x %>% 
+  mutate(endo = (sc_endo_educ + sc_endo_isei)/2,
+         exo  = (sc_exo_press + sc_exo_score)/2) %>% 
+  select(genre, endo, exo) %>% 
+  arrange(endo) %>% 
+  mutate(diff = endo-exo)
+kable(y)
+```
+
+
+```{r}
+artists_filtered %>% 
+  filter(radio_total > 100) %>% 
+  mutate(radio_ratio = radio_leg / radio_total) %>% 
+  group_by(genre) %>% 
+  summarize(m = mean(radio_ratio)) %>% 
+  arrange(desc(m)) %>% 
+  kable() 
+  
+```
+
