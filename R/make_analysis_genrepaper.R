@@ -45,22 +45,16 @@ plot_endoexo_corrplot <- function(artists){
 }
 
 table_leg_variance <- function(artists){
-  ts <- artists %>% 
+  # R-squared from regression of leg ~ genre
+  rs <- artists %>% 
     select(starts_with("sc_"), genre) %>% 
-    pivot_longer(-genre) %>% 
-    filter(!is.na(value)) %>% 
-    group_by(name) %>% 
-    summarise(total_ss = sum((value - mean(value, na.rm=TRUE))^2))
-  
-  tb <- artists %>% 
-    select(starts_with("sc_"), genre) %>% 
-    pivot_longer(-genre) %>% 
-    filter(!is.na(value)) %>% 
-    group_by(genre, name) %>% 
-    summarise(within_ss = sum((value - mean(value))^2)) %>% 
-    group_by(name) %>% 
-    summarise(within_ss = sum(within_ss)) %>% 
-    full_join(ts) %>% 
-    mutate(proportion_variance_explained = (1 - within_ss / total_ss))
-  return(tb)
+    summarise(across(starts_with("sc_"), function(.x){
+      y <- lm(.x~genre, data = .) %>% summary()
+      y$r.squared
+    }))
+  rs <- rs %>% 
+    pivot_longer(everything(), 
+                 names_to = "Variable", 
+                 values_to = "R squared")
+  return(rs)
 }

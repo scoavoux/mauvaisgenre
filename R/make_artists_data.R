@@ -23,28 +23,48 @@ compute_exo_press <- function(){
 }
 
 compute_exo_radio <- function(){
-  
+  require(tidytable)
+  s3 <- initialize_s3()
+  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/radio/radio_plays_with_artist_id.csv")
+  radio <- f$Body %>% rawToChar() %>% fread()
+  radio_leg <- c("France Inter", "France Musique", "Fip", "Radio Nova")
+  r <- radio %>%
+    filter(!is.na(artist_id)) %>% 
+    count(artist_id, radio) %>% 
+    mutate(leg = if_else(radio %in% radio_leg, n, 0)) %>% 
+    group_by(artist_id) %>% 
+    summarize(radio_total = sum(n),
+              radio_leg = sum(leg))
+  return(r)
 }
 
-join_artist <- function(artists_list, ...){
+join_artist <- function(...){
   # Make artist dataset by joining all indicators
   s3 <- initialize_s3()
   # artists <- artists_list %>%
   #   left_join()
   f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists.csv")
-  writeBin(f$Body, con = "artists.csv")
-  artists <- read_csv("artists.csv")
+  artists <- f$Body %>% rawToChar %>% read_csv()
+  
+  # Proper join
+  l <- list(...)
+  for(i in seq_along(l)){
+    artists <- artists %>% 
+      left_join(l[[i]])
+  }
   
   # Also recoding artist dataset
+  
   artists <- artists %>% 
-    # correct artist that do not appear in press search
-    # should be moved to computing press coverage
-    mutate(total_n_pqnt_texte = ifelse(total_n_pqnt_texte == 0, NA, total_n_pqnt_texte)) %>% 
-    # Scale endo and exo variables
+# turn NA to 0 in radio plays
+    mutate(across(starts_with("radio"), ~if_else(is.na(.x), 0, .x))) %>% 
+# Scaling legitimacy variables
     mutate(sc_endo_isei = center_scale(endo_isei_mean_pond),
            sc_endo_educ = center_scale(endo_share_high_education_pond),
            sc_exo_press = center_scale(log(total_n_pqnt_texte+1)),
-           sc_exo_score = center_scale(senscritique_meanscore))
+           sc_exo_score = center_scale(senscritique_meanscore),
+           sc_exo_radio = center_scale(log(radio_leg+1))
+           )
 
   return(artists)
 }
@@ -60,4 +80,9 @@ filter_artists <- function(artists){
            parse # has been looked up in press data
            )
   return(artists_filtered)
+}
+
+compute_exo_pca <- function(artists){
+  artists %>% 
+    select()
 }
