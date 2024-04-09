@@ -73,12 +73,18 @@ join_artist <- function(...){
 
 # Code artists ------
 filter_artists <- function(artists){
-  # Rules of inclusion/exclusion of artists
+    # Rules of inclusion/exclusion of artists
   artists_filtered <- artists %>% 
     filter(!is.na(genre),
            !is.na(senscritique_meanscore), # has score on senscritique
            parse # has been looked up in press data
            )
+  
+  # Add PCA
+  x <- compute_pca(artists_filtered)
+  artists_filtered <- artists_filtered %>% 
+    mutate(sc_exo_pca = x$ind$coord[,1])
+  
   return(artists_filtered)
 }
 

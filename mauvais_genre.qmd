@@ -2,7 +2,7 @@
 title: "Mauvais genre"
 format: 
   html:
-    standalone: true
+    embed-resources: true
 editor: source
 ---
 
@@ -18,7 +18,27 @@ opts_chunk$set(echo = FALSE,
 ```{r packages}
 library(targets)
 library(tidyverse)
+source("R/common_functions.R")
 ```
+
+# Data and Methods
+
+```{r}
+#| label: data
+tar_load(artists_filtered)
+```
+
+
+```{r}
+#| label: PCA
+library(FactoMineR)
+library(factoextra)
+pca_mod <- compute_pca(artists_filtered)
+fviz_pca_var(pca_mod)
+```
+
+
+# Results
 
 ```{r}
 #| label: gg_endoleg_bygenre
@@ -50,9 +70,9 @@ tar_load(tb_leg_variance)
 kable(tb_leg_variance)
 ```
 
-```{r}
-tar_load(artists_filtered)
+# Exploration
 
+```{r}
 x <- artists_filtered %>% 
   select(genre, starts_with("sc")) %>% 
   pivot_longer(-genre) %>% 

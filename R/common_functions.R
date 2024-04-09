@@ -26,3 +26,12 @@ center_scale <- function(x){
   }
   return(z)
 }
+
+compute_pca <- function(df){
+  require(FactoMineR)
+  # Compute PCA on exo variables.
+  # Might be used in several places so we make it a function.
+  pca_mod <- select(df, sc_exo_press, sc_exo_radio, sc_exo_score) %>% 
+    PCA(graph=FALSE)
+ return(pca_mod)
+}

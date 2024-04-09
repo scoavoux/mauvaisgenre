@@ -1,3 +1,5 @@
 install.packages("GGally")
 install.packages("tidytable")
 install.packages("tarchetypes")
+install.packages("FactoMineR")
+install.packages("factoextra")
