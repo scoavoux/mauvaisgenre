@@ -53,15 +53,31 @@ gg_exoleg_bygenre
 ```
 
 ```{r}
-#| label: gg_endoexo_bygenre_scatterplot
-tar_load(gg_endoexo_bygenre_scatterplot)
-print(gg_endoexo_bygenre_scatterplot)
+#| label: gg_endoexoleg_bygenre
+tar_load(gg_endoexoleg_bygenre)
+print(gg_endoexoleg_bygenre)
+
+```
+
+
+```{r}
+#| label: gg_endoexoleg_correlation
+tar_load(gg_endoexoleg_correlation)
+print(gg_endoexoleg_correlation)
 ```
 
 ```{r}
-#| label: gg_endoexo_corrplot
-tar_load(gg_endoexo_corrplot)
-print(gg_endoexo_corrplot)
+#| label: gg_endoexoleg_correlation_genremean
+tar_load(gg_endoexoleg_correlation_genremean)
+print(gg_endoexoleg_correlation_genremean)
+
+```
+
+
+```{r}
+#| label: gg_endoexoleg_correlation_bygenre
+tar_load(gg_endoexoleg_correlation_bygenre)
+print(gg_endoexoleg_correlation_bygenre)
 ```
 
 ```{r}
