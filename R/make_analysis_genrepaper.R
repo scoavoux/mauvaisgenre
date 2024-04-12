@@ -88,6 +88,9 @@ plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FA
       round(2)
     paste0("italic(R)^2 ==", y)
   }
+  artists <- artists %>% 
+    mutate(genre = recode_vars(genre, "genres")) 
+
   g <- artists %>% 
     ggplot(aes(sc_exo_pca, sc_endo_isei)) +
      geom_smooth(se = FALSE, method="lm") +
@@ -125,7 +128,7 @@ plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FA
   g <- g + 
     geom_text(data = lab, mapping = aes(x=x, y=y, label = r2), parse = TRUE, hjust=.75)
   if(genrefacets) {
-    g <- g + facet_wrap(~genre, scales="free")
+    g <- g + facet_wrap(~genre, ncol=3)
     }
   return(g)
 }

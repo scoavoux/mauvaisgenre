@@ -50,12 +50,14 @@ fviz_pca_var(pca_mod)
 #| fig-height: 6
 tar_load(gg_endoexoleg_bygenre)
 print(gg_endoexoleg_bygenre)
+ggsave("gg_endoexoleg_bygenre.pdf", gg_endoexoleg_bygenre, path = "output", device = "pdf")
 ```
 
 ```{r}
 #| label: gg_endoexoleg_genrerank
 tar_load(gg_endoexoleg_genrerank)
 print(gg_endoexoleg_genrerank)
+ggsave("gg_endoexoleg_genrerank.pdf", gg_endoexoleg_genrerank, path = "output", device = "pdf")
 ```
 
 
@@ -64,6 +66,7 @@ print(gg_endoexoleg_genrerank)
 #| fig-height: 6
 tar_load(gg_endoexoleg_correlation)
 print(gg_endoexoleg_correlation)
+ggsave("gg_endoexoleg_correlation.pdf", gg_endoexoleg_correlation, path = "output", device = "pdf")
 ```
 
 ```{r}
@@ -71,6 +74,7 @@ print(gg_endoexoleg_correlation)
 #| fig-height: 6
 tar_load(gg_endoexoleg_correlation_genremean)
 print(gg_endoexoleg_correlation_genremean)
+ggsave("gg_endoexoleg_correlation_genremean.pdf", gg_endoexoleg_correlation_genremean, path = "output", device = "pdf")
 ```
 
 
@@ -79,6 +83,7 @@ print(gg_endoexoleg_correlation_genremean)
 #| fig-height: 9
 tar_load(gg_endoexoleg_correlation_bygenre)
 print(gg_endoexoleg_correlation_bygenre)
+ggsave("gg_endoexoleg_correlation_bygenre.pdf", gg_endoexoleg_correlation_bygenre, path = "output", device = "pdf")
 ```
 
 ```{r}
@@ -89,12 +94,7 @@ kable(tb_leg_variance)
 
 # Exploration
 
-```{r}
-
-```
-
-
-# Overlap between genres.
+## Overlap between genres.
 
 ```{r}
 # Pairwise cohen's d
@@ -140,6 +140,7 @@ bind_rows(l) %>%
 #| fig-height: 6
 tar_load(gg_endoleg_bygenre)
 gg_endoleg_bygenre
+ggsave("gg_endoleg_bygenre.pdf", gg_endoleg_bygenre, path = "output", device = "pdf")
 ```
 
 ```{r}
@@ -147,4 +148,5 @@ gg_endoleg_bygenre
 #| fig-height: 9
 tar_load(gg_exoleg_bygenre)
 gg_exoleg_bygenre
+ggsave("gg_exoleg_bygenre.pdf", gg_exoleg_bygenre, path = "output", device = "pdf")
 ```
