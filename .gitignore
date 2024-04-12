@@ -5,3 +5,4 @@ _targets
 artists.csv
 *.html
 *_files
+*.tex

@@ -18,9 +18,47 @@ set_ggplot_options <- function(){
   theme_set(theme_bw(base_size = 16))
 }
 
+recode_vars <- function(char, var){
+  if(var == "genres"){
+    val <- c("rock" 			= "Rock", 
+             "raphiphop" 	= "Rap & Hip-Hop", 
+             "frenchsongs" 	= "Chanson", 
+             "reggae" 		= "Reggae", 
+             "soulfunk" 		= "Soul & Funk", 
+             "edm" 			= "EDM", 
+             "pop" 			= "Pop", 
+             "jazz" 			= "Jazz", 
+             "frenchrap" 	= "French Rap", 
+             "latino" 		= "Latino", 
+             "rnb" 			= "R&B", 
+             "metal" 		= "Metal", 
+             "classical" 	= "Classical", 
+             "african" 		= "African", 
+             "country" 		= "Country", 
+             "alternative" 	= "Alternative", 
+             "folk" 			= "Folk", 
+             "blues" 		= "Blues")
+  } else if (var == "legitimacy"){
+    val = c("sc_endo_isei" = "Endogenous legitimacy\n(ISEI)",
+            "sc_endo_educ" = "Endogenous legitimacy\n(education)",
+            "sc_exo_press" = "Exogenous legitimacy\n(media)",
+            "sc_exo_score" = "Exogenous legitimacy\n(score)",
+            "sc_exo_radio" = "Exogenous legitimacy\n(radio)",
+            "sc_exo_pca"   = "Exogenous legitimacy\n(PCA)",
+            "endo_isei_mean_pond" = "Endogenous legitimacy\n(ISEI, unscaled)", 
+            "endo_share_high_education_pond" = "Endogenous legitimacy\n(education, unscaled)",
+            "total_n_pqnt_texte" ="Exogenous legitimacy\n(media, unscaled)", 
+            "senscritique_meanscore" = "Exogenous legitimacy\n(score, unscaled)", 
+            "radio_leg" =  "Exogenous legitimacy\n(radio, unscaled)")
+  } else {
+    stop("Type of variable unspecified or unknown")
+  }
+  return(val[char])
+}
+
 center_scale <- function(x){
   if(!is.numeric(x)){
-    error("Variable not numeric")
+    stop("Variable not numeric")
   } else {
     z <- (x - mean(x, na.rm=TRUE))/sd(x, na.rm=TRUE)
   }

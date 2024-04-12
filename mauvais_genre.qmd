@@ -1,7 +1,7 @@
 ---
 title: "Mauvais genre"
 format: 
-  html:
+  html: 
     embed-resources: true
 editor: source
 ---
@@ -19,6 +19,8 @@ opts_chunk$set(echo = FALSE,
 library(targets)
 library(tidyverse)
 source("R/common_functions.R")
+set_ggplot_options()
+
 ```
 
 # Data and Methods
@@ -40,34 +42,33 @@ fviz_pca_var(pca_mod)
 
 # Results
 
-```{r}
-#| label: gg_endoleg_bygenre
-tar_load(gg_endoleg_bygenre)
-gg_endoleg_bygenre
-```
 
-```{r}
-#| label: gg_exoleg_bygenre
-tar_load(gg_exoleg_bygenre)
-gg_exoleg_bygenre
-```
+
 
 ```{r}
 #| label: gg_endoexoleg_bygenre
+#| fig-height: 6
 tar_load(gg_endoexoleg_bygenre)
 print(gg_endoexoleg_bygenre)
+```
 
+```{r}
+#| label: gg_endoexoleg_genrerank
+tar_load(gg_endoexoleg_genrerank)
+print(gg_endoexoleg_genrerank)
 ```
 
 
 ```{r}
 #| label: gg_endoexoleg_correlation
+#| fig-height: 6
 tar_load(gg_endoexoleg_correlation)
 print(gg_endoexoleg_correlation)
 ```
 
 ```{r}
 #| label: gg_endoexoleg_correlation_genremean
+#| fig-height: 6
 tar_load(gg_endoexoleg_correlation_genremean)
 print(gg_endoexoleg_correlation_genremean)
 ```
@@ -75,6 +76,7 @@ print(gg_endoexoleg_correlation_genremean)
 
 ```{r}
 #| label: gg_endoexoleg_correlation_bygenre
+#| fig-height: 9
 tar_load(gg_endoexoleg_correlation_bygenre)
 print(gg_endoexoleg_correlation_bygenre)
 ```
@@ -88,42 +90,9 @@ kable(tb_leg_variance)
 # Exploration
 
 ```{r}
-x <- artists_filtered %>% 
-  select(genre, starts_with("sc")) %>% 
-  pivot_longer(-genre) %>% 
-  filter(!is.na(value)) %>% 
-  group_by(genre, name) %>% 
-  summarize(m = mean(value)) %>% 
-  arrange(name, desc(m)) %>% 
-  group_by(name) %>% 
-  mutate(rank = row_number()) %>% 
-  select(-m) %>% 
-  pivot_wider(names_from = name, values_from = rank)
 
-kable(x)
 ```
 
-```{r}
-y <- x %>% 
-  mutate(endo = (sc_endo_educ + sc_endo_isei)/2,
-         exo  = (sc_exo_press + sc_exo_score)/2) %>% 
-  select(genre, endo, exo) %>% 
-  arrange(endo) %>% 
-  mutate(diff = endo-exo)
-kable(y)
-```
-
-
-```{r}
-artists_filtered %>% 
-  filter(radio_total > 100) %>% 
-  mutate(radio_ratio = radio_leg / radio_total) %>% 
-  group_by(genre) %>% 
-  summarize(m = mean(radio_ratio)) %>% 
-  arrange(desc(m)) %>% 
-  kable() 
-  
-```
 
 # Overlap between genres.
 
@@ -133,8 +102,8 @@ artists_filtered %>%
 # s = \sqrt(((n1-1)s1^2+n2-1*s2^2)/n1+n2-2)
 x1 <- artists_filtered %>% 
   group_by(genre) %>% 
-  summarise(m1 = mean(endo_isei_mean_pond),
-            v1 = var(endo_isei_mean_pond),
+  summarise(m1 = mean(sc_exo_pca),
+            v1 = var(sc_exo_pca),
             n1 = n())
 x2 <- x1 %>% rename(genre2 = "genre", 
                     m2="m1",
@@ -162,4 +131,20 @@ bind_rows(l) %>%
     theme(axis.text.x = element_text(angle=90, hjust=1,vjust=0.5))
 
 ```
+# Supplements
 
+## Distribution of all variables considered for legitimacy
+
+```{r}
+#| label: gg_endoleg_bygenre
+#| fig-height: 6
+tar_load(gg_endoleg_bygenre)
+gg_endoleg_bygenre
+```
+
+```{r}
+#| label: gg_exoleg_bygenre
+#| fig-height: 9
+tar_load(gg_exoleg_bygenre)
+gg_exoleg_bygenre
+```
