@@ -117,7 +117,7 @@ plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FA
     }
     lab <- tibble(genre = names(l), r2 = unlist(l))
     lab <- artists %>% 
-      group_by(genre) %>% 
+#     group_by(genre) %>% 
       summarize(x = max(sc_exo_pca)-.5, y = min(sc_endo_isei)+.5) %>% 
       right_join(lab)
   } else {
