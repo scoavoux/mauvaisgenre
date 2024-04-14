@@ -33,17 +33,32 @@ plot_exoleg_bygenre <- function(artists){
   return(g)
 }
 
-plot_endoexoleg_bygenre <- function(artists){
+plot_endoexoleg_bygenre <- function(artists, type="density"){
   set_ggplot_options()
-  g <- artists %>% 
+  require(gghalves)
+  d <- artists %>% 
     select(genre, sc_endo_isei, sc_exo_pca) %>% 
     mutate(genre = recode_vars(genre, "genres"),
            genre = factor(genre) %>% fct_reorder(sc_endo_isei, median)) %>% 
     pivot_longer(-genre) %>% 
-    mutate(name = recode_vars(name, "legitimacy")) %>% 
-    ggplot(aes(x= genre, y = value)) +
-    geom_boxplot() +
-    facet_wrap(~name, scales = "free") +
+    mutate(name = recode_vars(name, "legitimacy"))
+  
+  if(type == "density") {
+    g <- ggplot(d, aes(x= genre, y = value)) +
+      geom_half_violin(side="t")
+      # geom_half_point(side = "l", size=.7)
+  } else if(type == "estimate"){
+    d <- d %>% 
+      group_by(genre, name) %>% 
+      summarize(m = mean(value),
+                se = 1.96*sd(value))
+    g <- ggplot(d, aes(x = genre, y = m, ymin = m-se, ymax=m+se)) +
+      geom_point() +
+      geom_errorbar(width = 0)
+  }
+  
+  g <- g + 
+    facet_wrap(~name) +
     coord_flip() +
     labs(y="", x="")
   return(g)
@@ -119,7 +134,8 @@ plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FA
     lab <- artists %>% 
 #     group_by(genre) %>% 
       summarize(x = max(sc_exo_pca)-.5, y = min(sc_endo_isei)+.5) %>% 
-      right_join(lab)
+#      right_join(lab)
+      bind_cols(lab)
   } else {
     lab <- tibble(r2 = get_r2(artists),
                   x = max(artists$sc_exo_pca)-.5, 
@@ -131,6 +147,63 @@ plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FA
     g <- g + facet_wrap(~genre, ncol=3)
     }
   return(g)
+}
+
+plot_genre_overlap <- function(artists){
+  require(overlapping)
+  
+  lendo <- lexo <- vector("list", length = length(unique(artists$genre)))
+  
+  names(lendo) <- unique(artists$genre)
+  for(ge in unique(artists$genre)){
+    lendo[[ge]] <- filter(artists, genre == ge) %>% pull(sc_endo_isei)
+  }
+  
+  
+  lexo <- vector("list", length = length(unique(artists$genre)))
+  names(lexo) <- unique(artists$genre)
+  for(ge in unique(artists$genre)){
+    lexo[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_pca)
+  }
+  
+  # order by mean ENDOGENOUS legitimacy
+  # beware... maybe we should use exo
+  # or order both list independently
+  o <- artists %>% 
+    group_by(genre) %>% 
+    summarise(m = mean(sc_endo_isei)) %>% 
+    arrange(m) 
+  
+  lendo <- lendo[o$genre]
+  lexo  <- lexo[o$genre]
+  
+  ol_endo <- overlap(lendo, plot = FALSE)
+  ol_exo  <- overlap(lexo, plot = FALSE)
+  
+  dp <- tibble(cp= names(ol_endo$OVPairs),
+         ol = ol_endo$OVPairs,
+         leg = "sc_endo_isei") %>% 
+    bind_rows(tibble(cp= names(ol_exo$OVPairs),
+                     ol = ol_exo$OVPairs,
+                     leg = "sc_exo_pca")) %>% 
+    separate(cp, into = c("g1", "g2"), sep = "-") %>% 
+    add_count(g1, name = "n1") %>% 
+    add_count(g2, name = "n2") %>% 
+    arrange(n1, n2) %>% 
+    mutate(g1 = recode_vars(g1, "genres") %>% factor(levels = unique(.)),
+           g2 = recode_vars(g2, "genres") %>% factor(levels = unique(.)),
+           leg = recode_vars(leg, "legitimacy"))
+  g <- ggplot(dp, aes(g1, g2, fill = ol)) +
+    geom_tile() +
+    geom_text(aes(label=round(ol, 2) %>% str_replace("0.", "."))) +
+    labs(x="", y="", fill="Overlap") +
+    scale_y_discrete(position="right") +
+    facet_wrap(~leg) +
+    theme(axis.text.x = element_text(angle=45, hjust = 1),line = element_blank(),
+          legend.position = "top") +
+    scale_fill_distiller(type = "seq",
+                         direction = 1,
+                         palette = "Greys")
 }
 
 table_leg_variance <- function(artists){

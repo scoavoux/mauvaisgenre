@@ -37,10 +37,12 @@ list(
   tar_target(gg_endoleg_bygenre, plot_endoleg_bygenre(artists_filtered)),
   tar_target(gg_exoleg_bygenre, plot_exoleg_bygenre(artists_filtered)),
   tar_target(gg_endoexoleg_bygenre, plot_endoexoleg_bygenre(artists_filtered)),
+  tar_target(gg_endoexoleg_bygenre_mean_errorbar, plot_endoexoleg_bygenre(artists_filtered, type = "estimate")),
   tar_target(gg_endoexoleg_genrerank, plot_endoexoleg_genrerank(artists_filtered)),
   tar_target(gg_endoexoleg_correlation, plot_endoexoleg_correlation(artists_filtered)),
   tar_target(gg_endoexoleg_correlation_bygenre, plot_endoexoleg_correlation(artists_filtered, genrefacets = TRUE)),
   tar_target(gg_endoexoleg_correlation_genremean, plot_endoexoleg_correlation(artists_filtered, genremean = TRUE)),
+  tar_target(gg_genre_overlap, plot_genre_overlap(artists_filtered)),
   tar_target(tb_leg_variance, table_leg_variance(artists_filtered)),
   
   # Report Omni1

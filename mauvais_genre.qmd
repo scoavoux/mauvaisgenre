@@ -1,6 +1,6 @@
 ---
 title: "Mauvais genre"
-format: 
+format:
   html: 
     embed-resources: true
 editor: source
@@ -20,7 +20,6 @@ library(targets)
 library(tidyverse)
 source("R/common_functions.R")
 set_ggplot_options()
-
 ```
 
 # Data and Methods
@@ -43,8 +42,6 @@ fviz_pca_var(pca_mod)
 # Results
 
 
-
-
 ```{r}
 #| label: gg_endoexoleg_bygenre
 #| fig-height: 6
@@ -52,6 +49,15 @@ tar_load(gg_endoexoleg_bygenre)
 print(gg_endoexoleg_bygenre)
 ggsave("gg_endoexoleg_bygenre.pdf", gg_endoexoleg_bygenre, path = "output", device = "pdf")
 ```
+
+```{r}
+#| label: gg_endoexoleg_bygenre_mean_errorbar
+
+tar_load(gg_endoexoleg_bygenre_mean_errorbar)
+print(gg_endoexoleg_bygenre_mean_errorbar)
+ggsave("gg_endoexoleg_bygenre_mean_errorbar.pdf", gg_endoexoleg_bygenre_mean_errorbar, path = "output", device = "pdf")
+```
+
 
 ```{r}
 #| label: gg_endoexoleg_genrerank
@@ -96,41 +102,19 @@ kable(tb_leg_variance)
 
 ## Overlap between genres.
 
+We use the measure of overlap proposed by https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.01089/full
+
 ```{r}
-# Pairwise cohen's d
-# cohen d = (x_1-x_2)/s ou s = pooled sd
-# s = \sqrt(((n1-1)s1^2+n2-1*s2^2)/n1+n2-2)
-x1 <- artists_filtered %>% 
-  group_by(genre) %>% 
-  summarise(m1 = mean(sc_exo_pca),
-            v1 = var(sc_exo_pca),
-            n1 = n())
-x2 <- x1 %>% rename(genre2 = "genre", 
-                    m2="m1",
-                    v2="v1",
-                    n2="n1")
-options(scipen = 99)
-l <- vector("list", length = nrow(x1))
-names(l) <- x1$genre
-for(ge in x1$genre){
-  l[[ge]] <- filter(x1, genre == ge) %>% 
-    bind_cols(x2) %>% 
-    mutate(d = abs((m1-m2))/sqrt(((n1-1)*v1+(n2-1)*v2)/(n1+n2-2))) %>% 
-    select(genre, genre2, d)
-}
-bind_rows(l) %>% 
-  mutate(d=round(d, 2)) %>% 
-  group_by(genre) %>% 
-  mutate(m = mean(d)) %>% 
-  ungroup() %>% 
-  mutate(genre = factor(genre) %>% fct_reorder(d, mean),
-         genre2 = factor(genre2, levels = levels(genre))) %>% 
-  ggplot(aes(genre, genre2, fill=d, label=d)) +
-    geom_tile() +
-    geom_text() +
-    theme(axis.text.x = element_text(angle=90, hjust=1,vjust=0.5))
+#| label: overlap
+#| fig-height: 6
+#gg_genre_overlap
+tar_load(gg_genre_overlap)
+print(gg_genre_overlap)
+ggsave("gg_genre_overlap.pdf", gg_genre_overlap, path="output", device="pdf")
 
 ```
+
+
 # Supplements
 
 ## Distribution of all variables considered for legitimacy
