@@ -92,7 +92,7 @@ plot_endoexoleg_genrerank <- function(artists){
   return(g)
 }
 
-plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FALSE){
+plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FALSE, ncol=3){
   require(ggrepel)
   set_ggplot_options()
   if(genrefacets & genremean) error("genrefacets and genremean cannot both be TRUE")
@@ -144,7 +144,7 @@ plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FA
   g <- g + 
     geom_text(data = lab, mapping = aes(x=x, y=y, label = r2), parse = TRUE, hjust=.75)
   if(genrefacets) {
-    g <- g + facet_wrap(~genre, ncol=3)
+    g <- g + facet_wrap(~genre, ncol=ncol)
     }
   return(g)
 }
@@ -196,14 +196,16 @@ plot_genre_overlap <- function(artists){
   g <- ggplot(dp, aes(g1, g2, fill = ol)) +
     geom_tile() +
     geom_text(aes(label=round(ol, 2) %>% str_replace("0.", "."))) +
-    labs(x="", y="", fill="Overlap") +
+    labs(x="", y="") +
     scale_y_discrete(position="right") +
     facet_wrap(~leg) +
-    theme(axis.text.x = element_text(angle=45, hjust = 1),line = element_blank(),
+    theme(axis.text.x = element_text(angle=45, hjust = 1), line = element_blank(),
           legend.position = "top") +
+    guides(fill = "none") +
     scale_fill_distiller(type = "seq",
                          direction = 1,
                          palette = "Greys")
+  return(g)
 }
 
 table_leg_variance <- function(artists){
