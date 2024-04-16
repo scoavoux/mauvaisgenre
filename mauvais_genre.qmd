@@ -36,6 +36,7 @@ library(FactoMineR)
 library(factoextra)
 pca_mod <- compute_pca(artists_filtered)
 fviz_pca_var(pca_mod)
+ggsave("pca_var.pdf", path="output", device="pdf")
 ```
 
 

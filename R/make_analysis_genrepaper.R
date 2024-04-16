@@ -38,17 +38,21 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
   require(gghalves)
   d <- artists %>% 
     select(genre, sc_endo_isei, sc_exo_pca) %>% 
-    mutate(genre = recode_vars(genre, "genres"),
-           genre = factor(genre) %>% fct_reorder(sc_endo_isei, median)) %>% 
-    pivot_longer(-genre) %>% 
-    mutate(name = recode_vars(name, "legitimacy"))
+    mutate(genre = recode_vars(genre, "genres"))
   
   if(type == "density") {
-    g <- ggplot(d, aes(x= genre, y = value)) +
-      geom_half_violin(side="t")
+    g <- d %>% 
+      mutate(genre = factor(genre) %>% fct_reorder(sc_endo_isei, median)) %>% 
+      pivot_longer(-genre) %>% 
+      mutate(name = recode_vars(name, "legitimacy")) %>% 
+      ggplot(aes(x= genre, y = value)) +
+        geom_half_violin(side="t")
       # geom_half_point(side = "l", size=.7)
   } else if(type == "estimate"){
     d <- d %>% 
+      mutate(genre = factor(genre) %>% fct_reorder(sc_endo_isei, mean)) %>% 
+      pivot_longer(-genre) %>% 
+      mutate(name = recode_vars(name, "legitimacy")) %>% 
       group_by(genre, name) %>% 
       summarize(m = mean(value),
                 se = 1.96*sd(value))
