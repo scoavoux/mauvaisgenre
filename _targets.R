@@ -46,13 +46,16 @@ list(
                                                                             ncol=6)),
   tar_target(gg_endoexoleg_correlation_genremean, plot_endoexoleg_correlation(artists_filtered, genremean = TRUE)),
   tar_target(gg_genre_overlap, plot_genre_overlap(artists_filtered)),
-  tar_target(tb_leg_variance, table_leg_variance(artists_filtered)),
+  tar_target(tb_leg_variance, table_leg_variance(artists_filtered))
   
   # Report Omni1
-  tar_quarto(mauvais_genre_report, "mauvais_genre.qmd"),
+  # we remove it for now because it's the longest target to compile
+  # (about 30 seconds) and it basically removes the incentive to do cache/targets
+  # altogether
+  #tar_quarto(mauvais_genre_report, "mauvais_genre.qmd")
   
   # Prepare user data ------  
   
   # Analysis Omni 2 ------
-  tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
+  #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
 )
