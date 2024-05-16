@@ -15,8 +15,10 @@ tar_option_set(
 )
 
 source("R/common_functions.R")
+source("R/make_intermediary_data.R")
 source("R/make_artists_data.R")
 source("R/make_analysis_genrepaper.R")
+source("R/make_user_data.R")
 
 
 list(
@@ -46,7 +48,7 @@ list(
                                                                             ncol=6)),
   tar_target(gg_endoexoleg_correlation_genremean, plot_endoexoleg_correlation(artists_filtered, genremean = TRUE)),
   tar_target(gg_genre_overlap, plot_genre_overlap(artists_filtered)),
-  tar_target(tb_leg_variance, table_leg_variance(artists_filtered))
+  tar_target(tb_leg_variance, table_leg_variance(artists_filtered)),
   
   # Report Omni1
   # we remove it for now because it's the longest target to compile
@@ -55,7 +57,10 @@ list(
   #tar_quarto(mauvais_genre_report, "mauvais_genre.qmd")
   
   # Prepare user data ------  
-  
+  tar_target(streaming_data_files, list_streaming_data_files()),
+  tar_target(user_artist_peryear_onefile, make_user_artist_peryear_table_onefile(streaming_data_files), pattern = streaming_data_files),
+  tar_target(user_artist_peryear, merge_user_artist_peryear_table(user_artist_peryear_onefile)),
+  tar_target(omni_from_survey,compute_omnivorourness_from_survey())
   # Analysis Omni 2 ------
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
 )
