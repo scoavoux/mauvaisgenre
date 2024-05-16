@@ -10,6 +10,29 @@ make_artist_list <- function(){
   return(artists_list)
 }
 
+make_genres_data <- function(){
+  require(tidyverse)
+  s3 <- initialize_s3()
+  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists_genre_weight.csv")
+  genres <- f$Body %>% rawToChar() %>% read_csv()
+  genres <- genres %>% 
+    filter(n_playlists_used > 5) %>% 
+    pivot_longer(african:soulfunk, names_to = "genre") %>% 
+    # We use the main genre with at least 33% of playlists
+    filter(value > .33) %>%
+    arrange(artist_id, desc(value)) %>% 
+    slice(1, .by = artist_id) %>% 
+    select(-n_playlists_used, -value)
+  return(genres)
+  # Check coverage of genre definition
+  # user_artist_peryear %>% 
+  #   filter(!is.na(artist_id)) %>% 
+  #   left_join(genres) %>% 
+  #   mutate(na = is.na(genre)) %>% 
+  #   group_by(na) %>% 
+  #   summarise(n=sum(n_play))
+  # With .4 threshold, 70% of plays; with .3, 79%
+}
 
 # Compute aggregate stats on artists ------
 compute_endo_leg <- function(){

@@ -34,6 +34,7 @@ list(
   
   tar_target(artists, join_artist(exo_radio)), #endo_leg, exo_press, exo_sc
   tar_target(artists_filtered, filter_artists(artists)),
+  tar_target(genres, make_genres_data()),
 
   # Analysis Omni 1 ------
   tar_target(gg_endoleg_bygenre, plot_endoleg_bygenre(artists_filtered)),
