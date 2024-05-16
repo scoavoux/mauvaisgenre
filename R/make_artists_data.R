@@ -1,14 +1,14 @@
 
 # Make base data ------
-make_artist_list <- function(){
-  # Returns a list of artists that will be
-  # analyzed. Main variable is artist_id
-  #   artist_id
-  #   artist_name
-  #   genre
-  artists_list <- read_csv()
-  return(artists_list)
-}
+# make_artist_list <- function(){
+#   # Returns a list of artists that will be
+#   # analyzed. Main variable is artist_id
+#   #   artist_id
+#   #   artist_name
+#   #   genre
+#   artists_list <- read_csv()
+#   return(artists_list)
+# }
 
 make_genres_data <- function(){
   require(tidyverse)
@@ -16,6 +16,7 @@ make_genres_data <- function(){
   f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists_genre_weight.csv")
   genres <- f$Body %>% rawToChar() %>% read_csv()
   genres <- genres %>% 
+    select(-artist_name) %>% 
     filter(n_playlists_used > 5) %>% 
     pivot_longer(african:soulfunk, names_to = "genre") %>% 
     # We use the main genre with at least 33% of playlists
@@ -35,15 +36,15 @@ make_genres_data <- function(){
 }
 
 # Compute aggregate stats on artists ------
-compute_endo_leg <- function(){
-  # input is stream data + user data
-  # output: artist_id, endo_dipl, endo_isei
-  
-}
-
-compute_exo_press <- function(){
-  
-}
+# compute_endo_leg <- function(){
+#   # input is stream data + user data
+#   # output: artist_id, endo_dipl, endo_isei
+#   
+# }
+# 
+# compute_exo_press <- function(){
+#   
+# }
 
 compute_exo_radio <- function(){
   require(tidytable)
@@ -111,7 +112,7 @@ filter_artists <- function(artists){
   return(artists_filtered)
 }
 
-compute_exo_pca <- function(artists){
-  artists %>% 
-    select()
-}
+# compute_exo_pca <- function(artists){
+#   artists %>% 
+#     select()
+# }
