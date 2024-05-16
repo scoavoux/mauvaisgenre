@@ -61,7 +61,12 @@ list(
   tar_target(streaming_data_files, list_streaming_data_files()),
   tar_target(user_artist_peryear_onefile, make_user_artist_peryear_table_onefile(streaming_data_files), pattern = streaming_data_files),
   tar_target(user_artist_peryear, merge_user_artist_peryear_table(user_artist_peryear_onefile)),
-  tar_target(omni_from_survey,compute_omnivorourness_from_survey())
+  
+  tar_target(omni_from_survey, compute_omnivorourness_from_survey()),
+  tar_target(omni_from_streams, compute_omnivorourness_from_streams(user_artist_peryear, artists_filtered, genres)),
+  tar_target(latent_classes_from_surveys_multiple, compute_latent_classes_from_survey(nclass = 3L:8L)),
+  tar_target(latent_classes_from_streams_multiple, compute_latent_classes_from_streams(user_artist_peryear, genres, nclass = 3L:8L))
+  
   # Analysis Omni 2 ------
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
 )

@@ -55,6 +55,12 @@ compute_latent_classes_from_streams <- function(user_artist_peryear, genres, ncl
   require(mclust)
   require(tidyverse)
   require(tidytable)
+  # require(conflicted)
+  # conflict_prefer("ungroup", "tidytable")
+  # conflict_prefer("group_by", "tidytable")
+  # conflict_prefer("summarize", "tidytable")
+  # conflict_prefer("filter", "tidytable")
+  # conflicts_prefer(tidytable::pivot_wider)
 
   user_artist_peryear <- user_artist_peryear %>% 
     group_by(hashed_id, artist_id) %>% 
@@ -76,6 +82,62 @@ compute_latent_classes_from_streams <- function(user_artist_peryear, genres, ncl
   return(mod)
 }
 
+compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_filtered, genres){
+  require(tidyverse)
+  require(tidytable)
+  
+  user_artist_peryear <- user_artist_peryear %>% 
+    filter(!is.na(artist_id)) %>% 
+    group_by(hashed_id, artist_id) %>% 
+    # we use number of play
+    summarize(n_play = sum(n_play)) %>% 
+    ungroup() %>% 
+    left_join(genres)
+  
+  ## diversity over genres actually listened
+  ### HHI over stream by genre
+  omni <- user_artist_peryear %>% 
+    filter(!is.na(genre)) %>% 
+    group_by(hashed_id, genre) %>% 
+    summarize(n_play = sum(n_play)) %>% 
+    group_by(hashed_id) %>% 
+    mutate(f_play = n_play / sum(n_play)) %>% 
+    summarize(omni_stream_genres_hhi = 1 - sum(f_play^2))
+  
+  ## diversity over individual legitimacy
+  ### weighted mean and sd of each artist's average legitimacy
+  ### as highbrow dim (mean) and omnivorous dim (sd)
+  omni <- user_artist_peryear %>% 
+    group_by(hashed_id) %>% 
+    mutate(f_play = n_play / sum(n_play)) %>% 
+    left_join(select(artists_filtered, artist_id, sc_exo_pca)) %>% 
+    filter(!is.na(sc_exo_pca)) %>% 
+    group_by(hashed_id) %>% 
+    summarize(mean_exo_pca = sum(sc_exo_pca*f_play), 
+              sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2))
+              ) %>% 
+    full_join(omni)
+  
+  ## Same by genre
+  omni <- user_artist_peryear %>% 
+    group_by(hashed_id) %>% 
+    mutate(f_play = n_play / sum(n_play)) %>% 
+    left_join(select(artists_filtered, artist_id, sc_exo_pca)) %>% 
+    filter(!is.na(sc_exo_pca), !is.na(genre)) %>% 
+    group_by(hashed_id, genre) %>% 
+    summarize(n=sum(n_play),
+              mean_exo_pca = sum(sc_exo_pca*f_play), 
+              sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2))
+    ) %>% 
+    # one needs to actually have listened to that genre
+    filter(n>100) %>% 
+    pivot_longer(ends_with("exo_pca")) %>% 
+    mutate(name = paste(name, genre, sep="_")) %>% 
+    select(-genre, -n) %>% 
+    pivot_wider(names_from = name, values_from=value) %>% 
+    full_join(omni)
+  return(omni)
+}
 
 ## Peterson: sum of genres declared
 ### in survey: sum over genres consumed
