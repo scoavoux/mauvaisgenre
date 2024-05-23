@@ -1,0 +1,95 @@
+---
+title: Latent class diagnostics
+author: Samuel Coavoux
+format:
+  html: 
+    embed-resources: true
+editor: source
+---
+
+```{r}
+library(knitr)
+opts_chunk$set(results = 'asis')
+```
+
+```{r}
+library(targets)
+library(tidyverse)
+```
+
+# Latent classes from survey
+
+```{r}
+tar_load("latent_classes_from_surveys_multiple")
+```
+
+
+```{r}
+diag_lca <- tibble(nclass = names(latent_classes_from_surveys_multiple),
+                   bic = map(latent_classes_from_surveys_multiple, ~.x$bic) %>%  unlist(),
+                   chisq = map(latent_classes_from_surveys_multiple, ~.x$Chisq) %>%  unlist(),
+                   df = map(latent_classes_from_surveys_multiple, ~.x$resid.df) %>%  unlist(),
+                   chisq.pvalue = pchisq(chisq, df, lower.tail = FALSE))
+diag_lca
+```
+
+## Description of profiles
+
+```{r}
+extract_probs <- function(k){
+  res <- vector("list", length(latent_classes_from_surveys_multiple[[k]]$probs))
+  for(i in 1:length(latent_classes_from_surveys_multiple[[k]]$probs)){
+    res[[i]] <- latent_classes_from_surveys_multiple[[k]]$probs[[i]] %>% 
+      as.data.frame() %>% 
+      rownames_to_column("class") 
+    res[[i]]$genre <- names(latent_classes_from_surveys_multiple[[k]]$probs)[i]
+  }
+  res <- bind_rows(res) %>% 
+    select(-`Pr(1)`) %>% 
+    mutate(`Pr(2)` = round(`Pr(2)`, 2),
+           class = str_remove_all(class, "[ :]")) %>% 
+    pivot_wider(names_from = class, values_from = `Pr(2)`) %>% 
+    arrange(genre)
+  return(res)
+}
+
+for(k in names(latent_classes_from_surveys_multiple)){
+  extract_probs(k) %>% 
+    kable(caption = paste0("Profile for ", k)) %>% 
+    print()
+  cat("\n\n")
+}
+
+```
+
+
+# Latent profiles from streams
+
+```{r}
+tar_load("latent_classes_from_streams_multiple")
+```
+
+
+```{r}
+bic <- map(latent_classes_from_streams_multiple, ~.x$bic) %>% 
+  unlist()
+tibble(bic, k=names(bic)) %>% 
+  mutate(k = str_extract(k, "\\d")) %>% 
+  ggplot(aes(k, bic)) +
+    geom_point() +
+    labs(x = "Number of clusters", y = "BIC", title = "BIC of various k for LPA models (stream data)")
+```
+
+```{r}
+for(k in names(latent_classes_from_streams_multiple)){
+  latent_classes_from_streams_multiple[[k]]$parameters$mean %>% 
+    as.data.frame() %>% 
+    rename_with(~str_replace(.x, "V", "class")) %>% 
+    mutate(across(starts_with("class"), round)) %>% 
+    rownames_to_column("genre") %>% 
+    kable(caption = paste0("Profile for ", k)) %>% 
+    print()
+  cat("\n\n")
+}
+```
+
