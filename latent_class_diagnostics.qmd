@@ -26,11 +26,8 @@ tar_load("latent_classes_from_surveys_multiple")
 
 ```{r}
 diag_lca <- tibble(nclass = names(latent_classes_from_surveys_multiple),
-                   bic = map(latent_classes_from_surveys_multiple, ~.x$bic) %>%  unlist(),
-                   chisq = map(latent_classes_from_surveys_multiple, ~.x$Chisq) %>%  unlist(),
-                   df = map(latent_classes_from_surveys_multiple, ~.x$resid.df) %>%  unlist(),
-                   chisq.pvalue = pchisq(chisq, df, lower.tail = FALSE))
-diag_lca
+                   bic = map(latent_classes_from_surveys_multiple, ~.x$bic) %>%  unlist())
+kable(diag_lca)
 ```
 
 ## Description of profiles
@@ -46,10 +43,17 @@ extract_probs <- function(k){
   }
   res <- bind_rows(res) %>% 
     select(-`Pr(1)`) %>% 
-    mutate(`Pr(2)` = round(`Pr(2)`, 2),
-           class = str_remove_all(class, "[ :]")) %>% 
+    mutate(class = str_remove_all(class, "[ :]")) %>% 
     pivot_wider(names_from = class, values_from = `Pr(2)`) %>% 
     arrange(genre)
+  res <- res %>% 
+    summarize(across(-genre, mean)) %>% 
+    mutate(genre = "**Overall mean**") %>% 
+    relocate(genre) %>% 
+    bind_rows(res) %>% 
+    mutate(across(starts_with("class"), ~round(.x, 2)))
+
+
   return(res)
 }
 
@@ -82,12 +86,51 @@ tibble(bic, k=names(bic)) %>%
 
 ```{r}
 for(k in names(latent_classes_from_streams_multiple)){
-  latent_classes_from_streams_multiple[[k]]$parameters$mean %>% 
+  res <- latent_classes_from_streams_multiple[[k]]$parameters$mean %>% 
     as.data.frame() %>% 
     rename_with(~str_replace(.x, "V", "class")) %>% 
-    mutate(across(starts_with("class"), round)) %>% 
+    rownames_to_column("genre")
+  res <- res %>% 
+    summarize(across(-genre, mean)) %>% 
+    mutate(genre = "**Overall sum of played time**") %>% 
+    relocate(genre) %>% 
+    bind_rows(res) %>% 
+    mutate(across(starts_with("class"), ~round(.x/3600)))
+
+  kable(res, caption = paste0("Profile for ", k, "in hours played")) %>% 
+    print()
+  cat("\n\n")
+}
+```
+
+
+# Latent profiles from streams (proportional)
+
+```{r}
+tar_load("latent_classes_from_streams_multiple_proportion")
+```
+
+
+```{r}
+bic <- map(latent_classes_from_streams_multiple_proportion, ~.x$bic) %>% 
+  unlist()
+tibble(bic, k=names(bic)) %>% 
+  mutate(k = str_extract(k, "\\d")) %>% 
+  ggplot(aes(k, bic)) +
+    geom_point() +
+    labs(x = "Number of clusters", y = "BIC", title = "BIC of various k for LPA models (stream data)")
+```
+
+```{r}
+for(k in names(latent_classes_from_streams_multiple_proportion)){
+  res <- latent_classes_from_streams_multiple_proportion[[k]]$parameters$mean %>% 
+    as.data.frame() %>% 
+    rename_with(~str_replace(.x, "V", "class")) %>% 
     rownames_to_column("genre") %>% 
-    kable(caption = paste0("Profile for ", k)) %>% 
+    mutate(across(starts_with("class"), ~round(.x, 3)))
+
+  
+  kable(res, caption = paste0("Profile for ", k)) %>% 
     print()
   cat("\n\n")
 }
