@@ -1,5 +1,5 @@
 # Compute omnivorism by user ------
-compute_omnivorourness_from_survey <- function(survey, genre_aliases){
+compute_omnivorourness_from_survey <- function(survey, genres_aliases){
   # Compute from genres liked and consumed.
   # TODO: cultural holes
   require(tidyverse)
@@ -8,15 +8,16 @@ compute_omnivorourness_from_survey <- function(survey, genre_aliases){
     select(hashed_id, matches("B_genres_\\d+")) %>%
     pivot_longer(-hashed_id) %>%
     # rename genres
-    mutate(value = genre_aliases[value]) %>% 
+    mutate(value = genres_aliases[value]) %>% 
     filter(value != "", !is.na(value)) %>%
+    distinct(hashed_id, value) %>% 
     mutate(name = 1) %>%
     summarise(omni_survey_sum_genres_played = sum(name), .by = hashed_id)
 
   # Recoding data on liking genres
   omni_survey_sum_genres_liked <- make_genre_preference_data() %>%
     # Consolidate genres to agree between survey and streaming
-    mutate(genre = genre_aliases[genre]) %>% 
+    mutate(genre = genres_aliases[genre]) %>% 
     filter(genre != "", !is.na(genre)) %>%
     # only loved and liked genres
     filter(group %in% c("0", "1")) %>%
@@ -29,19 +30,16 @@ compute_omnivorourness_from_survey <- function(survey, genre_aliases){
   return(omni)
 }
 
-compute_latent_classes_from_survey <- function(survey, genre_aliases, nclass){
+compute_latent_classes_from_survey <- function(survey, genres_aliases, nclass){
   require(tidyverse)
-  require(poLCA)
-  require(conflicted)
-  conflict_prefer("select", "dplyr")
-  conflict_prefer("filter", "dplyr")
 
   genre_matrix <- survey %>%
     select(hashed_id, matches("B_genres_\\d+")) %>%
     pivot_longer(-hashed_id) %>%
     # consolidate genres
-    mutate(value = genre_aliases[value]) %>% 
+    mutate(value = genres_aliases[value]) %>% 
     filter(value != "", !is.na(value)) %>%
+    distinct(hashed_id, value) %>% 
     mutate(name = 2) %>% 
     pivot_wider(names_from = value, values_from = name, values_fill = 1)
 
@@ -53,7 +51,7 @@ compute_latent_classes_from_survey <- function(survey, genre_aliases, nclass){
   mod <- vector("list", length(nclass))
   names(mod) <- paste0("k", nclass)
   for(i in nclass){
-    mod[[paste0("k", i)]] <- poLCA(form, genre_matrix, nclass = i)
+    mod[[paste0("k", i)]] <- poLCA::poLCA(form, genre_matrix, nclass = i)
   }
   return(mod)
 }

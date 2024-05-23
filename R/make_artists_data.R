@@ -35,12 +35,12 @@ make_genres_data <- function(){
   # With .4 threshold, 70% of plays; with .3, 79%
 }
 
-make_genre_aliases <- function(){
+make_genres_aliases <- function(){
   require(tidyverse)
-  genre_aliases <- read_csv("data/genres.csv")
-  genre_aliases_char <- genre_aliases$streaminggenre
-  names(genre_aliases_char) <- genre_aliases$surveygenre
-  return(genre_aliases_char)
+  genres_aliases <- read_csv("data/genres.csv")
+  genres_aliases_char <- genres_aliases$streaminggenre
+  names(genres_aliases_char) <- genres_aliases$surveygenre
+  return(genres_aliases_char)
 }
 
 # Compute aggregate stats on artists ------
