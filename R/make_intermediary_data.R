@@ -1,3 +1,11 @@
+make_survey_data <- function(){
+  require(tidyverse)
+  s3 <- initialize_s3()
+  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/survey/RECORDS_Wave3_apr_june_23_responses_corrected.csv")
+  survey <- f$Body %>% rawToChar() %>% data.table::fread() %>% tibble()
+  return(survey)
+}
+
 make_genre_preference_data <- function(){
   require(tidyverse)
   s3 <- initialize_s3()
