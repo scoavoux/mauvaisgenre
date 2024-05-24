@@ -30,6 +30,7 @@ compute_omnivorourness_from_survey <- function(survey, genres_aliases){
   return(omni)
 }
 
+# Make latent classes
 compute_latent_classes_from_survey <- function(survey, genres_aliases, nclass){
   require(tidyverse)
 
@@ -52,6 +53,8 @@ compute_latent_classes_from_survey <- function(survey, genres_aliases, nclass){
   names(mod) <- paste0("k", nclass)
   for(i in nclass){
     mod[[paste0("k", i)]] <- poLCA::poLCA(form, genre_matrix, nclass = i)
+    # Pass the ids so that we can pair the data afterwards
+    mod[[paste0("k", i)]]$id <- genre_matrix$hashed_id
   }
   return(mod)
 }
@@ -78,7 +81,9 @@ compute_latent_classes_from_streams <- function(user_artist_peryear, genres, ncl
     left_join(genres) %>% 
     filter(!is.na(genre)) %>% 
     group_by(hashed_id, genre) %>% 
-    summarize(l_play = sum(l_play))
+    summarize(l_play = sum(l_play)) %>% 
+    # express time in hours
+    mutate(l_play = l_play/3600)
 
   if(proportion){
     user_genre <- user_genre %>% 
@@ -96,6 +101,8 @@ compute_latent_classes_from_streams <- function(user_artist_peryear, genres, ncl
   names(mod) <- paste0("k", nclass)
   for(i in nclass){
     mod[[paste0("k", i)]] <- Mclust(select(user_genre_matrix, -hashed_id), G = i)
+    # pass ids to be able to pair the values afterwards
+    mod[[paste0("k", i)]]$id <- user_genre_matrix$hashed_id
   }
   return(mod)
 }
@@ -170,5 +177,56 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_fil
 ### let us attribute to each artist the average legitimacy of their genre
 ### weighted mean and sd of this,
 ### as highbrow dim (mean) and omnivorous dim (sd)
+
+# Put everything together
+recode_survey_data <- function(survey, 
+                               omni_from_survey, 
+                               omni_from_streams,
+                               latent_classes_from_surveys,
+                               latent_classes_from_streams,
+                               latent_classes_from_streams_proportion){
+  
+  # Recode survey questions  
+  survey <- survey %>% 
+    mutate(age=2023-E_birth_year,
+           gender = factor(E_gender, levels = c("Un homme", "Une femme"), labels = c("Men", "Women")),
+           degree = ifelse(E_diploma == "", NA, E_diploma) %>% fct_collapse(low = c(
+             "CEP (certificat d'études primaires)",
+             "DEUG, BTS, DUT, DEUST, diplôme des professions sociales ou de la santé, d'infirmier.ère",
+             "CAP, BEP, brevet de compagnon",       
+             "Aucun diplôme",
+             "BEPC, brevet élementaire, brevet des collèges"
+           ),
+           
+           middle = c("Bac général, brevet supérieur",
+                      "Bac pro ou techno, brevet professionnel ou de technicien, BEA, BEC, BEI, BEH, capacité en droit"
+           ),
+           high = c(
+             "Licence, licence pro, maîtrise, BUT",
+             "Master, diplôme d'ingénieur.e, DEA, DESS",
+             "Doctorat (y compris médecine, pharmacie, dentaire), HDR"
+           )
+           ))
+  # Let us select only variables of interest...
+  
+  
+  # Extract clusters
+  lcs <- tibble(cluster_survey = latent_classes_from_surveys$predclass, 
+                hashed_id = latent_classes_from_surveys$id)
+  lcst <- tibble(cluster_streams = latent_classes_from_streams$classification,
+                 hashed_id = latent_classes_from_streams$id)
+  lcstp <- tibble(cluster_streamsprop = latent_classes_from_streams_proportion$classification,
+                  hashed_id = latent_classes_from_streams_proportion$id)
+  
+  # Now let's aggregate with other datasets
+  survey <- survey %>% 
+    left_join(omni_from_survey) %>% 
+    left_join(omni_from_streams) %>% 
+    left_join(lcs) %>% 
+    left_join(lcst) %>% 
+    left_join(lcstp)
+  
+  return(survey)
+}
 
 

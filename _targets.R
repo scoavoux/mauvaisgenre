@@ -60,7 +60,6 @@ list(
   
   # Prepare user data ------
   tar_target(survey_raw, make_survey_data()),
-  tar_target(survey, recode_survey_data(survey_raw)),
   tar_target(streaming_data_files, list_streaming_data_files()),
   tar_target(user_artist_peryear_onefile, make_user_artist_peryear_table_onefile(streaming_data_files), pattern = streaming_data_files),
   tar_target(user_artist_peryear, merge_user_artist_peryear_table(user_artist_peryear_onefile)),
@@ -84,8 +83,15 @@ list(
   tar_target(latent_classes_from_streams, 
              select_latent_class_model(latent_classes_from_streams_multiple, 3)),
   tar_target(latent_classes_from_streams_proportion, 
-             select_latent_class_model(latent_classes_from_streams_multiple_proportion, 3))
+             select_latent_class_model(latent_classes_from_streams_multiple_proportion, 3)),
   
+  # Put everything together
+  tar_target(survey, recode_survey_data(survey_raw, 
+                                        omni_from_survey, 
+                                        omni_from_streams,
+                                        latent_classes_from_surveys,
+                                        latent_classes_from_streams,
+                                        latent_classes_from_streams_proportion))
   # Analysis Omni 2 ------
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
 )
