@@ -100,6 +100,10 @@ compute_latent_classes_from_streams <- function(user_artist_peryear, genres, ncl
   return(mod)
 }
 
+select_latent_class_model <- function(models_list, nclass){
+  return(models_list[[paste0("k", nclass)]])
+}
+
 compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_filtered, genres){
   require(tidyverse)
   require(tidytable)

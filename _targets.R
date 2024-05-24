@@ -64,11 +64,20 @@ list(
   tar_target(user_artist_peryear_onefile, make_user_artist_peryear_table_onefile(streaming_data_files), pattern = streaming_data_files),
   tar_target(user_artist_peryear, merge_user_artist_peryear_table(user_artist_peryear_onefile)),
   
+  # Omnivorousness
   tar_target(omni_from_survey, compute_omnivorourness_from_survey(survey, genres_aliases)),
   tar_target(omni_from_streams, compute_omnivorourness_from_streams(user_artist_peryear, artists_filtered, genres)),
+  
+  # Latent classes
+  ## Make many models
   tar_target(latent_classes_from_surveys_multiple, compute_latent_classes_from_survey(survey, genres_aliases, nclass = 3L:10L)),
   tar_target(latent_classes_from_streams_multiple, compute_latent_classes_from_streams(user_artist_peryear, genres, nclass = 3L:10L)),
-  tar_target(latent_classes_from_streams_multiple_proportion, compute_latent_classes_from_streams(user_artist_peryear, genres, nclass = 3L:8L, proportion = TRUE))
+  tar_target(latent_classes_from_streams_multiple_proportion, compute_latent_classes_from_streams(user_artist_peryear, genres, nclass = 3L:8L, proportion = TRUE)),
+  
+  ## Extract one
+  tar_target(latent_classes_from_surveys, select_latent_class_model(latent_classes_from_surveys_multiple, 10)),
+  tar_target(latent_classes_from_streams, select_latent_class_model(latent_classes_from_streams_multiple, 3)),
+  tar_target(latent_classes_from_streams_proportion, select_latent_class_model(latent_classes_from_streams_multiple_proportion, 3))
   
   # Analysis Omni 2 ------
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
