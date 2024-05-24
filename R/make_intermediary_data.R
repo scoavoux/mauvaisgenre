@@ -3,6 +3,32 @@ make_survey_data <- function(){
   s3 <- initialize_s3()
   f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/survey/RECORDS_Wave3_apr_june_23_responses_corrected.csv")
   survey <- f$Body %>% rawToChar() %>% data.table::fread() %>% tibble()
+
+  return(survey)
+}
+
+recode_survey_data <- function(survey){
+  # Recode survey questions  
+  survey <- survey %>% 
+    mutate(age=2023-E_birth_year,
+           gender = factor(E_gender, levels = c("Un homme", "Une femme"), labels = c("Men", "Women")),
+           degree = ifelse(E_diploma == "", NA, E_diploma) %>% fct_collapse(low = c(
+             "CEP (certificat d'études primaires)",
+             "DEUG, BTS, DUT, DEUST, diplôme des professions sociales ou de la santé, d'infirmier.ère",
+             "CAP, BEP, brevet de compagnon",       
+             "Aucun diplôme",
+             "BEPC, brevet élementaire, brevet des collèges"
+           ),
+           
+           middle = c("Bac général, brevet supérieur",
+                      "Bac pro ou techno, brevet professionnel ou de technicien, BEA, BEC, BEI, BEH, capacité en droit"
+           ),
+           high = c(
+             "Licence, licence pro, maîtrise, BUT",
+             "Master, diplôme d'ingénieur.e, DEA, DESS",
+             "Doctorat (y compris médecine, pharmacie, dentaire), HDR"
+           )
+           ))
   return(survey)
 }
 
