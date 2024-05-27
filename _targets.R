@@ -79,11 +79,11 @@ list(
   
   ## Extract one
   tar_target(latent_classes_from_surveys, 
-             select_latent_class_model(latent_classes_from_surveys_multiple, 10)),
+             select_latent_class_model(latent_classes_from_surveys_multiple, 4)),
   tar_target(latent_classes_from_streams, 
-             select_latent_class_model(latent_classes_from_streams_multiple, 3)),
+             select_latent_class_model(latent_classes_from_streams_multiple, 5)),
   tar_target(latent_classes_from_streams_proportion, 
-             select_latent_class_model(latent_classes_from_streams_multiple_proportion, 3)),
+             select_latent_class_model(latent_classes_from_streams_multiple_proportion, 5)),
   
   # Put everything together
   tar_target(survey, recode_survey_data(survey_raw, 

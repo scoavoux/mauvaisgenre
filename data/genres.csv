@@ -1,25 +1,25 @@
-surveygenre,streaminggenre
-"Blues","blues"
-"Country","country"
-"Dance & EDM","dance"
-"Electro","electro"
-"Folk & Acoustique","folk"
-"Hip Hop / Rap","raphiphop"
-"Indé / Alternatif","alternative"
-"Jazz","jazz"
-"K-pop",""
-"Musique Classique","classical"
-"Musique de Film",""
-"Musique Brésilienne","latino"
-"Musique Latino","latino"
-"Musiques Africaines","african"
-"Musiques Arabes","african"
-"Musiques Asiatiques",""
-"Métal","metal"
-"Pop","pop"
-"Rap français","frenchrap"
-"Reggae","reggae"
-"RnB","rnb"
-"Rock","rock"
-"Soul / Funk","soulfunk"
-"Variété française","frenchsongs"
+surveygenre,streaminggenre,question
+"Blues","blues",B_genres_18
+"Country","country",B_genres_19
+"Dance & EDM","dance",B_genres_20
+"Electro","electro",B_genres_4
+"Folk & Acoustique","folk",B_genres_15
+"Hip Hop / Rap","raphiphop",B_genres_8
+"Indé / Alternatif","alternative",B_genres_13
+"Jazz","jazz",B_genres_5
+"K-pop","",B_genres_21
+"Musique Classique","classical",B_genres_10
+"Musique de Film","",B_genres_14
+"Musique Brésilienne","latino",B_genres_23
+"Musique Latino","latino",B_genres_16
+"Musiques Africaines","african",B_genres_24
+"Musiques Arabes","african",B_genres_22
+"Musiques Asiatiques","",B_genres_17
+"Métal","metal",B_genres_12
+"Pop","pop",B_genres_2
+"Rap français","frenchrap",B_genres_1
+"Reggae","reggae",B_genres_11
+"RnB","rnb",B_genres_6
+"Rock","rock",B_genres_3
+"Soul / Funk","soulfunk",B_genres_7
+"Variété française","frenchsongs",B_genres_9

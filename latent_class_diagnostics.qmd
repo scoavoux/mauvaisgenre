@@ -3,6 +3,7 @@ title: Latent class diagnostics
 author: Samuel Coavoux
 format:
   html: 
+    toc: true
     embed-resources: true
 editor: source
 ---
@@ -15,6 +16,7 @@ opts_chunk$set(results = 'asis')
 ```{r}
 library(targets)
 library(tidyverse)
+library(janitor)
 ```
 
 # Latent classes from survey
@@ -25,9 +27,13 @@ tar_load("latent_classes_from_surveys_multiple")
 
 
 ```{r}
-diag_lca <- tibble(nclass = names(latent_classes_from_surveys_multiple),
+diag_lca <- tibble(nclass = names(latent_classes_from_surveys_multiple) %>% 
+                     str_remove("k") %>% 
+                     as.numeric(),
                    bic = map(latent_classes_from_surveys_multiple, ~.x$bic) %>%  unlist())
-kable(diag_lca)
+ggplot(diag_lca, aes(nclass, bic)) +
+  geom_point() +
+  geom_line()
 ```
 
 ## Description of profiles
@@ -52,12 +58,15 @@ extract_probs <- function(k){
     relocate(genre) %>% 
     bind_rows(res) %>% 
     mutate(across(starts_with("class"), ~round(.x, 2)))
-
-
   return(res)
 }
 
 for(k in names(latent_classes_from_surveys_multiple)){
+  if(k == "k1") next
+  tabyl(latent_classes_from_surveys_multiple[[k]]$predclass) %>% 
+    kable(caption = "Prevalence of each class") %>% 
+    print()
+
   extract_probs(k) %>% 
     kable(caption = paste0("Profile for ", k)) %>% 
     print()
@@ -78,7 +87,7 @@ tar_load("latent_classes_from_streams_multiple")
 bic <- map(latent_classes_from_streams_multiple, ~.x$bic) %>% 
   unlist()
 tibble(bic, k=names(bic)) %>% 
-  mutate(k = str_extract(k, "\\d")) %>% 
+  mutate(k = str_extract(k, "\\d+") %>% as.numeric()) %>% 
   ggplot(aes(k, bic)) +
     geom_point() +
     labs(x = "Number of clusters", y = "BIC", title = "BIC of various k for LPA models (stream data)")
@@ -86,6 +95,12 @@ tibble(bic, k=names(bic)) %>%
 
 ```{r}
 for(k in names(latent_classes_from_streams_multiple)){
+  if(k == "k1") next
+  tabyl(latent_classes_from_streams_multiple[[k]]$classification) %>% 
+    kable(caption = "Prevalence of each classes") %>% 
+    print()
+  cat("\n\n")
+  
   res <- latent_classes_from_streams_multiple[[k]]$parameters$mean %>% 
     as.data.frame() %>% 
     rename_with(~str_replace(.x, "V", "class")) %>% 
@@ -95,7 +110,7 @@ for(k in names(latent_classes_from_streams_multiple)){
     mutate(genre = "**Overall sum of played time**") %>% 
     relocate(genre) %>% 
     bind_rows(res) %>% 
-    mutate(across(starts_with("class"), ~round(.x/3600)))
+    mutate(across(starts_with("class"), ~round(.x)))
 
   kable(res, caption = paste0("Profile for ", k, "in hours played")) %>% 
     print()
@@ -115,7 +130,7 @@ tar_load("latent_classes_from_streams_multiple_proportion")
 bic <- map(latent_classes_from_streams_multiple_proportion, ~.x$bic) %>% 
   unlist()
 tibble(bic, k=names(bic)) %>% 
-  mutate(k = str_extract(k, "\\d")) %>% 
+  mutate(k = str_extract(k, "\\d+") %>% as.numeric()) %>% 
   ggplot(aes(k, bic)) +
     geom_point() +
     labs(x = "Number of clusters", y = "BIC", title = "BIC of various k for LPA models (stream data)")
@@ -123,6 +138,13 @@ tibble(bic, k=names(bic)) %>%
 
 ```{r}
 for(k in names(latent_classes_from_streams_multiple_proportion)){
+  if(k == "k1") next
+
+  tabyl(latent_classes_from_streams_multiple_proportion[[k]]$classification) %>% 
+    kable(caption = "Prevalence of each classes") %>% 
+    print()
+  cat("\n\n")
+
   res <- latent_classes_from_streams_multiple_proportion[[k]]$parameters$mean %>% 
     as.data.frame() %>% 
     rename_with(~str_replace(.x, "V", "class")) %>% 
