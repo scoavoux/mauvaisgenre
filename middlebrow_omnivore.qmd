@@ -1,7 +1,9 @@
 ---
-title: "Omnivorousness as bonne volonté culturelle"
+title: "Omnivores on a diet. Exploratory analysis for OMNI2"
+author: Samuel Coavoux
 format: 
   html:
+    toc: true
     embed-resources: true
 editor: source
 ---
@@ -20,37 +22,575 @@ opts_chunk$set(echo = FALSE,
 #| label: packages
 library(targets)
 library(tidyverse)
-```
-
-# Outliers on the ISEI sd distribution
-
-The degree of eclecticism of an artist can be approached by the standard 
-deviation of their ISEI score.
-
-```{r}
-#| label: outliers on the isei/sd distribution
-tar_load("artists_filtered")
-# artists_filtered %>% 
-#   filter(n_users_total > 1000) %>% 
-#   arrange(endo_isei_sd_pond) %>% 
-#   slice(1:10, (n()-9):n()) %>% 
-#   select(artist_name, endo_isei_sd_pond, endo_isei_mean_pond) %>% 
-#   kable()
+library(janitor)
 ```
 
 ```{r}
-x <- lm(endo_isei_sd_pond ~ endo_isei_mean_pond, data=artists_filtered)
-artists_filtered <- artists_filtered %>% 
-  mutate(endo_isei_resid = x$residuals)
-# Positive if true value of sd is higher than predicted value
-# => more diverse than expected; negative in the other case
-artists_filtered %>% 
-  arrange(endo_isei_resid) %>% 
-  filter(n_users_total > 800, genre != "metal") %>% 
-  select(artist_name, genre, endo_isei_resid, endo_isei_mean_pond, endo_isei_sd_pond) %>% 
-  group_by(genre) %>% 
-  slice(1:4, (n()-3):n()) %>% 
+#| label: load data and recode
+# loading data
+tar_load("survey")
+
+# make aliases
+## For genres names
+tar_load("genres_aliases")
+genres <- read_csv("data/genres.csv")
+genres_aliases_q <- genres$streaminggenre
+names(genres_aliases_q) <- genres$question
+
+## for omnivorousness variables
+omni_dic <- c(omni_survey_sum_genres_played = "Richness played", 
+              omni_survey_sum_genres_liked = "Richness liked",
+              omni_stream_genres_hhi = "HHI genres streamed",
+              mean_exo_pca = "Mean exo. leg.",
+              sd_exo_pca = "SD exo. leg.")
+
+
+# Recode
+## Make LCA classes a factor rather than integer/numeric
+survey <- survey %>% 
+  mutate(across(starts_with("cluster_"), ~paste0("class", str_pad(.x, 2, pad = 0))))
+
+## TEMP: remove NA
+survey <- survey %>% 
+  filter(cluster_survey != "classNA", 
+         cluster_streams != "classNA",
+         cluster_streamsprop != "classNA")
+
+
+```
+
+# First strategy: looking at consumption clusters
+
+## LCA on Surveys
+
+We load the results of the LCA in the survey.
+
+We look at the distribution of classes
+
+```{r}
+#| label: cluster from survey, distribution
+tabyl(survey$cluster_survey) %>% 
+  kable(caption = "Distribution of clusters from LCA on survey data")
+```
+
+
+We first interpret the classes based on the distribution of genres
+
+```{r}
+#| label: cluster from survey, interpretation
+tb <- survey %>%
+  select(hashed_id, cluster_survey, matches("B_genres_\\d+")) %>%
+  # consolidate genres
+  pivot_longer(matches("B_genres_\\d+")) %>%
+  mutate(name = genres_aliases_q[name],
+         value = ifelse(value != "", 1, 0)) %>% 
+  # remove empty genres
+  filter(!is.na(name)) %>% 
+  distinct() %>% 
+  group_by(cluster_survey, name) %>% 
+  summarise(m=sum(value)/n()) %>% 
+  pivot_wider(names_from = cluster_survey, values_from = m) %>% 
+  rename(genre = "name")
+tb %>% 
+  adorn_pct_formatting() %>% 
+  kable(caption = "Profils of clusters")
+```
+
+```{r}
+#| label: plot LCA cluster profiles
+#| fig.height: 8
+tb %>% 
+  pivot_longer(-genre) %>% 
+  ggplot(aes(value, genre, fill=genre)) +
+    geom_col() +
+    facet_wrap(~name)
+```
+
+```{r}
+#| label: plot LCA cluster profiles most significant genres
+#| fig.height: 8
+
+sig_genres <- c("rock", "classical", "jazz", "frenchrap", "frenchsongs")
+tb %>% 
+  filter(genre %in% sig_genres) %>% 
+  pivot_longer(-genre) %>% 
+  ggplot(aes(value, genre, fill=genre)) +
+    geom_col() +
+    facet_wrap(~name)
+```
+
+We then look at how these classes are distributed in the population, 
+across gender, age, and SES.
+
+```{r}
+#| label: cluster from survey, demographic data
+cluster_dem <- survey %>% 
+  select(cluster_survey, age, gender, degree) %>% 
+  filter(!is.na(cluster_survey))
+```
+
+
+```{r}
+#| label: cluster from survey, age
+cluster_dem %>% 
+  ggplot(aes(age, factor(cluster_survey))) +
+    geom_boxplot()
+```
+
+```{r}
+#| label: cluster from survey, degree
+cluster_dem %>% 
+  filter(!is.na(degree)) %>% 
+  ggplot(aes(factor(cluster_survey), fill=degree)) +
+    geom_bar(position="fill")
+```
+
+```{r}
+#| label: cluster from survey, gender
+cluster_dem %>% 
+  filter(!is.na(gender)) %>% 
+  ggplot(aes(factor(cluster_survey), fill=gender)) +
+    geom_bar(position="fill")
+```
+
+```{r}
+#| label: cluster from survey, correlation with omnivorousness metrics
+survey %>% 
+  select(cluster_survey, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
+  pivot_longer(-cluster_survey) %>% 
+  mutate(name = omni_dic[name]) %>% 
+  filter(!is.na(value)) %>% 
+  group_by(cluster_survey, name) %>% 
+  summarize(value = mean(value)) %>% 
+  pivot_wider(names_from = name, values_from = value) %>% 
   kable()
 ```
 
+## Latent Profile Analysis on streaming data 
+
+Let us do the same with the streaming data.
+
+We look at the distribution of classes
+
+```{r}
+#| label: cluster from streams, distribution
+tabyl(survey$cluster_streams) %>% 
+  kable(caption = "Distribution of clusters from LPA on survey data")
+```
+
+
+We first interpret the classes based on the distribution of genres
+
+```{r}
+#| label: cluster from streams, interpretation
+tb <- survey %>%
+  select(hashed_id, cluster_streams, matches("B_genres_\\d+")) %>%
+  # consolidate genres
+  pivot_longer(matches("B_genres_\\d+")) %>%
+  mutate(name = genres_aliases_q[name],
+         value = ifelse(value != "", 1, 0)) %>% 
+  # remove empty genres
+  filter(!is.na(name)) %>% 
+  distinct() %>% 
+  group_by(cluster_streams, name) %>% 
+  summarise(m=sum(value)/n()) %>% 
+  pivot_wider(names_from = cluster_streams, values_from = m) %>% 
+  rename(genre = "name")
+tb %>% 
+  adorn_pct_formatting() %>% 
+  kable(caption = "Profils of clusters")
+```
+
+```{r}
+#| label: plot LPA streams cluster profiles
+#| fig.height: 8
+tb %>% 
+  pivot_longer(-genre) %>% 
+  ggplot(aes(value, genre, fill=genre)) +
+    geom_col() +
+    facet_wrap(~name)
+```
+
+```{r}
+#| label: plot LPA streams cluster profiles most significant genres
+#| fig.height: 8
+
+sig_genres <- c("rock", "classical", "jazz", "frenchrap", "frenchsongs")
+tb %>% 
+  filter(genre %in% sig_genres) %>% 
+  pivot_longer(-genre) %>% 
+  ggplot(aes(value, genre, fill=genre)) +
+    geom_col() +
+    facet_wrap(~name)
+```
+
+We then look at how these classes are distributed in the population, 
+across gender, age, and SES.
+
+```{r}
+#| label: cluster from streams, demographic data
+cluster_dem <- survey %>% 
+  select(cluster_streams, age, gender, degree) %>% 
+  filter(!is.na(cluster_streams))
+```
+
+
+```{r}
+#| label: cluster from streams, link with age
+cluster_dem %>% 
+  ggplot(aes(age, factor(cluster_streams))) +
+    geom_boxplot()
+```
+```{r}
+#| label: cluster from streams, link with degree
+cluster_dem %>% 
+  filter(!is.na(degree)) %>% 
+  ggplot(aes(factor(cluster_streams), fill=degree)) +
+    geom_bar(position="fill")
+```
+
+```{r}
+#| label: cluster from streams, link with gender
+cluster_dem %>% 
+  filter(!is.na(gender)) %>% 
+  ggplot(aes(factor(cluster_streams), fill=gender)) +
+    geom_bar(position="fill")
+```
+
+```{r}
+#| label: cluster from streams, link with omnivorousness variables
+survey %>% 
+  select(cluster_streams, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
+  pivot_longer(-cluster_streams) %>% 
+  mutate(name = omni_dic[name]) %>% 
+  filter(!is.na(value)) %>% 
+  group_by(cluster_streams, name) %>% 
+  summarize(value = mean(value)) %>% 
+  pivot_wider(names_from = name, values_from = value) %>% 
+  kable()
+```
+
+
+## Streaming data -- proportioned
+
+And now with the proportioned streaming data
+
+We look at the distribution of classes
+
+```{r}
+#| label: cluster from streams with proportion, distribution
+tabyl(survey$cluster_streamsprop) %>% 
+  kable(caption = "Distribution of clusters from LCA on survey data")
+```
+
+
+We first interpret the classes based on the distribution of genres
+
+```{r}
+#| label: cluster from streams with proportion, interpretation
+tb <- survey %>%
+  select(hashed_id, cluster_streamsprop, matches("B_genres_\\d+")) %>%
+  # consolidate genres
+  pivot_longer(matches("B_genres_\\d+")) %>%
+  mutate(name = genres_aliases_q[name],
+         value = ifelse(value != "", 1, 0)) %>% 
+  # remove empty genres
+  filter(!is.na(name)) %>% 
+  distinct() %>% 
+  group_by(cluster_streamsprop, name) %>% 
+  summarise(m=sum(value)/n()) %>% 
+  pivot_wider(names_from = cluster_streamsprop, values_from = m) %>% 
+  rename(genre = "name")
+tb %>% 
+  adorn_pct_formatting() %>% 
+  kable(caption = "Profils of clusters")
+```
+
+```{r}
+#| label: plot LPA streams prop cluster profiles
+#| fig.height: 8
+tb %>% 
+  pivot_longer(-genre) %>% 
+  ggplot(aes(value, genre, fill=genre)) +
+    geom_col() +
+    facet_wrap(~name)
+```
+
+```{r}
+#| label: plot LPA streams prop cluster profiles most significant genres
+#| fig.height: 8
+
+sig_genres <- c("rock", "classical", "jazz", "frenchrap", "frenchsongs")
+tb %>% 
+  filter(genre %in% sig_genres) %>% 
+  pivot_longer(-genre) %>% 
+  ggplot(aes(value, genre, fill=genre)) +
+    geom_col() +
+    facet_wrap(~name)
+```
+
+We then look at how these classes are distributed in the population, 
+across gender, age, and SES.
+
+```{r}
+#| label: cluster from streams with proportion, demographic data
+cluster_dem <- survey %>% 
+  select(cluster_streamsprop, age, gender, degree) %>% 
+  filter(!is.na(cluster_streamsprop))
+```
+
+
+```{r}
+#| label: cluster from streams with proportion, age
+cluster_dem %>% 
+  ggplot(aes(age, factor(cluster_streamsprop))) +
+    geom_boxplot()
+```
+
+```{r}
+#| label: cluster from streams with proportion, degree
+cluster_dem %>% 
+  filter(!is.na(degree)) %>% 
+  ggplot(aes(factor(cluster_streamsprop), fill=degree)) +
+    geom_bar(position="fill")
+```
+
+```{r}
+#| label: cluster from streams with proportion, gender
+cluster_dem %>% 
+  filter(!is.na(gender)) %>% 
+  ggplot(aes(factor(cluster_streamsprop), fill=gender)) +
+    geom_bar(position="fill")
+```
+
+```{r}
+#| label: cluster from streams with proportion, omnivorous
+survey %>% 
+  select(cluster_streamsprop, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
+  pivot_longer(-cluster_streamsprop) %>% 
+  mutate(name = omni_dic[name]) %>% 
+  filter(!is.na(value)) %>% 
+  group_by(cluster_streamsprop, name) %>% 
+  summarize(value = mean(value)) %>% 
+  pivot_wider(names_from = name, values_from = value) %>% 
+  kable()
+```
+
+## Comparison between survey and streaming
+
+Do the clusters match?
+
+```{r}
+#| label: comparing the two LPA on streams
+tabyl(survey, cluster_streamsprop, cluster_streams) %>% 
+  adorn_percentages() %>% 
+  adorn_pct_formatting() %>% 
+  kable(caption = "Relation between clusters from streams and from streams with proportions")
+```
+
+```{r}
+#| label: comparing survey with streams
+tabyl(survey, cluster_survey, cluster_streams) %>% 
+  adorn_percentages() %>% 
+  adorn_pct_formatting() %>% 
+  kable(caption = "Relation between cluster from survey and cluster from streams")
+```
+
+
+```{r}
+#| label: comparing survey with streams prop
+tabyl(survey, cluster_survey, cluster_streamsprop) %>% 
+  adorn_percentages() %>% 
+  adorn_pct_formatting() %>% 
+  kable(caption = "Relation between cluster from survey and cluster from streams with proportion")
+```
+
+## Legitimacy by cluster
+
+Now, how does the legitimacy of artists from some genres vary along clusters?
+
+We look at the distribution of legitimacy genre by genre, cluster by cluster.
+
+TODO: RESCALE THESE BY GENRE (AT THE ARTIST LEVEL) FOR HOMOGENOUS X
+
+```{r}
+#| label: legitimacy of specific genres by cluster, survey
+#| fig.height: 12
+#| fig.width: 8
+survey %>% 
+  select(cluster_survey, starts_with("mean_exo_pca_")) %>% 
+  pivot_longer(-cluster_survey) %>% 
+  filter(!is.na(cluster_survey), !is.na(value)) %>% 
+  mutate(name = str_remove(name, "mean_exo_pca_")) %>% 
+  group_by(cluster_survey, name) %>% 
+  summarize(m = mean(value), se = 1.96 * sd(value) / sqrt(n())) %>% 
+  ggplot(aes(y=m, x=factor(cluster_survey), ymin = m-se, ymax=m+se)) +
+    geom_point() +
+    geom_linerange() +
+    coord_flip() +
+    facet_wrap(~name, scales = "free_x") +
+    labs(x = "Mean exo. leg.", y = "Cluster", title = "Mean legitimacy of music from each genre")
+```
+
+```{r}
+#| label: legitimacy of specific genres by cluster, streams
+#| fig.height: 12
+#| fig.width: 8
+survey %>% 
+  select(cluster_streams, starts_with("mean_exo_pca_")) %>% 
+  pivot_longer(-cluster_streams) %>% 
+  filter(!is.na(cluster_streams), !is.na(value)) %>% 
+  mutate(name = str_remove(name, "mean_exo_pca_")) %>% 
+  group_by(cluster_streams, name) %>% 
+  summarize(m = mean(value), se = 1.96 * sd(value) / sqrt(n())) %>% 
+  ggplot(aes(y=m, x=factor(cluster_streams), ymin = m-se, ymax=m+se)) +
+    geom_point() +
+    geom_pointrange() +
+    coord_flip() +
+    facet_wrap(~name, scales = "free_x") +
+    labs(x = "Mean exo. leg.", y = "Cluster", title = "Mean legitimacy of music from each genre")
+
+```
+
+```{r}
+#| label: legitimacy of specific genres by cluster, streams prop
+#| fig.height: 12
+#| fig.width: 8
+survey %>% 
+  select(cluster_streamsprop, starts_with("mean_exo_pca_")) %>% 
+  pivot_longer(-cluster_streamsprop) %>% 
+  filter(!is.na(cluster_streamsprop), !is.na(value)) %>% 
+  mutate(name = str_remove(name, "mean_exo_pca_")) %>% 
+  group_by(cluster_streamsprop, name) %>% 
+  summarize(m = mean(value), se = 1.96 * sd(value) / sqrt(n())) %>% 
+  ggplot(aes(y=m, x=factor(cluster_streamsprop), ymin = m-se, ymax=m+se)) +
+    geom_point() +
+    geom_pointrange() +
+    coord_flip() +
+    facet_wrap(~name, scales = "free_x") +
+    labs(x = "Mean exo. leg.", y = "Cluster", title = "Mean legitimacy of music from each genre")
+
+```
+
+# Second strategy: looking at continuous metrics
+
+```{r}
+#| eval: false
+library(GGally)
+select(survey, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
+  ggpairs()
+```
+
+## The link between diversity over legitimacy level and other measures of omnivorousness
+
+```{r}
+#| label: pairwise omnivorousness, exo vs. HHI streams
+survey %>% 
+  ggplot(aes(omni_stream_genres_hhi, sd_exo_pca)) +
+    geom_point() +
+  geom_smooth(method="lm") +
+        labs(title = "The higher the diversity of genres actually played,\n the lower the diversity of exogenous legitimacy",
+         x = "Diversity of genres played (HHI on streaming data)", y = "exo omnivorousness")
+```
+
+```{r}
+#| label: pairwise omnivorousness, exo vs. richness listened
+survey %>% 
+  filter(!is.na(omni_survey_sum_genres_played)) %>% 
+  ggplot(aes(factor(omni_survey_sum_genres_played), sd_exo_pca)) +
+    geom_boxplot() +
+    labs(title = "The more genres someone declares to listen, the lower the diversity over legitimacy levels",
+         x = "# of genres declared played", y = "exo omnivorousness") +
+    ylim(c(0, .4))
+```
+
+## Demographic correlates of HHI omnivorousness
+
+Reminder: HHI omnivorousness is (1-herfindahl index) and indicates the
+diversity of music streaming across genres (0 is low, 1 is high).
+
+```{r}
+#| label: HHI omnivorousness by gender and degree
+select(survey, omni_stream_genres_hhi, gender, degree) %>% 
+  filter(!is.na(gender), !is.na(degree)) %>% 
+  pivot_longer(-omni_stream_genres_hhi) %>% 
+  group_by(name, value) %>% 
+  summarize(m = mean(omni_stream_genres_hhi, na.rm=TRUE),
+            sd = sd(omni_stream_genres_hhi, na.rm=TRUE),
+            n = n(),
+            se = 1.96*sd/sqrt(n)) %>% 
+  ggplot(aes(value, m, ymin = m-se, ymax=m+se)) +
+    geom_point() +
+    geom_pointrange() +
+    facet_wrap(~name, scales = "free_x") +
+    labs(title = "HHI omnivorousness by degree and gender", x="", y = "HHI omnivorousness")
+```
+
+```{r}
+#| label: HHI omnivorousness by gender and degree, boxplot
+select(survey, omni_stream_genres_hhi, gender, degree) %>% 
+  filter(!is.na(gender), !is.na(degree)) %>% 
+  pivot_longer(-omni_stream_genres_hhi) %>% 
+  ggplot(aes(value, omni_stream_genres_hhi)) +
+    geom_boxplot(notch = TRUE) +
+    ylim(c(0, .25)) +
+    facet_wrap(~name, scales = "free_x") +
+    labs(title = "HHI omnivorousness by degree and gender", x="", y = "HHI omnivorousness")
+
+```
+
+```{r}
+#| label: HHI omnivorousness by age
+select(survey, omni_stream_genres_hhi, age) %>% 
+  ggplot(aes(age, omni_stream_genres_hhi)) +
+    geom_point() +
+    geom_smooth(method="lm") +
+    labs(x = "age", y="HHI omnivorousness",
+         title = "The older one is, the higher the HHI omnivorouness")
+
+```
+
+
+## Demographic correlates of exo omnivorousness
+
+```{r}
+#| label: exo omnivorousness by gender and degree
+select(survey, sd_exo_pca, gender, degree) %>% 
+  filter(!is.na(gender), !is.na(degree)) %>% 
+  pivot_longer(-sd_exo_pca) %>% 
+  group_by(name, value) %>% 
+  summarize(m = mean(sd_exo_pca, na.rm=TRUE),
+            sd = sd(sd_exo_pca, na.rm=TRUE),
+            n = n(),
+            se = 1.96*sd/sqrt(n)) %>% 
+  ggplot(aes(value, m, ymin = m-se, ymax=m+se)) +
+    geom_point() +
+    geom_pointrange() +
+    facet_wrap(~name, scales = "free_x") +
+    labs(title = "Exo omnivorousness by degree and gender", x="", y = "exo omnivorousness")
+```
+
+```{r}
+#| label: exo omnivorousness by gender and degree, boxplot
+select(survey, sd_exo_pca, gender, degree) %>% 
+  filter(!is.na(gender), !is.na(degree)) %>% 
+  pivot_longer(-sd_exo_pca) %>% 
+  ggplot(aes(value, sd_exo_pca)) +
+    geom_boxplot(notch = TRUE) +
+    ylim(c(0, .25)) +
+    facet_wrap(~name, scales = "free_x") +
+    labs(title = "Exo omnivorousness by degree and gender", x="", y = "exo omnivorousness")
+
+```
+
+```{r}
+#| label: exo omnivorousness by age
+select(survey, sd_exo_pca, age) %>% 
+  ggplot(aes(age, sd_exo_pca)) +
+    geom_point() +
+    geom_smooth(method="lm") +
+    labs(x = "age", y="exo omnivorousness",
+         title = "The older one is, the lower the diversity of exogenous legitimacy")
+
+```
 
