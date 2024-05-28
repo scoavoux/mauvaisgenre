@@ -42,7 +42,9 @@ omni_dic <- c(omni_survey_sum_genres_played = "Richness played",
               omni_survey_sum_genres_liked = "Richness liked",
               omni_stream_genres_hhi = "HHI genres streamed",
               mean_exo_pca = "Mean exo. leg.",
-              sd_exo_pca = "SD exo. leg.")
+              sd_exo_pca = "SD exo. leg.",
+              omni_survey_cultural_holes_played = "Cultural holes played",
+              omni_survey_cultural_holes_liked = "Cultural holes liked")
 
 
 # Recode
@@ -593,4 +595,10 @@ select(survey, sd_exo_pca, age) %>%
          title = "The older one is, the lower the diversity of exogenous legitimacy")
 
 ```
+
+# Misc
+
+Definition of cultural holes omnivorousness
+
+$$EO_i = \sum_{j \in N(i)}(a_{ij} - (\frac{1}{OV_i-1}\sum_{k \in N(i)}^{k \neq j}{o_{jk}}))$$
 

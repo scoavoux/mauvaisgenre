@@ -97,7 +97,7 @@ compute_omnivorourness_from_survey <- function(survey, genres_aliases){
   genre_proximity_matrix_liked <- make_genre_proximity_matrix(person_genre_liked_survey)
   omni_survey_culturalholes_liked <- compute_cultural_hole_omnivorousness(person_genre_liked_survey,
                                                                           genre_proximity_matrix_liked,
-                                                                    "omni_survey_cultural_holes_played")
+                                                                    "omni_survey_cultural_holes_liked")
   
   omni <- omni_survey_sum_genres_played %>%
     full_join(omni_survey_sum_genres_liked) %>%
