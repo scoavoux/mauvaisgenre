@@ -3,16 +3,17 @@ make_survey_data <- function(){
   s3 <- initialize_s3()
   f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/survey/RECORDS_Wave3_apr_june_23_responses_corrected.csv")
   survey <- f$Body %>% rawToChar() %>% data.table::fread() %>% tibble()
-
+  
+  # filter only 
+  survey <- survey %>% 
+    filter(Progress == 100,
+           country == "FR")
   return(survey)
 }
 
 
-make_genre_preference_data <- function(){
+make_genre_preference_data <- function(survey){
   require(tidyverse)
-  s3 <- initialize_s3()
-  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/survey/RECORDS_Wave3_apr_june_23_responses_corrected.csv")
-  survey <- f$Body %>% rawToChar() %>% data.table::fread() %>% tibble()
   gc <- survey %>%
     select(hashed_id, matches("B_genres_classif_\\d_GROUP")) %>%
     pivot_longer(-hashed_id, values_to = "genre") %>%
