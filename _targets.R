@@ -79,7 +79,7 @@ list(
   
   ## Extract one
   tar_target(latent_classes_from_surveys, 
-             select_latent_class_model(latent_classes_from_surveys_multiple, 4)),
+             select_latent_class_model(latent_classes_from_surveys_multiple, 8)),
   tar_target(latent_classes_from_streams, 
              select_latent_class_model(latent_classes_from_streams_multiple, 5)),
   tar_target(latent_classes_from_streams_proportion, 

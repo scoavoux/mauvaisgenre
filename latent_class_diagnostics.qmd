@@ -106,7 +106,7 @@ for(k in names(latent_classes_from_streams_multiple)){
     rename_with(~str_replace(.x, "V", "class")) %>% 
     rownames_to_column("genre")
   res <- res %>% 
-    summarize(across(-genre, mean)) %>% 
+    summarize(across(-genre, sum)) %>% 
     mutate(genre = "**Overall sum of played time**") %>% 
     relocate(genre) %>% 
     bind_rows(res) %>% 
