@@ -4,29 +4,105 @@ compute_omnivorourness_from_survey <- function(survey, genres_aliases){
   # TODO: cultural holes
   require(tidyverse)
 
-  omni_survey_sum_genres_played <- survey %>%
+  person_genre_survey <- survey %>%
     select(hashed_id, matches("B_genres_\\d+")) %>%
-    pivot_longer(-hashed_id) %>%
-    # rename genres
+    pivot_longer(-hashed_id) %>% 
     mutate(value = genres_aliases[value]) %>% 
-    filter(value != "", !is.na(value)) %>%
+    filter(value != "", !is.na(value)) %>% 
     distinct(hashed_id, value) %>% 
+    select(hashed_id, genre = "value")
+  
+  omni_survey_sum_genres_played <- person_genre_survey %>%
     mutate(name = 1) %>%
     summarise(omni_survey_sum_genres_played = sum(name), .by = hashed_id)
 
-  # Recoding data on liking genres
-  omni_survey_sum_genres_liked <- make_genre_preference_data() %>%
+  person_genre_liked_survey <- make_genre_preference_data(survey) %>%
     # Consolidate genres to agree between survey and streaming
     mutate(genre = genres_aliases[genre]) %>% 
     filter(genre != "", !is.na(genre)) %>%
     # only loved and liked genres
-    filter(group %in% c("0", "1")) %>%
+    filter(group %in% c("0", "1")) %>% 
+    select(hashed_id, genre)
+  
+  omni_survey_sum_genres_liked <- person_genre_liked_survey %>%
     summarize(omni_survey_sum_genres_liked = n(), .by = hashed_id)
 
+  # Cultural Holes (Lizardo)
+  ## Compute genre similarity matrix
+  ## => pairwise genre distance.
+  #o_{jk} = \frac{c_{jk}}{min(c_{jj}, c_{kk})}
+  ## Then for each person-month:
+  ## $$OV_i = \sum_j{a_ij}$$
+  ## $$EO_i = \sum_{j \in N(i)}(a_{ij} - (\frac{1}{OV_i-1}\sum_{k \in N(i)}^{k \neq j}{o_{jk}}))$$
   
+  make_genre_proximity_matrix <- function(person_genre_survey){
+    genre_proximity_matrix <- person_genre_survey %>% 
+      full_join(rename(person_genre_survey, genre1 = "genre"), 
+                by="hashed_id", 
+                relationship = "many-to-many") %>% 
+      count(genre, genre1)
+    
+    genre_max <- genre_proximity_matrix %>% 
+      filter(genre == genre1) %>% 
+      select(-genre1, max=n)
+    
+    genre_proximity_matrix <- genre_proximity_matrix %>% 
+      left_join(rename(genre_max, genre1 = "genre", max1 = "max")) %>% 
+      left_join(genre_max) %>% 
+      mutate(min = if_else(max < max1, max, max1),
+             f = n / min) %>% 
+      select(genre, genre1, f)
+    
+    return(genre_proximity_matrix)
+  }
+  
+  compute_cultural_hole_omnivorousness <- function(genre, genre_proximity_matrix){
+    if(length(genre) > 1){
+      OV_i <- 1 / (n_distinct(genre)-1)
+      r <- tibble(genre = genre) %>% 
+        left_join(filter(genre_proximity_matrix, genre1 %in% genre)) %>% 
+        filter(genre != genre1) %>% 
+        group_by(genre) %>% 
+        summarize(d = sum(f)*OV_i) %>% 
+        summarise(r = sum(1-d)) %>% 
+        pull(r)
+    } else {
+      r <- 0
+    }
+    return(r)
+  }
+  
+  compute_cultural_hole_omnivorousness <- function(person_genre_survey, genre_proximity_matrix, 
+                                                   .name = "cultural_hole_omnivorousness"){
+    univores <- count(person_genre_survey, hashed_id, name = "cho") %>% 
+      filter(cho == 1)
+    
+    pgs <- person_genre_survey %>% 
+      filter(!(hashed_id %in% univores$hashed_id)) %>% 
+      left_join(genre_proximity_matrix, relationship = "many-to-many") %>% 
+      filter(genre1 %in% genre, genre != genre1) %>% 
+      group_by(hashed_id, genre) %>% 
+      summarize(d = (1/n())*sum(f)) %>% 
+      summarize(cho = sum(1-d))
+    
+    pgs <- bind_rows(pgs, univores)
+    names(pgs) <- c("hashed_id", .name)
+    return(pgs)
+  }
+  
+  genre_proximity_matrix_played <- make_genre_proximity_matrix(person_genre_survey)
+  omni_survey_culturalholes_played <- compute_cultural_hole_omnivorousness(person_genre_survey,
+                                                                           genre_proximity_matrix_played,
+                                                                    "omni_survey_cultural_holes_played")
+  genre_proximity_matrix_liked <- make_genre_proximity_matrix(person_genre_liked_survey)
+  omni_survey_culturalholes_liked <- compute_cultural_hole_omnivorousness(person_genre_liked_survey,
+                                                                          genre_proximity_matrix_liked,
+                                                                    "omni_survey_cultural_holes_played")
   
   omni <- omni_survey_sum_genres_played %>%
-    full_join(omni_survey_sum_genres_liked)
+    full_join(omni_survey_sum_genres_liked) %>%
+    full_join(omni_survey_culturalholes_played) %>% 
+    full_join(omni_survey_culturalholes_liked)
   return(omni)
 }
 
