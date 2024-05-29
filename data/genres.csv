@@ -1,8 +1,8 @@
 surveygenre,streaminggenre,question
 "Blues","blues",B_genres_18
 "Country","country",B_genres_19
-"Dance & EDM","dance",B_genres_20
-"Electro","electro",B_genres_4
+"Dance & EDM","edm",B_genres_20
+"Electro","edm",B_genres_4
 "Folk & Acoustique","folk",B_genres_15
 "Hip Hop / Rap","raphiphop",B_genres_8
 "Indé / Alternatif","alternative",B_genres_13
