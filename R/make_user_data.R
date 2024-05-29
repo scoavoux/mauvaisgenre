@@ -201,7 +201,7 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_fil
   
   ## diversity over genres actually listened
   ### HHI over stream by genre
-  omni <- user_artist_peryear %>% 
+  omni_HHI <- user_artist_peryear %>% 
     filter(!is.na(genre)) %>% 
     group_by(hashed_id, genre) %>% 
     summarize(l_play = sum(l_play)) %>% 
@@ -212,35 +212,42 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_fil
   ## diversity over individual legitimacy
   ### weighted mean and sd of each artist's average legitimacy
   ### as highbrow dim (mean) and omnivorous dim (sd)
-  omni <- user_artist_peryear %>% 
+  omni_exo <- user_artist_peryear %>% 
     group_by(hashed_id) %>% 
     mutate(f_play = l_play / sum(l_play)) %>% 
     left_join(select(artists_filtered, artist_id, sc_exo_pca)) %>% 
     filter(!is.na(sc_exo_pca)) %>% 
     group_by(hashed_id) %>% 
     summarize(mean_exo_pca = sum(sc_exo_pca*f_play), 
-              sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2))
-              ) %>% 
-    full_join(omni)
+              sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2)))
   
   ## Same by genre
-  omni <- user_artist_peryear %>% 
+  ## Start by rescaling legitimacy by genre
+  artists_filtered <- artists_filtered %>% 
+    group_by(genre) %>% 
+    mutate(sc_exo_pca_scbygenre = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca))
+  
+  omni_exo_bygenre <- user_artist_peryear %>% 
     group_by(hashed_id) %>% 
     mutate(f_play = l_play / sum(l_play)) %>% 
-    left_join(select(artists_filtered, artist_id, sc_exo_pca)) %>% 
-    filter(!is.na(sc_exo_pca), !is.na(genre)) %>% 
+    # We must first rescale by genre
+    left_join(select(artists_filtered, artist_id, sc_exo_pca_scbygenre)) %>% 
+    filter(!is.na(sc_exo_pca_scbygenre), !is.na(genre)) %>% 
     group_by(hashed_id, genre) %>% 
     summarize(n=sum(l_play),
-              mean_exo_pca = sum(sc_exo_pca*f_play), 
-              sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2))
+              mean_exo_pca = sum(sc_exo_pca_scbygenre*f_play), 
+              sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca_scbygenre - mean(sc_exo_pca_scbygenre)))^2))
     ) %>% 
     # one needs to actually have listened to that genre
     filter(n>100) %>% 
     pivot_longer(ends_with("exo_pca")) %>% 
     mutate(name = paste(name, genre, sep="_")) %>% 
     select(-genre, -n) %>% 
-    pivot_wider(names_from = name, values_from=value) %>% 
-    full_join(omni)
+    pivot_wider(names_from = name, values_from=value)
+  
+  omni <- omni_HHI %>% 
+    full_join(omni_exo) %>% 
+    full_join(omni_exo_bygenre)
   return(omni)
 }
 
