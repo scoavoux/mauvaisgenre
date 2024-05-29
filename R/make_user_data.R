@@ -124,7 +124,7 @@ compute_latent_classes_from_survey <- function(survey, genres_aliases, nclass){
   # standard and don't allow easily passing arguments
   genres <- names(genre_matrix)[-1]
 
-  form <- cbind(frenchrap, pop, rock, electro, jazz, rnb, soulfunk, raphiphop, frenchsongs, classical, reggae, metal, alternative, folk, latino, blues, country, dance, african)~1
+  form <- cbind(frenchrap, pop, rock, edm, jazz, rnb, soulfunk, raphiphop, frenchsongs, classical, reggae, metal, alternative, folk, latino, blues, country, african)~1
   mod <- vector("list", length(nclass))
   names(mod) <- paste0("k", nclass)
   for(i in nclass){
@@ -187,7 +187,7 @@ select_latent_class_model <- function(models_list, nclass){
   return(models_list[[paste0("k", nclass)]])
 }
 
-compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_filtered, genres){
+compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_filtered, genres, rescale_by = "artist"){
   require(tidyverse)
   require(tidytable)
   
@@ -222,29 +222,53 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_fil
               sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2)))
   
   ## Same by genre
-  ## Start by rescaling legitimacy by genre
-  artists_filtered <- artists_filtered %>% 
-    group_by(genre) %>% 
-    mutate(sc_exo_pca_scbygenre = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca))
+  if(rescale_by == "artist"){
+    ## Start by rescaling legitimacy by genre
+    artists_filtered <- artists_filtered %>%
+      group_by(genre) %>%
+      mutate(sc_exo_pca_scbygenre = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca))
+    omni_exo_bygenre <- user_artist_peryear %>%
+      group_by(hashed_id) %>%
+      mutate(f_play = l_play / sum(l_play)) %>%
+      # We must first rescale by genre
+      left_join(select(artists_filtered, artist_id, sc_exo_pca_scbygenre)) %>%
+      filter(!is.na(sc_exo_pca_scbygenre), !is.na(genre)) %>%
+      group_by(hashed_id, genre) %>%
+      summarize(n=sum(l_play),
+                mean_exo_pca = sum(sc_exo_pca_scbygenre*f_play),
+                sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca_scbygenre - mean(sc_exo_pca_scbygenre)))^2))
+      ) %>%
+      # one needs to actually have listened to that genre
+      filter(n>100) %>%
+      pivot_longer(ends_with("exo_pca")) %>%
+      mutate(name = paste(name, genre, sep="_")) %>%
+      select(-genre, -n) %>%
+      pivot_wider(names_from = name, values_from=value)
+  } else if(rescale_by == "user"){
+    # or rescale among individuals  
+    omni_exo_bygenre <- user_artist_peryear %>% 
+      group_by(hashed_id) %>% 
+      mutate(f_play = l_play / sum(l_play)) %>% 
+      # We must first rescale by genre
+      left_join(select(artists_filtered, artist_id, sc_exo_pca)) %>% 
+      filter(!is.na(sc_exo_pca), !is.na(genre)) %>% 
+      group_by(genre) %>% 
+      mutate(sc_exo_pca = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca)) %>% 
+      group_by(hashed_id, genre) %>% 
+      summarize(n=sum(l_play),
+                mean_exo_pca = sum(sc_exo_pca*f_play), 
+                sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2))
+      ) %>% 
+      # one needs to actually have listened to that genre
+      filter(n>100) %>% 
+      pivot_longer(ends_with("exo_pca")) %>% 
+      mutate(name = paste(name, genre, sep="_")) %>% 
+      select(-genre, -n) %>% 
+      pivot_wider(names_from = name, values_from=value)
+  }
+
   
-  omni_exo_bygenre <- user_artist_peryear %>% 
-    group_by(hashed_id) %>% 
-    mutate(f_play = l_play / sum(l_play)) %>% 
-    # We must first rescale by genre
-    left_join(select(artists_filtered, artist_id, sc_exo_pca_scbygenre)) %>% 
-    filter(!is.na(sc_exo_pca_scbygenre), !is.na(genre)) %>% 
-    group_by(hashed_id, genre) %>% 
-    summarize(n=sum(l_play),
-              mean_exo_pca = sum(sc_exo_pca_scbygenre*f_play), 
-              sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca_scbygenre - mean(sc_exo_pca_scbygenre)))^2))
-    ) %>% 
-    # one needs to actually have listened to that genre
-    filter(n>100) %>% 
-    pivot_longer(ends_with("exo_pca")) %>% 
-    mutate(name = paste(name, genre, sep="_")) %>% 
-    select(-genre, -n) %>% 
-    pivot_wider(names_from = name, values_from=value)
-  
+    
   omni <- omni_HHI %>% 
     full_join(omni_exo) %>% 
     full_join(omni_exo_bygenre)
