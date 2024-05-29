@@ -35,9 +35,9 @@ make_genres_data <- function(){
   # With .4 threshold, 70% of plays; with .3, 79%
 }
 
-make_genres_aliases <- function(){
+make_genres_aliases <- function(.file = "data/genres.csv"){
   require(tidyverse)
-  genres_aliases <- read_csv("data/genres.csv")
+  genres_aliases <- read_csv(.file)
   genres_aliases_char <- c(genres_aliases$streaminggenre, 
                            genres_aliases$streaminggenre)
   names(genres_aliases_char) <- c(genres_aliases$surveygenre,

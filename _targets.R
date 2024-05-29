@@ -17,8 +17,9 @@ tar_option_set(
 source("R/common_functions.R")
 source("R/make_intermediary_data.R")
 source("R/make_artists_data.R")
-source("R/make_analysis_genrepaper.R")
 source("R/make_user_data.R")
+source("R/make_analysis_genrepaper.R")
+source("R/make_analysis_omnipaper.R")
 
 
 list(
@@ -66,7 +67,7 @@ list(
   
   # Omnivorousness
   tar_target(omni_from_survey, compute_omnivorourness_from_survey(survey_raw, genres_aliases)),
-  tar_target(omni_from_streams, compute_omnivorourness_from_streams(user_artist_peryear, artists_filtered, genres)),
+  tar_target(omni_from_streams, compute_omnivorourness_from_streams(user_artist_peryear, artists_filtered, genres, rescale_by = "user")),
   
   # Latent classes
   ## Make many models
@@ -79,7 +80,7 @@ list(
   
   ## Extract one
   tar_target(latent_classes_from_surveys, 
-             select_latent_class_model(latent_classes_from_surveys_multiple, 8)),
+             select_latent_class_model(latent_classes_from_surveys_multiple, 4)),
   tar_target(latent_classes_from_streams, 
              select_latent_class_model(latent_classes_from_streams_multiple, 5)),
   tar_target(latent_classes_from_streams_proportion, 
@@ -91,7 +92,8 @@ list(
                                         omni_from_streams,
                                         latent_classes_from_surveys,
                                         latent_classes_from_streams,
-                                        latent_classes_from_streams_proportion))
+                                        latent_classes_from_streams_proportion)),
   # Analysis Omni 2 ------
+  tar_target(lca_class_interpretation, make_lca_class_interpretation())
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
 )
