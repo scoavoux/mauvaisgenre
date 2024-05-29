@@ -38,8 +38,10 @@ make_genres_data <- function(){
 make_genres_aliases <- function(){
   require(tidyverse)
   genres_aliases <- read_csv("data/genres.csv")
-  genres_aliases_char <- genres_aliases$streaminggenre
-  names(genres_aliases_char) <- genres_aliases$surveygenre
+  genres_aliases_char <- c(genres_aliases$streaminggenre, 
+                           genres_aliases$streaminggenre)
+  names(genres_aliases_char) <- c(genres_aliases$surveygenre,
+                                  genres_aliases$question)
   return(genres_aliases_char)
 }
 

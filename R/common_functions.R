@@ -49,7 +49,14 @@ recode_vars <- function(char, var){
             "endo_share_high_education_pond" = "Endogenous legitimacy\n(education, unscaled)",
             "total_n_pqnt_texte" ="Exogenous legitimacy\n(media, unscaled)", 
             "senscritique_meanscore" = "Exogenous legitimacy\n(score, unscaled)", 
-            "radio_leg" =  "Exogenous legitimacy\n(radio, unscaled)")
+            "radio_leg" =  "Exogenous legitimacy\n(radio, unscaled)",
+            "omni_survey_sum_genres_played" = "Richness played", 
+            "omni_survey_sum_genres_liked" = "Richness liked",
+            "omni_stream_genres_hhi" = "HHI genres streamed",
+            "mean_exo_pca" = "Mean exo. leg.",
+            "sd_exo_pca" = "SD exo. leg.",
+            "omni_survey_cultural_holes_played" = "Cultural holes played",
+            "omni_survey_cultural_holes_liked" = "Cultural holes liked")
   } else {
     stop("Type of variable unspecified or unknown")
   }

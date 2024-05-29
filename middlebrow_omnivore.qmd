@@ -33,19 +33,9 @@ tar_load("survey")
 # make aliases
 ## For genres names
 tar_load("genres_aliases")
-genres <- read_csv("data/genres.csv")
-genres_aliases_q <- genres$streaminggenre
-names(genres_aliases_q) <- genres$question
 
 ## for omnivorousness variables
-omni_dic <- c(omni_survey_sum_genres_played = "Richness played", 
-              omni_survey_sum_genres_liked = "Richness liked",
-              omni_stream_genres_hhi = "HHI genres streamed",
-              mean_exo_pca = "Mean exo. leg.",
-              sd_exo_pca = "SD exo. leg.",
-              omni_survey_cultural_holes_played = "Cultural holes played",
-              omni_survey_cultural_holes_liked = "Cultural holes liked")
-
+source("R/common_functions.R")
 
 # Recode
 ## Make LCA classes a factor rather than integer/numeric
@@ -57,8 +47,6 @@ survey <- survey %>%
   filter(cluster_survey != "classNA", 
          cluster_streams != "classNA",
          cluster_streamsprop != "classNA")
-
-
 ```
 
 # First strategy: looking at consumption clusters
@@ -84,7 +72,7 @@ tb <- survey %>%
   select(hashed_id, cluster_survey, matches("B_genres_\\d+")) %>%
   # consolidate genres
   pivot_longer(matches("B_genres_\\d+")) %>%
-  mutate(name = genres_aliases_q[name],
+  mutate(name = genres_aliases[name],
          value = ifelse(value != "", 1, 0)) %>% 
   # remove empty genres
   filter(!is.na(name)) %>% 
@@ -160,7 +148,7 @@ cluster_dem %>%
 survey %>% 
   select(cluster_survey, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
   pivot_longer(-cluster_survey) %>% 
-  mutate(name = omni_dic[name]) %>% 
+  mutate(name = recode_vars(name, "legitimacy")) %>% 
   filter(!is.na(value)) %>% 
   group_by(cluster_survey, name) %>% 
   summarize(value = mean(value)) %>% 
@@ -189,7 +177,7 @@ tb <- survey %>%
   select(hashed_id, cluster_streams, matches("B_genres_\\d+")) %>%
   # consolidate genres
   pivot_longer(matches("B_genres_\\d+")) %>%
-  mutate(name = genres_aliases_q[name],
+  mutate(name = genres_aliases[name],
          value = ifelse(value != "", 1, 0)) %>% 
   # remove empty genres
   filter(!is.na(name)) %>% 
@@ -264,7 +252,7 @@ cluster_dem %>%
 survey %>% 
   select(cluster_streams, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
   pivot_longer(-cluster_streams) %>% 
-  mutate(name = omni_dic[name]) %>% 
+  mutate(name = recode_vars(name, "legitimacy")) %>% 
   filter(!is.na(value)) %>% 
   group_by(cluster_streams, name) %>% 
   summarize(value = mean(value)) %>% 
@@ -294,7 +282,7 @@ tb <- survey %>%
   select(hashed_id, cluster_streamsprop, matches("B_genres_\\d+")) %>%
   # consolidate genres
   pivot_longer(matches("B_genres_\\d+")) %>%
-  mutate(name = genres_aliases_q[name],
+  mutate(name = genres_aliases[name],
          value = ifelse(value != "", 1, 0)) %>% 
   # remove empty genres
   filter(!is.na(name)) %>% 
@@ -370,7 +358,7 @@ cluster_dem %>%
 survey %>% 
   select(cluster_streamsprop, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
   pivot_longer(-cluster_streamsprop) %>% 
-  mutate(name = omni_dic[name]) %>% 
+  mutate(name = recode_vars(name, "legitimacy")) %>% 
   filter(!is.na(value)) %>% 
   group_by(cluster_streamsprop, name) %>% 
   summarize(value = mean(value)) %>% 
