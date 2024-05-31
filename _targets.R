@@ -36,7 +36,8 @@ list(
   tar_target(artists, join_artist(exo_radio)), #endo_leg, exo_press, exo_sc
   tar_target(artists_filtered, filter_artists(artists)),
   tar_target(genres, make_genres_data()),
-  tar_target(genres_aliases, make_genres_aliases()),
+  tar_target(genres_aliases_file, "data/genres.csv", format="file"),
+  tar_target(genres_aliases, make_genres_aliases(genres_aliases_file)),
 
   # Analysis Omni 1 ------
   tar_target(gg_endoleg_bygenre, plot_endoleg_bygenre(artists_filtered)),
@@ -94,6 +95,15 @@ list(
                                         latent_classes_from_streams,
                                         latent_classes_from_streams_proportion)),
   # Analysis Omni 2 ------
-  tar_target(lca_class_interpretation, make_lca_class_interpretation())
+  tar_target(lca_class_interpretation, make_lca_class_interpretation()),
+  tar_target(gg_lca_omni_paper, 
+             plot_lca_omni(survey, lca_class_interpretation, format="paper"),
+             format = "file"),
+  tar_target(gg_lca_omni_presentation1, 
+             plot_lca_omni(survey, lca_class_interpretation, format="presentation1"),
+             format = "file"),
+  tar_target(gg_lca_omni_presentation2, 
+             plot_lca_omni(survey, lca_class_interpretation, format="presentation2"),
+             format = "file")
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
 )

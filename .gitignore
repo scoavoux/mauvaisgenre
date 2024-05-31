@@ -6,3 +6,5 @@ artists.csv
 *_files
 *.tex
 output
+*.pdf
+*.png
