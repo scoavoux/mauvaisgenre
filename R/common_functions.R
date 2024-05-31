@@ -15,7 +15,8 @@ initialize_s3 <- function(){
 }
 
 set_ggplot_options <- function(){
-  theme_set(theme_bw(base_size = 16))
+  theme_set(theme_bw(base_size = 12))
+  theme_update(panel.grid=element_blank())
 }
 
 recode_vars <- function(char, var){
