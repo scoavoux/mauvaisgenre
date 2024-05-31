@@ -12,3 +12,5 @@ chown -R ${USERNAME}:${GROUPNAME} ${HOME}
 cd ~/work/mauvaisgenre
 R -f init.R
 mkdir output
+mkdir output/omni1
+mkdir output/omni2
