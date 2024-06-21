@@ -97,13 +97,10 @@ list(
   # Analysis Omni 2 ------
   tar_target(lca_class_interpretation, make_lca_class_interpretation()),
   tar_target(gg_lca_omni_paper, 
-             plot_lca_omni(survey, lca_class_interpretation, format="paper"),
-             format = "file"),
+             plot_lca_omni(survey, lca_class_interpretation, format="paper")),
   tar_target(gg_lca_omni_presentation1, 
-             plot_lca_omni(survey, lca_class_interpretation, format="presentation1"),
-             format = "file"),
+             plot_lca_omni(survey, lca_class_interpretation, format="presentation1")),
   tar_target(gg_lca_omni_presentation2, 
-             plot_lca_omni(survey, lca_class_interpretation, format="presentation2"),
-             format = "file")
+             plot_lca_omni(survey, lca_class_interpretation, format="presentation2"))
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
 )

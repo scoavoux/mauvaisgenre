@@ -154,7 +154,7 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
         labs(x = "", y = "")
   } else if(format == "presentation2"){
     # Version for the presentation: separate
-    s %>% 
+    gg <- s %>% 
       filter(str_detect(name, "leg.")) %>% 
       ggplot(aes(x=cluster_survey, y=m, ymin=m-se, ymax=m+se)) +
         geom_point() +
@@ -163,7 +163,7 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
         facet_wrap(~name, scales="free_x") +
         labs(x = "", y = "")
   }
-  ggsave(filename = paste0("gg_lca_omni_", format, ".pdf"), plot = gg, device = "pdf", path = "output/omni2")
+  return(gg)
 }
 
 plot_exoomni_by_otheromni <- function(survey){
