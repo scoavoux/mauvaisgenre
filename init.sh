@@ -11,6 +11,3 @@ chown -R ${USERNAME}:${GROUPNAME} ${HOME}
 # Go into
 cd ~/work/mauvaisgenre
 R -f init.R
-mkdir output
-mkdir output/omni1
-mkdir output/omni2
