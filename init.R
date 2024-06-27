@@ -1,8 +1,8 @@
 # options(repos="https://stat.ethz.ch/CRAN/")
 # install.packages("GGally")
 # install.packages("tidytable")
-# install.packages("visNetwork")
-# install.packages("tarchetypes")
+install.packages("visNetwork")
+install.packages("tarchetypes")
 # ## Dependencies for FactoMineR
 # install.packages("pbkrtest")
 # install.packages("lme4")
