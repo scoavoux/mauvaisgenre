@@ -1,3 +1,5 @@
+# Deal with survey data ------
+# For now we just import it from the last project
 make_survey_data <- function(){
   require(tidyverse)
   s3 <- initialize_s3()
@@ -11,6 +13,12 @@ make_survey_data <- function(){
   return(survey)
 }
 
+
+# Make genre preferences data. The questions on which genres you like
+# are stored in a lot of different variables depending on whether they 
+# are loved or liked, and how they are ranked. We simplify this by 
+# making a series of dummy variables of whether each genre is either loved
+# or liked.
 
 make_genre_preference_data <- function(survey){
   require(tidyverse)
@@ -32,8 +40,9 @@ make_genre_preference_data <- function(survey){
   return(full)
 }
 
-# Compute user_artist table: number and length of each user listening
-# to each artist
+# Making data on consumption ------
+## First a function to list available datasets. Returns all streaming data
+## whether long or short.
 list_streaming_data_files <- function(){
   require(tidyverse)
   s3 <- initialize_s3()
@@ -44,6 +53,9 @@ list_streaming_data_files <- function(){
   return(stream_data_files)
 }
 
+## Because importing them all at once creates memory problems, we divide
+## the task. This function loads and preprocesses each streaming data file
+## which is then turned to the next function for summary.
 make_user_artist_peryear_table_onefile <- function(file){
   require(tidyverse)
   require(tidytable)
@@ -84,6 +96,7 @@ make_user_artist_peryear_table_onefile <- function(file){
   return(user_artist_peryear)
 }
 
+## We bind each of the previous datasets together and compute summary stats.
 merge_user_artist_peryear_table <- function(...){
   library(tidyverse)
   library(tidytable)
