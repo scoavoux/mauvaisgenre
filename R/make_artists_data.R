@@ -10,6 +10,135 @@
 #   return(artists_list)
 # }
 
+make_senscritique_data <- function(){
+  require(tidyverse)
+  require(tidytable)
+  require(WikidataQueryServiceR)
+  s3 <- initialize_s3()
+  
+  # Spotify/deezer id from WIKIDATA
+  wikidata_spotify_deezer <- query_wikidata('SELECT DISTINCT ?spotify_id ?deezer_id #?item ?itemLabel 
+  WHERE {
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+    ?item p:P1902 ?statement0.
+    ?statement0 (ps:P1902) _:anyValueP1902.
+    ?item p:P2722 ?statement1.
+    ?statement1 (ps:P2722) _:anyValueP2722.
+    ?item wdt:P2722 ?deezer_id.
+    ?item wdt:P1902 ?spotify_id.
+  }')
+
+  # Spotify/deezer id from WIKIDATA
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_wikidataid_pair.csv")
+  mbz_wikidata <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
+  
+  wikidata_deezer <- query_wikidata('SELECT DISTINCT ?item ?deezer_id #?item ?itemLabel 
+  WHERE {
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+    ?item p:P2722 ?statement1.
+    ?statement1 (ps:P2722) _:anyValueP2722.
+    ?item wdt:P2722 ?deezer_id.
+  }')
+  wikidata_deezer <- wikidata_deezer %>% 
+    mutate(wikidata_id = str_extract(item, "/(Q\\d+)", group = 1)) %>% 
+    select(-item)
+  
+  mbz_wikidata <- mbz_wikidata %>% 
+    select(-mbname) %>% 
+    inner_join(wikidata_deezer) %>% 
+    select(-wikidata_id)
+  
+  # Musicbrainz id / deezer id pairs from musicbrainz dumps
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_deezerid_pair.csv")
+  mbz_dz <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
+  
+  # SensCritique / deezer id from Deezer api search
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_id_deezer_id_pairing.csv")
+  pairings <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_deezer_id_pairing_2.csv")
+  pairings2 <- f$Body %>% rawToChar() %>% read_csv()
+  pairings <- pairings %>% 
+    select(contact_id, artist_id) %>% 
+    bind_rows(select(pairings2, contact_id, artist_id = "deezer_id")) %>% 
+    distinct()
+  
+  # TODO: see how many artists we are missing and whether we should add another
+  # service with spotify/deezer ids (or push them to wikidata)
+  # especially: see maping senscritique id deezer id used on previous
+  # project (based on... search in SC database?)
+  # Also need to check whether this is a problem with SC spotify links or
+  # with wikidata not having spotify/deezer match.
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts.csv")
+  co <- f$Body %>% rawToChar() %>% fread()
+  rm(f)
+  
+  co <- distinct(co) %>% 
+    mutate(spotify_id = str_remove(spotify_id, "spotify:artist:")) %>% 
+    rename(mbid = "mbz_id")
+  
+  co <- co %>% 
+    left_join(select(wikidata_spotify_deezer, spotify_id, deezer_id), by = "spotify_id") %>% 
+    left_join(select(mbz_wikidata, mbid, deezer_id_wk = "deezer_id")) %>% 
+    left_join(select(mbz_dz, mbid, deezer_id_mb = "deezer_id")) %>% 
+    left_join(select(pairings, contact_id, deezer_id_p = "artist_id"))
+  
+  co <- co %>% 
+    mutate(artist_id = case_when(!is.na(deezer_id) ~ deezer_id, 
+                                 !is.na(deezer_id_wk) ~ deezer_id_wk,
+                                 !is.na(deezer_id_mb) ~ deezer_id_mb,
+                                 TRUE ~ deezer_id_p),
+           id_origin = case_when(!is.na(deezer_id)    ~ "Wikidata spotify/deezer pair", 
+                                 !is.na(deezer_id_wk) ~ "Wikidata mbid/deezer pair",
+                                 !is.na(deezer_id_mb) ~ "Musicbrainz mbid / deezer pair",
+                                 !is.na(deezer_id_p)  ~ "API search"))
+  # Manque désormais plus que 126 artists
+  # anti_join(artists_filtered, co) %>% select(artist_id, artist_name) %>% 
+  #   arrange(artist_id) %>% 
+  #   print(n=130)
+  
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/ratings.csv")
+  ratings <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts_albums_link.csv")
+  contacts_albums_list <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
+
+  # needed?
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/albums.csv")
+  albums <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
+  
+    
+  # signification of contact_subtype_id?
+  # 11 = personne artiste
+  # 12 = label
+  # 13 = groupe artiste
+  # 26 = producteur
+  
+  contacts_albums_list <- contacts_albums_list %>% 
+    filter(contact_subtype_id %in% c(11, 13))
+  
+  cora <- ratings %>%
+    group_by(product_id) %>% 
+    summarize(n = n(),
+              mean = mean(rating),
+              sd = sd(rating)) %>% 
+    filter(n > 10) %>% 
+    inner_join(contacts_albums_list) %>% 
+    group_by(contact_id) %>% 
+    summarise(mean = mean(mean), 
+              max = max(mean),
+              min = min(mean),
+              n_albums = n(),
+              mean_sd = mean(sd)) %>% 
+    inner_join(select(co, contact_id, artist_id))
+  return(cora)
+}
+
+
 make_genres_data <- function(){
   require(tidyverse)
   s3 <- initialize_s3()
