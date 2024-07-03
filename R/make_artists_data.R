@@ -10,6 +10,54 @@
 #   return(artists_list)
 # }
 
+#tar_load("user_artist_peryear")
+
+make_artist_popularity_data <- function(user_artist_peryear){
+  library(tidyverse)
+  library(tidytable)
+  library(arrow)
+  s3 <- initialize_s3()
+
+  # compute artist/hashed_id pairs (collapse years)
+  pop_raw <- user_artist_peryear %>% 
+    filter(!is.na(artist_id)) %>% 
+    group_by(artist_id, hashed_id) %>% 
+    summarise(l_play = sum(l_play),
+              n_play = sum(n_play))
+  
+  # separate between survey respondants and control group
+  f <- s3$download_file(Bucket = "scoavoux", Key = "records_w3/RECORDS_hashed_user_group.parquet", Filename = "data/RECORDS_hashed_user_group.parquet")
+  us <- read_parquet("data/RECORDS_hashed_user_group.parquet")
+  rm(f)
+  
+  pop_control <- us %>% 
+    filter(is_in_control_group) %>% 
+    select(hashed_id) %>% 
+    inner_join(pop_raw) %>% 
+    group_by(artist_id) %>% 
+    summarise(l_play = sum(l_play),
+              n_play = sum(n_play),
+              n_users = n()) %>% 
+    mutate(f_l_play = l_play / sum(l_play),
+           f_n_play = n_play / sum(n_play)) %>% 
+    rename_with(~paste0("control_", .x), -artist_id)
+  
+  pop_respondants <- us %>% 
+    filter(is_respondent) %>% 
+    select(hashed_id) %>% 
+    inner_join(pop_raw) %>% 
+    group_by(artist_id) %>% 
+    summarise(l_play = sum(l_play),
+              n_play = sum(n_play),
+              n_users = n()) %>% 
+    mutate(f_l_play = l_play / sum(l_play),
+           f_n_play = n_play / sum(n_play)) %>% 
+    rename_with(~paste0("respondent_", .x), -artist_id)
+  
+  pop <- full_join(pop_control, pop_respondants)
+  return(pop)
+}
+
 make_senscritique_data <- function(){
   require(tidyverse)
   require(tidytable)

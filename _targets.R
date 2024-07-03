@@ -39,6 +39,7 @@ list(
   tar_target(genres_aliases_file, "data/genres.csv", format="file"),
   tar_target(genres_aliases, make_genres_aliases(genres_aliases_file)),
   tar_target(senscritique, make_senscritique_data()),
+  tar_target(artists_pop, make_artist_popularity_data),
 
   # Analysis Omni 1 ------
   tar_target(gg_endoleg_bygenre, plot_endoleg_bygenre(artists_filtered)),
