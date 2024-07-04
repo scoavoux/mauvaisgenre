@@ -1,17 +1,3 @@
-
-# Make base data ------
-# make_artist_list <- function(){
-#   # Returns a list of artists that will be
-#   # analyzed. Main variable is artist_id
-#   #   artist_id
-#   #   artist_name
-#   #   genre
-#   artists_list <- read_csv()
-#   return(artists_list)
-# }
-
-#tar_load("user_artist_peryear")
-
 # Make artists popularity data ------
 # For each artist, compute their use in control group
 # and in respondent group (criteria for selecting artists + assess
@@ -62,19 +48,19 @@ make_artist_popularity_data <- function(user_artist_peryear){
   return(pop)
 }
 
-
-make_endogenous_legitimacy_data <- function(user_artist_peryear, isei){
+# Make endogenenous legitimacy data ------
+# For each artist, compute mean ISEI and share of audience with a 
+# high education
+make_endogenous_legitimacy_data <- function(user_artist_peryear, isei, survey_raw){
   library(tidyverse)
   library(tidytable)
   
   isei <- filter(isei, !is.na(isei))
-  # Base data: streams
+
   pop <- user_artist_peryear %>% 
     filter(!is.na(artist_id)) %>% 
-    inner_join(isei) %>% 
     group_by(artist_id, hashed_id) %>% 
-    summarise(l_play = sum(l_play, na.rm=TRUE),
-              n_play = sum(n_play, na.rm=TRUE))
+    summarise(l_play = sum(l_play, na.rm=TRUE))
   
   artist_mean_isei <- pop %>% 
     inner_join(isei) %>% 
@@ -83,7 +69,20 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei){
     summarise(mean_isei = sum(f*isei)) %>% 
     filter(!is.na(mean_isei))
   
-  return(artist_mean_isei)
+  ed <- survey_raw %>% 
+    filter(E_diploma != "", !is.na(E_diploma)) %>% 
+    mutate(higher_ed = as.numeric(E_diploma %in% c("Master, diplôme d'ingénieur.e, DEA, DESS", "Doctorat (y compris médecine, pharmacie, dentaire), HDR" ))) %>% 
+    select(hashed_id, higher_ed) %>% 
+    filter(!is.na(higher_ed))
+  
+  artist_share_higher_education <- pop %>% 
+    inner_join(ed) %>% 
+    group_by(artist_id) %>% 
+    mutate(f = l_play / sum(l_play)) %>% 
+    summarise(share_higher_ed = sum(f*higher_ed)) %>% 
+    filter(!is.na(share_higher_ed))
+  
+  return(full_join(artist_mean_isei, artist_share_higher_education))
 }
 
 # Make senscritique data ------
@@ -421,7 +420,9 @@ test_join <- function(){
     mutate(across(everything(), ~ifelse(is.na(.x), FALSE, .x)))
   count(x, senscritique, radio, endo_legitimacy, genre, pop_threshold) %>% 
     arrange(desc(n)) %>% 
-    filter(pop_threshold, senscritique)
+    filter(pop_threshold) %>% 
+    mutate(k = senscritique + radio + genre) %>% 
+    arrange(desc(k))
   
   
   
