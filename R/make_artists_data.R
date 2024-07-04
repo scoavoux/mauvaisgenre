@@ -191,6 +191,7 @@ make_senscritique_pairing_data <- function(){
 
 make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
   require(tidyverse)
+  s3 <- initialize_s3()
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/ratings.csv")
   ratings <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
