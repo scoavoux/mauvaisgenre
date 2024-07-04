@@ -87,10 +87,11 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei){
 }
 
 # Make senscritique data ------
+# Makes pairing of deezer id (artist_id) with musicbrainz and senscritique
 # Starts from dump of senscritique SQL database,
 # made July, 1st 2024
 
-make_senscritique_data <- function(){
+make_senscritique_pairing_data <- function(){
   require(tidyverse)
   require(tidytable)
   require(WikidataQueryServiceR)
@@ -166,7 +167,8 @@ make_senscritique_data <- function(){
     left_join(select(pairings, contact_id, deezer_id_p = "artist_id"))
   
   co <- co %>% 
-    mutate(artist_id = case_when(!is.na(deezer_id) ~ deezer_id, 
+    mutate(deezer_id = as.numeric(deezer_id),
+           artist_id = case_when(!is.na(deezer_id) ~ deezer_id, 
                                  !is.na(deezer_id_wk) ~ deezer_id_wk,
                                  !is.na(deezer_id_mb) ~ deezer_id_mb,
                                  TRUE ~ deezer_id_p),
@@ -174,23 +176,27 @@ make_senscritique_data <- function(){
                                  !is.na(deezer_id_wk) ~ "Wikidata mbid/deezer pair",
                                  !is.na(deezer_id_mb) ~ "Musicbrainz mbid / deezer pair",
                                  !is.na(deezer_id_p)  ~ "API search"))
+
   # Manque désormais plus que 126 artists
   # anti_join(artists_filtered, co) %>% select(artist_id, artist_name) %>% 
   #   arrange(artist_id) %>% 
   #   print(n=130)
   
+  co <- co %>% 
+    filter(!is.na(artist_id)) %>% 
+    distinct(contact_id, artist_id, mbid)
+  
+  return(co)    
+}
+
+make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
+  require(tidyverse)
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/ratings.csv")
   ratings <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts_albums_link.csv")
   contacts_albums_list <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
-
-  # needed?
-  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/albums.csv")
-  albums <- f$Body %>% rawToChar() %>% read_csv()
-  rm(f)
-  
     
   # signification of contact_subtype_id?
   # 11 = personne artiste
@@ -214,34 +220,79 @@ make_senscritique_data <- function(){
               min = min(mean),
               n_albums = n(),
               mean_sd = mean(sd)) %>% 
-    inner_join(select(co, contact_id, artist_id))
+    inner_join(select(senscritique_mb_deezer_id, contact_id, artist_id)) %>% 
+    select(-contact_id)
   return(cora)
 }
 
+# Make genre data ------
 
-make_genres_data <- function(){
+make_genres_data <- function(source = "deezer_editorial_playlists", senscritique_mb_deezer_id){
   require(tidyverse)
   s3 <- initialize_s3()
-  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists_genre_weight.csv")
-  genres <- f$Body %>% rawToChar() %>% read_csv()
-  genres <- genres %>% 
-    select(-artist_name) %>% 
-    filter(n_playlists_used > 5) %>% 
-    pivot_longer(african:soulfunk, names_to = "genre") %>% 
-    # We use the main genre with at least 33% of playlists
-    filter(value > .33) %>%
-    arrange(artist_id, desc(value)) %>% 
-    slice(1, .by = artist_id) %>% 
-    select(-n_playlists_used, -value)
+  if(source == "deezer_editorial_playlists"){
+    f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists_genre_weight.csv")
+    genres <- f$Body %>% rawToChar() %>% read_csv()
+    genres <- genres %>% 
+      select(-artist_name) %>% 
+      filter(n_playlists_used > 5) %>% 
+      pivot_longer(african:soulfunk, names_to = "genre") %>% 
+      # We use the main genre with at least 33% of playlists
+      filter(value > .33) %>%
+      arrange(artist_id, desc(value)) %>% 
+      slice(1, .by = artist_id) %>% 
+      select(-n_playlists_used, -value)
+    # Check coverage of genre definition
+    # user_artist_peryear %>% 
+    #   filter(!is.na(artist_id)) %>% 
+    #   left_join(genres) %>% 
+    #   mutate(na = is.na(genre)) %>% 
+    #   group_by(na) %>% 
+    #   summarise(n=sum(n_play))
+    # With .4 threshold, 70% of plays; with .3, 79%
+    
+  } else if(source == "deezer_maingenre"){
+    s3$download_file(Bucket = "scoavoux", 
+                     Key = "records_w3/items/artists_data.snappy.parquet",
+                     Filename = "data/artists_data.snappy.parquet")
+    artists <- read_parquet("data/artists_data.snappy.parquet", col_select = 1:3)
+    artists <- artists %>% 
+      filter(!is.na(main_genre))
+    genres <- artists %>% select(artist_id, genre = "main_genre")
+    # TODO:Collapse
+    
+  } else if(source == "senscritique"){
+    f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/albums_tags.csv")
+    album_tags <- f$Body %>% rawToChar() %>% read_csv()
+    f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/tags_meaning.csv")
+    tags_meaning <- f$Body %>% rawToChar() %>% read_csv()
+    f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts_albums_link.csv")
+    contacts_albums_list <- f$Body %>% rawToChar() %>% read_csv()
+    rm(f)
+    
+    g <- left_join(album_tags, tags_meaning) %>% 
+      left_join(select(contacts_albums_list, -contact_subtype_id)) %>% 
+      left_join(select(senscritique_mb_deezer_id, -mbid)) %>% 
+      filter(!is.na(artist_id)) %>% 
+      count(artist_id, genre)
+    g
+    # TODO: collapse
+    
+  } else if(source == "musicbrainz_tags"){
+    # THERE IS SOMETHING WRONG PROBABLY IN MBID. FOR INSTANCE COCTEAU TWINS is
+    # "salsa choke" and Death Cab for Cutie is "Non-Music"
+    # f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_deezerid_pair.csv")
+    # mb_dz <- f$Body %>% rawToChar() %>% read_csv()
+    # mb_dz <- mb_dz %>% filter(!is.na(mbid))
+    # f <- s3$get_object(Bucket = "scoavoux", Key = "musicbrainz/mbid_genre.csv")
+    # mb_genres <- f$Body %>% rawToChar() %>% read_csv()
+    # mb_genres <- mb_genres %>% filter(!is.na(mbid))
+    # mbg <- mb_dz %>% 
+    #   inner_join(mb_genres) %>% 
+    #   arrange(mbid, desc(count)) %>% 
+    #   slice(1, .by = mbid)
+  }
   return(genres)
-  # Check coverage of genre definition
-  # user_artist_peryear %>% 
-  #   filter(!is.na(artist_id)) %>% 
-  #   left_join(genres) %>% 
-  #   mutate(na = is.na(genre)) %>% 
-  #   group_by(na) %>% 
-  #   summarise(n=sum(n_play))
-  # With .4 threshold, 70% of plays; with .3, 79%
 }
 
 make_genres_aliases <- function(.file = "data/genres.csv"){
