@@ -386,3 +386,62 @@ filter_artists <- function(artists){
 #   artists %>% 
 #     select()
 # }
+
+test_join <- function(){
+  require(tidyverse)
+  require(arrow)
+  s3 <- initialize_s3()
+
+  s3$download_file(Bucket = "scoavoux", 
+                   Key = "records_w3/items/artists_data.snappy.parquet",
+                   Filename = "data/artists_data.snappy.parquet")
+  artists <- read_parquet("data/artists_data.snappy.parquet", col_select = 1:3)
+  artists <- artists %>% 
+    filter(!is.na(main_genre))
+  
+  full_join()
+  tar_load("endo_legitimacy")
+  tar_load("exo_radio")
+  tar_load("exo_senscritique")
+  tar_load("genres")
+  tar_load("artists_pop")
+  
+  artists_pop <- artists_pop %>% 
+    filter(respondent_n_users > 20)
+  # x <- inner_join(exo_senscritique, exo_radio) %>% 
+  #   inner_join(endo_legitimacy) %>% 
+  #   inner_join(genres)
+
+  x <- select(exo_senscritique, artist_id) %>% mutate(senscritique = TRUE) %>% 
+    full_join(select(exo_radio, artist_id) %>% mutate(radio = TRUE)) %>% 
+    full_join(select(endo_legitimacy, artist_id) %>% mutate(endo_legitimacy = TRUE)) %>% 
+    full_join(select(artists, artist_id) %>% mutate(genre = TRUE)) %>%
+    full_join(select(artists_pop, artist_id) %>% mutate(pop_threshold = TRUE)) %>% 
+    mutate(across(everything(), ~ifelse(is.na(.x), FALSE, .x)))
+  count(x, senscritique, radio, endo_legitimacy, genre, pop_threshold) %>% 
+    arrange(desc(n)) %>% 
+    filter(pop_threshold, senscritique)
+  
+  
+  
+  # Using deezer genres, setting a low threshold for popularity (20) and
+  # accepting artists with 0 radio plays => about 12500 artists
+  a <- 
+    artists %>% 
+    select(artist_id = "deezer_id", name = "mbname", main_genre = "genre") %>% 
+    # filter on pop threshold
+    inner_join(filter(artists_pop, respondent_n_users >= 20) %>% 
+                select(artist_id)) %>% 
+    # Add senscritique score
+    inner_join(select(exo_senscritique,
+                     artist_id, 
+                     mean_sc_score = mean,
+                     max_sc_score  = max)) %>% 
+    # Add endogenous legitimacy
+    inner_join(endo_legitimacy) %>% 
+    # add radio. Set to zero when not present
+    left_join(exo_radio) %>% 
+    mutate(across(starts_with("radio"), ~ifelse(is.na(.x), 0, .x)))
+  janitor::tabyl(a, main_genre) %>% 
+    arrange(n)
+}
