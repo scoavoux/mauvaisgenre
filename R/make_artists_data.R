@@ -58,6 +58,34 @@ make_artist_popularity_data <- function(user_artist_peryear){
   return(pop)
 }
 
+
+make_endogenous_legitimacy_data <- function(user_artist_peryear, isei){
+  library(tidyverse)
+  library(tidytable)
+  
+  isei <- filter(isei, !is.na(isei))
+  # Base data: streams
+  pop <- user_artist_peryear %>% 
+    filter(!is.na(artist_id)) %>% 
+    inner_join(isei) %>% 
+    group_by(artist_id, hashed_id) %>% 
+    summarise(l_play = sum(l_play, na.rm=TRUE),
+              n_play = sum(n_play, na.rm=TRUE))
+  
+  artist_mean_isei <- pop %>% 
+    inner_join(isei) %>% 
+    group_by(artist_id) %>% 
+    mutate(f = l_play / sum(l_play)) %>% 
+    summarise(mean_isei = sum(f*isei)) %>% 
+    filter(!is.na(mean_isei))
+  
+  return(artist_mean_isei)
+}
+
+# Make senscritique data ------
+# Starts from dump of senscritique SQL database,
+# made July, 1st 2024
+
 make_senscritique_data <- function(){
   require(tidyverse)
   require(tidytable)
