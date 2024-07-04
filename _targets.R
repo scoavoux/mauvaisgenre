@@ -18,8 +18,6 @@ tar_source("R")
 
 list(
   # Prepare artists data ------
-  # tar_target(artists_list),
-  # 
   tar_target(senscritique_mb_deezer_id, make_senscritique_pairing_data()),
   # tar_target(exo_press, compute_exo_press()),
   tar_target(exo_radio, compute_exo_radio()),
