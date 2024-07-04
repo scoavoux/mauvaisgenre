@@ -14,32 +14,27 @@ tar_option_set(
   )
 )
 
-source("R/common_functions.R")
-source("R/make_intermediary_data.R")
-source("R/make_artists_data.R")
-source("R/make_user_data.R")
-source("R/make_analysis_genrepaper.R")
-source("R/make_analysis_omnipaper.R")
-
+tar_source("R")
 
 list(
   # Prepare artists data ------
   # tar_target(artists_list),
   # 
-  # tar_target(endo_leg, compute_endo_leg()),
+  tar_target(senscritique_mb_deezer_id, make_senscritique_pairing_data()),
   # tar_target(exo_press, compute_exo_press()),
   tar_target(exo_radio, compute_exo_radio()),
-  # tar_target(exo_sc, read_csv("")),
-  # 
-  # tar_target(exo_pca, compute_exo_pca()),
+  tar_target(exo_senscritique, make_senscritique_ratings_data(senscritique_mb_deezer_id)),
+  tar_target(isei, make_isei_data(survey_raw)),
+  tar_target(endo_legitimacy, make_endogenous_legitimacy_data(user_artist_peryear, isei)),
   
-  tar_target(artists, join_artist(exo_radio)), #endo_leg, exo_press, exo_sc
+
+  # tar_target(exo_pca, compute_exo_pca()),
+  tar_target(artists, join_artist(exo_radio)), #endo_leg, exo_press, exo_senscritique
   tar_target(artists_filtered, filter_artists(artists)),
   tar_target(genres, make_genres_data()),
   tar_target(genres_aliases_file, "data/genres.csv", format="file"),
   tar_target(genres_aliases, make_genres_aliases(genres_aliases_file)),
-  tar_target(senscritique, make_senscritique_data()),
-  tar_target(artists_pop, make_artist_popularity_data),
+  tar_target(artists_pop, make_artist_popularity_data(user_artist_peryear)),
 
   # Analysis Omni 1 ------
   tar_target(gg_endoleg_bygenre, plot_endoleg_bygenre(artists_filtered)),
@@ -96,6 +91,7 @@ list(
                                         latent_classes_from_surveys,
                                         latent_classes_from_streams,
                                         latent_classes_from_streams_proportion)),
+  
   # Analysis Omni 2 ------
   tar_target(lca_class_interpretation, make_lca_class_interpretation()),
   tar_target(gg_lca_omni_paper, 
@@ -103,6 +99,9 @@ list(
   tar_target(gg_lca_omni_presentation1, 
              plot_lca_omni(survey, lca_class_interpretation, format="presentation1")),
   tar_target(gg_lca_omni_presentation2, 
-             plot_lca_omni(survey, lca_class_interpretation, format="presentation2"))
+             plot_lca_omni(survey, lca_class_interpretation, format="presentation2")),
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
+  
+  # Supplementary analyses ------  
+  tar_target(tbl_coverage, make_tbl_coverage(artists_pop, artists_filtered))
 )
