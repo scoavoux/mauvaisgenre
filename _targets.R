@@ -23,7 +23,7 @@ list(
   tar_target(exo_radio, compute_exo_radio()),
   tar_target(exo_senscritique, make_senscritique_ratings_data(senscritique_mb_deezer_id)),
   tar_target(isei, make_isei_data(survey_raw)),
-  tar_target(endo_legitimacy, make_endogenous_legitimacy_data(user_artist_peryear, isei)),
+  tar_target(endo_legitimacy, make_endogenous_legitimacy_data(user_artist_peryear, isei, survey_raw)),
   
 
   # tar_target(exo_pca, compute_exo_pca()),
