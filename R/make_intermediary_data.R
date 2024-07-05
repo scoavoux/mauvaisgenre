@@ -63,8 +63,8 @@ make_user_artist_peryear_table_onefile <- function(file){
   require(lubridate)
   
   s3 <- initialize_s3()
-  users <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/RECORDS_hashed_user_group.parquet")$Body %>% 
-    read_parquet()
+  # users <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/RECORDS_hashed_user_group.parquet")$Body %>% 
+  #   read_parquet()
   if(str_detect(file, "long")){
     streams <- s3$get_object(Bucket = "scoavoux", Key = file)$Body %>% 
       read_parquet(col_select = c("hashed_id", "ts_listen", "song_id",
@@ -78,7 +78,7 @@ make_user_artist_peryear_table_onefile <- function(file){
       select(-media_type)
   }
   streams <- streams %>% 
-    filter(hashed_id %in% filter(users, is_respondent)$hashed_id) %>% 
+    # filter(hashed_id %in% filter(users, is_respondent)$hashed_id) %>% 
     mutate(year = year(as_datetime(ts_listen)),
            lt = ifelse(listening_time < 0, 0, listening_time)) %>% 
     filter(year > 2017, 
