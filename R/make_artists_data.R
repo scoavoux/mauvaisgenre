@@ -27,7 +27,7 @@ make_artist_popularity_data <- function(user_artist_peryear){
     group_by(artist_id) %>% 
     summarise(l_play = sum(l_play, na.rm=TRUE),
               n_play = sum(n_play, na.rm=TRUE),
-              n_users = n()) %>% 
+              n_users = n_distinct(hashed_id)) %>% 
     mutate(f_l_play = l_play / sum(l_play, na.rm=TRUE),
            f_n_play = n_play / sum(n_play, na.rm=TRUE)) %>% 
     rename_with(~paste0("control_", .x), -artist_id)
@@ -39,7 +39,7 @@ make_artist_popularity_data <- function(user_artist_peryear){
     group_by(artist_id) %>% 
     summarise(l_play = sum(l_play, na.rm=TRUE),
               n_play = sum(n_play, na.rm=TRUE),
-              n_users = n()) %>% 
+              n_users = n_distinct(hashed_id)) %>% 
     mutate(f_l_play = l_play / sum(l_play, na.rm=TRUE),
            f_n_play = n_play / sum(n_play, na.rm=TRUE)) %>% 
     rename_with(~paste0("respondent_", .x), -artist_id)
@@ -96,7 +96,7 @@ make_senscritique_pairing_data <- function(){
   require(WikidataQueryServiceR)
   s3 <- initialize_s3()
   
-  # Spotify/deezer id from WIKIDATA
+  # Spotify/deezer id pairings from WIKIDATA
   wikidata_spotify_deezer <- query_wikidata('SELECT DISTINCT ?spotify_id ?deezer_id #?item ?itemLabel 
   WHERE {
     SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
@@ -107,12 +107,8 @@ make_senscritique_pairing_data <- function(){
     ?item wdt:P2722 ?deezer_id.
     ?item wdt:P1902 ?spotify_id.
   }')
-
-  # Spotify/deezer id from WIKIDATA
-  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_wikidataid_pair.csv")
-  mbz_wikidata <- f$Body %>% rawToChar() %>% read_csv()
-  rm(f)
   
+  # We can also use the raw wikidata-deezer id pairs from wikidata
   wikidata_deezer <- query_wikidata('SELECT DISTINCT ?item ?deezer_id #?item ?itemLabel 
   WHERE {
     SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
@@ -123,27 +119,45 @@ make_senscritique_pairing_data <- function(){
   wikidata_deezer <- wikidata_deezer %>% 
     mutate(wikidata_id = str_extract(item, "/(Q\\d+)", group = 1)) %>% 
     select(-item)
+
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_wikidataid_pair.csv")
+  mbz_wikidata <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
   
   mbz_wikidata <- mbz_wikidata %>% 
     select(-mbname) %>% 
     inner_join(wikidata_deezer) %>% 
     select(-wikidata_id)
-  
+
   # Musicbrainz id / deezer id pairs from musicbrainz dumps
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_deezerid_pair.csv")
   mbz_dz <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
   
-  # SensCritique / deezer id from Deezer api search
+  # Musicbrainz id / spotify id to add spotify id when it lacks from co data
+  f <- s3$get_object(Bucket = "scoavoux", Key = "musicbrainz/mbid_spotifyid_pair.csv")
+  mbid_spotifyid <- f$Body %>% rawToChar() %>% read_csv()
+    
+  ## SensCritique / deezer id from Deezer api search (old)
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_id_deezer_id_pairing.csv")
   pairings <- f$Body %>% rawToChar() %>% read_csv()
-  rm(f)
+
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_deezer_id_pairing_2.csv")
   pairings2 <- f$Body %>% rawToChar() %>% read_csv()
+  
+  ## exact match between artists and 
+  ## see script pair_more_artists
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_deezer_id_pairing_3.csv")
+  pairings3 <- f$Body %>% rawToChar() %>% read_csv()
+  
+  rm(f)  
   pairings <- pairings %>% 
     select(contact_id, artist_id) %>% 
-    bind_rows(select(pairings2, contact_id, artist_id = "deezer_id")) %>% 
+    bind_rows(select(pairings2, contact_id, artist_id = "deezer_id"),
+              pairings3) %>% 
     distinct()
+  
+  pairings  
   
   # TODO: see how many artists we are missing and whether we should add another
   # service with spotify/deezer ids (or push them to wikidata)
@@ -156,10 +170,14 @@ make_senscritique_pairing_data <- function(){
   rm(f)
   
   co <- distinct(co) %>% 
-    mutate(spotify_id = str_remove(spotify_id, "spotify:artist:")) %>% 
+    mutate(spotify_id = str_remove(spotify_id, "spotify:artist:"),
+           spotify_id = ifelse(spotify_id == "", NA, spotify_id)) %>% 
     rename(mbid = "mbz_id")
   
   co <- co %>% 
+    left_join(select(mbid_spotifyid, mbid, spotify_id2 = "spotify_id")) %>% 
+    mutate(spotify_id = ifelse(is.na(spotify_id), spotify_id2, spotify_id)) %>% 
+    select(-spotify_id2) %>% 
     left_join(select(wikidata_spotify_deezer, spotify_id, deezer_id), by = "spotify_id") %>% 
     left_join(select(mbz_wikidata, mbid, deezer_id_wk = "deezer_id")) %>% 
     left_join(select(mbz_dz, mbid, deezer_id_mb = "deezer_id")) %>% 
@@ -399,10 +417,10 @@ test_join <- function(){
   artists <- artists %>% 
     filter(!is.na(main_genre))
   
-  full_join()
   tar_load("endo_legitimacy")
   tar_load("exo_radio")
   tar_load("exo_senscritique")
+  tar_load("senscritique_mb_deezer_id")
   tar_load("genres")
   tar_load("artists_pop")
   
@@ -412,7 +430,7 @@ test_join <- function(){
   #   inner_join(endo_legitimacy) %>% 
   #   inner_join(genres)
 
-  x <- select(exo_senscritique, artist_id) %>% mutate(senscritique = TRUE) %>% 
+  x <- select(senscritique_mb_deezer_id, artist_id) %>% mutate(senscritique = TRUE) %>% 
     full_join(select(exo_radio, artist_id) %>% mutate(radio = TRUE)) %>% 
     full_join(select(endo_legitimacy, artist_id) %>% mutate(endo_legitimacy = TRUE)) %>% 
     full_join(select(artists, artist_id) %>% mutate(genre = TRUE)) %>%
@@ -424,6 +442,13 @@ test_join <- function(){
     mutate(k = senscritique + radio + genre) %>% 
     arrange(desc(k))
   
+  filter(x, !senscritique, genre, pop_threshold) %>% 
+    left_join(artists) %>% 
+    left_join(select(artists_pop, artist_id, respondent_n_users)) %>% 
+    arrange(desc(respondent_n_users)) %>% 
+    filter(respondent_n_users > 100) %>% 
+    select(artist_id, name, respondent_n_users) %>% 
+    write_csv("manual_search.csv")
   
   
   # Using deezer genres, setting a low threshold for popularity (20) and
