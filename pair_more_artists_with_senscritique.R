@@ -1,9 +1,10 @@
 library(targets)
 library(tidyverse)
 library(tidytable)
+library(arrow)
 tar_load("senscritique_mb_deezer_id")
 senscritique_mb_deezer_id
-
+source("R/common_functions.R")
 s3 <- initialize_s3()
 f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts.csv")
 co <- f$Body %>% rawToChar() %>% fread()
@@ -28,10 +29,14 @@ artists <- artists %>%
   left_join(select(artists_pop, artist_id)) %>% 
   # et pas déjà identifiés
   anti_join(senscritique_mb_deezer_id)
-
+artists %>% filter(name == "Ramones")
+co %>% filter(str_detect(contact_name, "Ramones"))
 ju <- inner_join(select(artists, artist_id, name), select(co, contact_id, name = contact_name))
-ju %>% 
+more <- ju %>% 
+  distinct() %>% 
   add_count(name) %>% 
-  filter(n == 1) %>% 
-  left_join(artists_pop) %>% 
-  arrange(desc(respondent_n_users))
+  filter(contact_id == 561835)
+
+more %>% 
+  select("contact_id", "artist_id") %>% 
+  fwrite("senscritique_deezer_id_pairing_3.csv")
