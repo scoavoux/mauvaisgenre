@@ -19,10 +19,11 @@ s3$download_file(Bucket = "scoavoux",
 artists <- read_parquet("data/artists_data.snappy.parquet", col_select = 1:3)
 artists <- artists %>% 
   filter(!is.na(main_genre))
+
 tar_load("artists_pop")
 
 artists_pop <- artists_pop %>% 
-  filter(respondent_n_users > 20)
+  filter(respondent_n_users > 10)
 
 artists <- artists %>% 
   # tous les artistes avec plus de 20 usagers
@@ -32,11 +33,14 @@ artists <- artists %>%
 artists %>% filter(name == "Ramones")
 co %>% filter(str_detect(contact_name, "Ramones"))
 ju <- inner_join(select(artists, artist_id, name), select(co, contact_id, name = contact_name))
+
 more <- ju %>% 
   distinct() %>% 
-  add_count(name) %>% 
-  filter(contact_id == 561835)
+  add_count(name)
+
+more %>% 
+  arrange(name)
 
 more %>% 
   select("contact_id", "artist_id") %>% 
-  fwrite("senscritique_deezer_id_pairing_3.csv")
+  fwrite("senscritique_deezer_id_pairing_4.csv")

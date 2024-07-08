@@ -149,17 +149,25 @@ make_senscritique_pairing_data <- function(){
   pairings2 <- f$Body %>% rawToChar() %>% read_csv()
   
   #### From exact matches ------
-  ## exact match between artists and 
+  ## exact match between artists in dz and sc.
+  ## Only those with unique match
   ## see script pair_more_artists
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_deezer_id_pairing_3.csv")
   pairings3 <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)  
+  
+  ## Exact match but allow multiple matches -- script will collapse them
+  ## together afterwards
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_deezer_id_pairing_4.csv")
+  pairings4 <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)  
   
   #### Put them together ------
   pairings <- pairings %>% 
     select(contact_id, artist_id) %>% 
     bind_rows(select(pairings2, contact_id, artist_id = "deezer_id"),
-              pairings3) %>% 
+              pairings3,
+              pairings4) %>% 
     distinct()
   
   pairings <- pairings %>% 
