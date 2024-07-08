@@ -96,7 +96,9 @@ make_senscritique_pairing_data <- function(){
   require(WikidataQueryServiceR)
   s3 <- initialize_s3()
   
-  # Spotify/deezer id pairings from WIKIDATA
+  ## Import various pairings ------
+  
+  ### Spotify/deezer id pairings from WIKIDATA ------
   wikidata_spotify_deezer <- query_wikidata('SELECT DISTINCT ?spotify_id ?deezer_id #?item ?itemLabel 
   WHERE {
     SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
@@ -108,7 +110,7 @@ make_senscritique_pairing_data <- function(){
     ?item wdt:P1902 ?spotify_id.
   }')
   
-  # We can also use the raw wikidata-deezer id pairs from wikidata
+  ### Wikidata/deezer id pairs from WIKIDATA ------
   wikidata_deezer <- query_wikidata('SELECT DISTINCT ?item ?deezer_id #?item ?itemLabel 
   WHERE {
     SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
@@ -120,7 +122,7 @@ make_senscritique_pairing_data <- function(){
     mutate(wikidata_id = str_extract(item, "/(Q\\d+)", group = 1)) %>% 
     select(-item)
 
-  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_wikidataid_pair.csv")
+  f <- s3$get_object(Bucket = "scoavoux", Key = "musicbrainz/mbid_wikidataid_pair.csv")
   mbz_wikidata <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
   
@@ -129,35 +131,39 @@ make_senscritique_pairing_data <- function(){
     inner_join(wikidata_deezer) %>% 
     select(-wikidata_id)
 
-  # Musicbrainz id / deezer id pairs from musicbrainz dumps
-  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_deezerid_pair.csv")
+  ### Musicbrainz id / deezer id pairs from musicbrainz dumps ------
+  f <- s3$get_object(Bucket = "scoavoux", Key = "musicbrainz/mbid_deezerid_pair.csv")
   mbz_dz <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
   
-  # Musicbrainz id / spotify id to add spotify id when it lacks from co data
+  ### Musicbrainz id / spotify id to add spotify id when it lacks from co data ------
   f <- s3$get_object(Bucket = "scoavoux", Key = "musicbrainz/mbid_spotifyid_pair.csv")
   mbid_spotifyid <- f$Body %>% rawToChar() %>% read_csv()
     
-  ## SensCritique / deezer id from Deezer api search (old)
+  ### SensCritique / deezer id ------
+  #### from Deezer api search (old) ------
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_id_deezer_id_pairing.csv")
   pairings <- f$Body %>% rawToChar() %>% read_csv()
 
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_deezer_id_pairing_2.csv")
   pairings2 <- f$Body %>% rawToChar() %>% read_csv()
   
+  #### From exact matches ------
   ## exact match between artists and 
   ## see script pair_more_artists
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_deezer_id_pairing_3.csv")
   pairings3 <- f$Body %>% rawToChar() %>% read_csv()
-  
   rm(f)  
+  
+  #### Put them together ------
   pairings <- pairings %>% 
     select(contact_id, artist_id) %>% 
     bind_rows(select(pairings2, contact_id, artist_id = "deezer_id"),
               pairings3) %>% 
     distinct()
   
-  pairings  
+  pairings <- pairings %>% 
+    filter(!is.na(artist_id))
   
   # TODO: see how many artists we are missing and whether we should add another
   # service with spotify/deezer ids (or push them to wikidata)
@@ -203,7 +209,20 @@ make_senscritique_pairing_data <- function(){
     filter(!is.na(artist_id)) %>% 
     distinct(contact_id, artist_id, mbid)
   
-  return(co)    
+  ## Now sometimes one contact_id equivalent to several artist_id
+  ## = one artist identified on senscritique has several deezer profile
+  ## We consolidate them to the smallest artist_id (somewhat arbitrary
+  ## but usually means the oldest deezer profile)
+  co <- co %>% 
+    arrange(contact_id, artist_id) %>% 
+    group_by(contact_id) %>% 
+    mutate(inter_artist_id = first(artist_id)) %>% 
+    ungroup() %>% 
+    group_by(artist_id) %>% 
+    mutate(consolidated_artist_id = first(inter_artist_id)) %>% 
+    select(-inter_artist_id)
+
+  return(co)  
 }
 
 make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
@@ -232,14 +251,15 @@ make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
               sd = sd(rating)) %>% 
     filter(n > 10) %>% 
     inner_join(contacts_albums_list) %>% 
-    group_by(contact_id) %>% 
+    inner_join(select(senscritique_mb_deezer_id, contact_id, consolidated_artist_id) %>% 
+                 distinct()) %>% 
+    group_by(consolidated_artist_id) %>% 
     summarise(mean = mean(mean), 
               max = max(mean),
               min = min(mean),
               n_albums = n(),
               mean_sd = mean(sd)) %>% 
-    inner_join(select(senscritique_mb_deezer_id, contact_id, artist_id)) %>% 
-    select(-contact_id)
+    rename(artist_id = "consolidated_artist_id")
   return(cora)
 }
 
