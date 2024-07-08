@@ -22,7 +22,7 @@ library(janitor)
 # Latent classes from survey
 
 ```{r}
-tar_load("latent_classes_from_surveys_multiple")
+tar_load("latent_classes_from_surveys_multiple", store = "../_targets/")
 ```
 
 
@@ -79,7 +79,7 @@ for(k in names(latent_classes_from_surveys_multiple)){
 # Latent profiles from streams
 
 ```{r}
-tar_load("latent_classes_from_streams_multiple")
+tar_load("latent_classes_from_streams_multiple", store = "../_targets/")
 ```
 
 
@@ -122,7 +122,7 @@ for(k in names(latent_classes_from_streams_multiple)){
 # Latent profiles from streams (proportional)
 
 ```{r}
-tar_load("latent_classes_from_streams_multiple_proportion")
+tar_load("latent_classes_from_streams_multiple_proportion", store = "../_targets/")
 ```
 
 
