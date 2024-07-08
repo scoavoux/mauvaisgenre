@@ -249,14 +249,15 @@ make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
     summarize(n = n(),
               mean = mean(rating),
               sd = sd(rating)) %>% 
-    filter(n > 10) %>% 
+    # OK let us consider that 4 grades is enough
+    filter(n > 3) %>% 
     inner_join(contacts_albums_list) %>% 
     inner_join(select(senscritique_mb_deezer_id, contact_id, consolidated_artist_id) %>% 
                  distinct()) %>% 
     group_by(consolidated_artist_id) %>% 
-    summarise(mean = mean(mean), 
-              max = max(mean),
+    summarise(max = max(mean),
               min = min(mean),
+              mean = mean(mean), 
               n_albums = n(),
               mean_sd = mean(sd)) %>% 
     rename(artist_id = "consolidated_artist_id")
