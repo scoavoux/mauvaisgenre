@@ -187,7 +187,7 @@ select_latent_class_model <- function(models_list, nclass){
   return(models_list[[paste0("k", nclass)]])
 }
 
-compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_filtered, genres, rescale_by = "artist"){
+compute_omnivorourness_from_streams <- function(user_artist_peryear, artists, genres, rescale_by = "artist"){
   require(tidyverse)
   require(tidytable)
   
@@ -215,7 +215,7 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_fil
   omni_exo <- user_artist_peryear %>% 
     group_by(hashed_id) %>% 
     mutate(f_play = l_play / sum(l_play)) %>% 
-    left_join(select(artists_filtered, artist_id, sc_exo_pca)) %>% 
+    left_join(select(artists, artist_id, sc_exo_pca)) %>% 
     filter(!is.na(sc_exo_pca)) %>% 
     group_by(hashed_id) %>% 
     summarize(mean_exo_pca = sum(sc_exo_pca*f_play), 
@@ -224,14 +224,14 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_fil
   ## Same by genre
   if(rescale_by == "artist"){
     ## Start by rescaling legitimacy by genre
-    artists_filtered <- artists_filtered %>%
+    artists <- artists %>%
       group_by(genre) %>%
       mutate(sc_exo_pca_scbygenre = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca))
     omni_exo_bygenre <- user_artist_peryear %>%
       group_by(hashed_id) %>%
       mutate(f_play = l_play / sum(l_play)) %>%
       # We must first rescale by genre
-      left_join(select(artists_filtered, artist_id, sc_exo_pca_scbygenre)) %>%
+      left_join(select(artists, artist_id, sc_exo_pca_scbygenre)) %>%
       filter(!is.na(sc_exo_pca_scbygenre), !is.na(genre)) %>%
       group_by(hashed_id, genre) %>%
       summarize(n=sum(l_play),
@@ -250,7 +250,7 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists_fil
       group_by(hashed_id) %>% 
       mutate(f_play = l_play / sum(l_play)) %>% 
       # We must first rescale by genre
-      left_join(select(artists_filtered, artist_id, sc_exo_pca)) %>% 
+      left_join(select(artists, artist_id, sc_exo_pca)) %>% 
       filter(!is.na(sc_exo_pca), !is.na(genre)) %>% 
       group_by(genre) %>% 
       mutate(sc_exo_pca = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca)) %>% 

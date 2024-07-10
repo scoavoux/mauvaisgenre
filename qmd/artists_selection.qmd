@@ -1,0 +1,80 @@
+---
+title: "Artist selection"
+format:
+  html: 
+    embed-resources: true
+editor: source
+---
+
+```{r}
+  require(targets)
+  require(tidyverse)
+  require(arrow)
+
+  tar_source()
+  tar_load("endo_legitimacy")
+  tar_load("exo_radio")
+  tar_load("exo_senscritique")
+  tar_load("senscritique_mb_deezer_id")
+  tar_load("genres")
+  tar_load("artists_pop")
+
+```
+  
+```{r}
+  artists_pop <- artists_pop %>% 
+    filter(respondent_n_users > 10)
+  # x <- inner_join(exo_senscritique, exo_radio) %>% 
+  #   inner_join(endo_legitimacy) %>% 
+  #   inner_join(genres)
+
+  x <- select(senscritique_mb_deezer_id, -artist_id) %>% select(artist_id = "consolidated_artist_id") %>% distinct() %>% mutate(senscritique = TRUE) %>% 
+    full_join(select(exo_senscritique, artist_id) %>% mutate(senscritiquerating = TRUE)) %>% 
+    full_join(select(exo_radio, artist_id) %>% mutate(radio = TRUE)) %>% 
+    full_join(select(endo_legitimacy, artist_id) %>% mutate(endo_legitimacy = TRUE)) %>% 
+    full_join(select(genres, artist_id) %>% mutate(genre = TRUE)) %>%
+    full_join(select(artists_pop, artist_id, control_f_l_play) %>% mutate(pop_threshold = TRUE)) %>% 
+    mutate(across(everything(), ~ifelse(is.na(.x), FALSE, .x)),
+           senscritiquerating = ifelse(!senscritique, NA, senscritiquerating))
+  
+  group_by(x, senscritique, senscritiquerating, endo_legitimacy, genre, pop_threshold) %>% 
+    summarise(n = n(), f_play = sum(control_f_l_play, na.rm=TRUE)) %>% 
+    arrange(desc(f_play)) %>% 
+    filter(pop_threshold) %>% 
+    ungroup() %>% 
+    mutate(cum_f = cumsum(f_play))
+  
+  # x %>% 
+  #   filter(!senscritique) %>% 
+  #   arrange(desc(control_f_l_play)) %>% 
+  #   filter(control_f_l_play > 0.00001) %>% 
+  #   left_join(select(artists, artist_id, name)) %>% 
+  #   write_csv("manual_search.csv")
+  # 
+  
+  
+  # Using deezer genres, setting a low threshold for popularity (20) and
+  # accepting artists with 0 radio plays => about 12500 artists
+  a <- 
+    artists %>% 
+    select(artist_id, name, main_genre) %>% 
+    # filter on pop threshold
+    inner_join(filter(artists_pop, respondent_n_users >= 10) %>% 
+                select(artist_id, control_f_l_play, respondent_f_l_play)) %>% 
+    # Add senscritique score
+    inner_join(select(exo_senscritique,
+                     artist_id, 
+                     mean_sc_score = mean,
+                     max_sc_score  = max)) %>% 
+    # Add endogenous legitimacy
+    inner_join(endo_legitimacy) %>% 
+    # add radio. Set to zero when not present
+    left_join(exo_radio) %>% 
+    mutate(across(starts_with("radio"), ~ifelse(is.na(.x), 0, .x)))
+  a %>% arrange(desc(control_f_l_play))
+  sum(a$respondent_f_l_play, na.rm=TRUE)
+  janitor::tabyl(a, main_genre) %>% 
+    arrange(n)
+```
+
+  

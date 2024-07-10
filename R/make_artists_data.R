@@ -68,7 +68,8 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei, survey_ra
     inner_join(isei) %>% 
     group_by(artist_id) %>% 
     mutate(f = l_play / sum(l_play)) %>% 
-    summarise(mean_isei = sum(f*isei)) %>% 
+    summarise(n_isei = n(),
+              mean_isei = sum(f*isei)) %>% 
     filter(!is.na(mean_isei))
   
   ed <- survey_raw %>% 
@@ -235,6 +236,25 @@ make_senscritique_pairing_data <- function(){
   return(co)  
 }
 
+# Make press data ------
+## BEWARE: THIS IS A VARIABLE FROM A PREVIOUS VERSION OF THE DATABASE WITH
+## ONLY 7K ARTISTS SEARCHED IN THE PRESS
+make_press_data <- function(){
+  
+  require(tidyverse)
+  s3 <- initialize_s3()
+  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists.csv")
+  artists <- f$Body %>% rawToChar %>% read_csv()
+  artists <- mutate(artists, 
+                    total_n_pqnt_texte = n_presse_texte_le_figaro + 
+                      n_presse_texte_liberation + 
+                      n_presse_texte_le_monde + 
+                      n_presse_texte_telerama) %>% 
+    select(artist_id, total_n_pqnt_texte)
+  return(artists)
+}
+
+# Make senscritique ratings ------
 make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
   require(tidyverse)
   s3 <- initialize_s3()
@@ -265,21 +285,21 @@ make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
     inner_join(select(senscritique_mb_deezer_id, contact_id, consolidated_artist_id) %>% 
                  distinct()) %>% 
     group_by(consolidated_artist_id) %>% 
-    summarise(max = max(mean),
-              min = min(mean),
-              mean = mean(mean), 
-              n_albums = n(),
-              mean_sd = mean(sd)) %>% 
+    summarise(senscritique_maxscore = max(mean),
+              senscritique_minscore = min(mean),
+              senscritique_meanscore = mean(mean), 
+              senscritique_n_albums = n(),
+              senscritique_mean_sd = mean(sd)) %>% 
     rename(artist_id = "consolidated_artist_id")
   return(cora)
 }
 
 # Make genre data ------
 
-make_genres_data <- function(source = "deezer_editorial_playlists", senscritique_mb_deezer_id){
+make_genres_data <- function(.source = "deezer_editorial_playlists", senscritique_mb_deezer_id){
   require(tidyverse)
   s3 <- initialize_s3()
-  if(source == "deezer_editorial_playlists"){
+  if(.source == "deezer_editorial_playlists"){
     f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists_genre_weight.csv")
     genres <- f$Body %>% rawToChar() %>% read_csv()
     genres <- genres %>% 
@@ -290,7 +310,8 @@ make_genres_data <- function(source = "deezer_editorial_playlists", senscritique
       filter(value > .33) %>%
       arrange(artist_id, desc(value)) %>% 
       slice(1, .by = artist_id) %>% 
-      select(-n_playlists_used, -value)
+      select(-n_playlists_used, -value) %>% 
+      mutate(genre = recode_vars(genre, .source))
     # Check coverage of genre definition
     # user_artist_peryear %>% 
     #   filter(!is.na(artist_id)) %>% 
@@ -300,17 +321,19 @@ make_genres_data <- function(source = "deezer_editorial_playlists", senscritique
     #   summarise(n=sum(n_play))
     # With .4 threshold, 70% of plays; with .3, 79%
     
-  } else if(source == "deezer_maingenre"){
+  } else if(.source == "deezer_maingenre"){
     s3$download_file(Bucket = "scoavoux", 
                      Key = "records_w3/items/artists_data.snappy.parquet",
                      Filename = "data/temp/artists_data.snappy.parquet")
     artists <- read_parquet("data/temp/artists_data.snappy.parquet", col_select = 1:3)
     artists <- artists %>% 
       filter(!is.na(main_genre))
-    genres <- artists %>% select(artist_id, genre = "main_genre")
+    genres <- artists %>% 
+      select(artist_id, genre = "main_genre") %>% 
+      mutate(genre = recode_vars(genre, .source))
     # TODO:Collapse
     
-  } else if(source == "senscritique"){
+  } else if(.source == "senscritique_tags"){
     f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/albums_tags.csv")
     album_tags <- f$Body %>% rawToChar() %>% read_csv()
     f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/tags_meaning.csv")
@@ -319,15 +342,22 @@ make_genres_data <- function(source = "deezer_editorial_playlists", senscritique
     contacts_albums_list <- f$Body %>% rawToChar() %>% read_csv()
     rm(f)
     
-    g <- left_join(album_tags, tags_meaning) %>% 
-      left_join(select(contacts_albums_list, -contact_subtype_id)) %>% 
-      left_join(select(senscritique_mb_deezer_id, -mbid)) %>% 
-      filter(!is.na(artist_id)) %>% 
-      count(artist_id, genre)
-    g
+    genres <- left_join(album_tags, tags_meaning) %>% 
+      left_join(select(contacts_albums_list, -contact_subtype_id), relationship = "many-to-many") %>% 
+      left_join(select(senscritique_mb_deezer_id, -mbid), relationship = "many-to-many") %>% 
+      mutate(genre = recode_vars(genre, .source)) %>% 
+      filter(!is.na(artist_id), !is.na(genre)) %>%
+      count(artist_id, product_id, genre) %>% 
+      mutate(f = n/sum(n), .by = product_id) %>% 
+      summarise(f = sum(f), .by = c(artist_id, genre)) %>% 
+      mutate(f = f / sum(f), .by = artist_id) %>% 
+      arrange(artist_id, desc(f)) %>% 
+      slice(1, .by = artist_id) %>% 
+      filter(f > .3) %>% 
+      select(artist_id, genre)
     # TODO: collapse
     
-  } else if(source == "musicbrainz_tags"){
+  } else if(.source == "musicbrainz_tags"){
     # THERE IS SOMETHING WRONG PROBABLY IN MBID. FOR INSTANCE COCTEAU TWINS is
     # "salsa choke" and Death Cab for Cutie is "Non-Music"
     # f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/mbid_deezerid_pair.csv")
@@ -344,16 +374,16 @@ make_genres_data <- function(source = "deezer_editorial_playlists", senscritique
   return(genres)
 }
 
-# Compute aggregate stats on artists ------
-# compute_endo_leg <- function(){
-#   # input is stream data + user data
-#   # output: artist_id, endo_dipl, endo_isei
-#   
-# }
-# 
-# compute_exo_press <- function(){
-#   
-# }
+# Merge genres ------
+## Takes a list of tibbles describing artist genres
+## and return a list of unique genre attribution for each artist
+merge_genres <- function(...){
+  require(tidyverse)  
+  # order of arguments is the order of priority of databases
+  genres <- bind_rows(...) %>% 
+    slice(1, .by = artist_id)
+  return(genres)
+}
 
 compute_exo_radio <- function(){
   require(tidytable)
@@ -372,124 +402,48 @@ compute_exo_radio <- function(){
 }
 
 join_artist <- function(...){
-  # Make artist dataset by joining all indicators
-  s3 <- initialize_s3()
-  # artists <- artists_list %>%
-  #   left_join()
-  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists.csv")
-  artists <- f$Body %>% rawToChar %>% read_csv()
-  
+  require(tidyverse)
   # Proper join
   l <- list(...)
-  for(i in seq_along(l)){
-    artists <- artists %>% 
-      left_join(l[[i]])
+  artists_raw <- l[[1]]
+  for(i in 2:length(l)){
+    artists_raw <- artists_raw %>% 
+      full_join(l[[i]])
   }
+  return(artists_raw)
+}
+
+# Filter artists ------
+## We define here how to 
+filter_artists <- function(artists_raw){
+  require(tidyverse)
   
-  # Also recoding artist dataset
+  # Rules of inclusion/exclusion of artists
+  artists <- artists_raw %>% 
+    filter(!is.na(genre),
+           !is.na(senscritique_meanscore), # has score on senscritique
+           !is.na(mean_isei),
+           n_isei > 5
+           #parse # has been looked up in press data
+    )
   
   artists <- artists %>% 
-# turn NA to 0 in radio plays
-    mutate(across(starts_with("radio"), ~if_else(is.na(.x), 0, .x))) %>% 
-# Scaling legitimacy variables
-    mutate(sc_endo_isei = center_scale(endo_isei_mean_pond),
-           sc_endo_educ = center_scale(endo_share_high_education_pond),
+    # turn NA to 0 in radio plays
+    mutate(across(starts_with("radio|total_n"), ~if_else(is.na(.x), 0, .x))) %>% 
+    # Scaling legitimacy variables
+    mutate(sc_endo_isei = center_scale(mean_isei),
+           sc_endo_educ = center_scale(share_higher_ed),
            sc_exo_press = center_scale(log(total_n_pqnt_texte+1)),
            sc_exo_score = center_scale(senscritique_meanscore),
            sc_exo_radio = center_scale(log(radio_leg+1))
-           )
+    )
+  
 
+  # Add PCA
+  x <- compute_pca(artists)
+  artists <- artists %>% 
+    mutate(sc_exo_pca = x$ind$coord[,1])
+  
   return(artists)
 }
 
-# Compute aggregate stats on users ------
-
-# Code artists ------
-filter_artists <- function(artists){
-    # Rules of inclusion/exclusion of artists
-  artists_filtered <- artists %>% 
-    filter(!is.na(genre),
-           !is.na(senscritique_meanscore), # has score on senscritique
-           parse # has been looked up in press data
-           )
-  
-  # Add PCA
-  x <- compute_pca(artists_filtered)
-  artists_filtered <- artists_filtered %>% 
-    mutate(sc_exo_pca = x$ind$coord[,1])
-  
-  return(artists_filtered)
-}
-
-# compute_exo_pca <- function(artists){
-#   artists %>% 
-#     select()
-# }
-
-test_join <- function(){
-  require(tidyverse)
-  require(arrow)
-  s3 <- initialize_s3()
-
-  s3$download_file(Bucket = "scoavoux", 
-                   Key = "records_w3/items/artists_data.snappy.parquet",
-                   Filename = "data/artists_data.snappy.parquet")
-  artists <- read_parquet("data/artists_data.snappy.parquet", col_select = 1:3)
-  artists <- artists %>% 
-    filter(!is.na(main_genre))
-  
-  tar_load("endo_legitimacy")
-  tar_load("exo_radio")
-  tar_load("exo_senscritique")
-  tar_load("senscritique_mb_deezer_id")
-  tar_load("genres")
-  tar_load("artists_pop")
-  
-  artists_pop <- artists_pop %>% 
-    filter(respondent_n_users > 20)
-  # x <- inner_join(exo_senscritique, exo_radio) %>% 
-  #   inner_join(endo_legitimacy) %>% 
-  #   inner_join(genres)
-
-  x <- select(senscritique_mb_deezer_id, artist_id) %>% mutate(senscritique = TRUE) %>% 
-    full_join(select(exo_radio, artist_id) %>% mutate(radio = TRUE)) %>% 
-    full_join(select(endo_legitimacy, artist_id) %>% mutate(endo_legitimacy = TRUE)) %>% 
-    full_join(select(artists, artist_id) %>% mutate(genre = TRUE)) %>%
-    full_join(select(artists_pop, artist_id) %>% mutate(pop_threshold = TRUE)) %>% 
-    mutate(across(everything(), ~ifelse(is.na(.x), FALSE, .x)))
-  count(x, senscritique, radio, endo_legitimacy, genre, pop_threshold) %>% 
-    arrange(desc(n)) %>% 
-    filter(pop_threshold) %>% 
-    mutate(k = senscritique + radio + genre) %>% 
-    arrange(desc(k))
-  
-  filter(x, !senscritique, genre, pop_threshold) %>% 
-    left_join(artists) %>% 
-    left_join(select(artists_pop, artist_id, respondent_n_users)) %>% 
-    arrange(desc(respondent_n_users)) %>% 
-    filter(respondent_n_users > 100) %>% 
-    select(artist_id, name, respondent_n_users) %>% 
-    write_csv("manual_search.csv")
-  
-  
-  # Using deezer genres, setting a low threshold for popularity (20) and
-  # accepting artists with 0 radio plays => about 12500 artists
-  a <- 
-    artists %>% 
-    select(artist_id = "deezer_id", name = "mbname", main_genre = "genre") %>% 
-    # filter on pop threshold
-    inner_join(filter(artists_pop, respondent_n_users >= 20) %>% 
-                select(artist_id)) %>% 
-    # Add senscritique score
-    inner_join(select(exo_senscritique,
-                     artist_id, 
-                     mean_sc_score = mean,
-                     max_sc_score  = max)) %>% 
-    # Add endogenous legitimacy
-    inner_join(endo_legitimacy) %>% 
-    # add radio. Set to zero when not present
-    left_join(exo_radio) %>% 
-    mutate(across(starts_with("radio"), ~ifelse(is.na(.x), 0, .x)))
-  janitor::tabyl(a, main_genre) %>% 
-    arrange(n)
-}
