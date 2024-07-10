@@ -1,11 +1,11 @@
 plot_endoleg_bygenre <- function(artists){
   set_ggplot_options()
   g <- artists %>% 
-    mutate(genre = recode_vars(genre, "genres"), 
+    mutate(genre = recode_vars(genre, "cleangenres"), 
            genre = fct_reorder(genre, endo_isei_mean_pond, mean)) %>% 
     select(genre, endo_isei_mean_pond, endo_share_high_education_pond) %>% 
     pivot_longer(-genre) %>% 
-    mutate(name = recode_vars(name, "legitimacy")) %>% 
+    mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
     ggplot(aes(x= genre, y = value)) +
       geom_boxplot() +
       facet_wrap(~name, scales = "free_x") +
@@ -19,11 +19,11 @@ plot_exoleg_bygenre <- function(artists){
   g <- artists %>% 
     mutate(total_n_pqnt_texte = log(total_n_pqnt_texte+1),
            radio_leg = log(radio_leg+1)) %>%
-    mutate(genre = recode_vars(genre, "genres"),
+    mutate(genre = recode_vars(genre, "cleangenres"),
            genre = factor(genre) %>% fct_reorder(senscritique_meanscore, median)) %>% 
     select(genre, total_n_pqnt_texte, senscritique_meanscore, radio_leg, sc_exo_pca) %>% 
     pivot_longer(-genre) %>% 
-    mutate(name = recode_vars(name, "legitimacy")) %>% 
+    mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
     ggplot(aes(genre, value)) +
       geom_boxplot() +
       facet_wrap(~name, scales = "free_x") +
@@ -38,13 +38,13 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
   require(gghalves)
   d <- artists %>% 
     select(genre, sc_endo_isei, sc_exo_pca) %>% 
-    mutate(genre = recode_vars(genre, "genres"))
+    mutate(genre = recode_vars(genre, "cleangenres"))
   
   if(type == "density") {
     g <- d %>% 
       mutate(genre = factor(genre) %>% fct_reorder(sc_endo_isei, median)) %>% 
       pivot_longer(-genre) %>% 
-      mutate(name = recode_vars(name, "legitimacy")) %>% 
+      mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
       ggplot(aes(x= genre, y = value)) +
         geom_half_violin(side="t")
       # geom_half_point(side = "l", size=.7)
@@ -52,7 +52,7 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
     d <- d %>% 
       mutate(genre = factor(genre) %>% fct_reorder(sc_endo_isei, mean)) %>% 
       pivot_longer(-genre) %>% 
-      mutate(name = recode_vars(name, "legitimacy")) %>% 
+      mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
       group_by(genre, name) %>% 
       summarize(n = n(),
                 m = mean(value),
@@ -85,7 +85,7 @@ plot_endoexoleg_genrerank <- function(artists){
   g <- x %>% 
     select(genre, sc_endo_isei, sc_exo_pca) %>% 
     pivot_longer(-genre) %>% 
-    mutate(genre = recode_vars(genre, "genres")) %>% 
+    mutate(genre = recode_vars(genre, "cleangenres")) %>% 
     ggplot(aes(x=name, y=value, group=genre)) +
       geom_point() +
       geom_line() +
@@ -109,7 +109,7 @@ plot_endoexoleg_correlation <- function(artists, genrefacets=FALSE, genremean=FA
     paste0("italic(R)^2 ==", y)
   }
   artists <- artists %>% 
-    mutate(genre = recode_vars(genre, "genres")) 
+    mutate(genre = recode_vars(genre, "cleangenres")) 
 
   g <- artists %>% 
     ggplot(aes(sc_exo_pca, sc_endo_isei)) +
@@ -195,9 +195,9 @@ plot_genre_overlap <- function(artists){
     add_count(g1, name = "n1") %>% 
     add_count(g2, name = "n2") %>% 
     arrange(n1, n2) %>% 
-    mutate(g1 = recode_vars(g1, "genres") %>% factor(levels = unique(.)),
-           g2 = recode_vars(g2, "genres") %>% factor(levels = unique(.)),
-           leg = recode_vars(leg, "legitimacy"))
+    mutate(g1 = recode_vars(g1, "cleangenres") %>% factor(levels = unique(.)),
+           g2 = recode_vars(g2, "cleangenres") %>% factor(levels = unique(.)),
+           leg = recode_vars(leg, "cleanlegitimacy"))
   g <- ggplot(dp, aes(g1, g2, fill = ol)) +
     geom_tile() +
     geom_text(aes(label=round(ol, 2) %>% str_replace("0.", "."))) +
@@ -225,7 +225,7 @@ table_leg_variance <- function(artists){
     pivot_longer(everything(), 
                  names_to = "Variable", 
                  values_to = "R squared") %>% 
-    mutate(Variable = recode_vars(Variable, "legitimacy") %>% 
+    mutate(Variable = recode_vars(Variable, "cleanlegitimacy") %>% 
              str_replace("\\n", " "))
   return(rs)
 }

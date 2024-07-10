@@ -31,7 +31,7 @@ plot_lca_profile <- function(latent_classes_from_surveys,
     select(-`Pr(1)`) %>% 
     mutate(class = str_remove_all(class, "[ :]")) %>% 
     pivot_wider(names_from = class, values_from = `Pr(2)`) %>% 
-    mutate(genre = recode_vars(genre, "genres"))
+    mutate(genre = recode_vars(genre, "cleangenres"))
   genre_prevalence <- res %>% 
     pivot_longer(-genre) %>% 
     summarise(value = mean(value), .by = genre)
@@ -123,7 +123,7 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
            omni_stream_genres_hhi, 
            sd_exo_pca) %>% 
     pivot_longer(-cluster_survey) %>% 
-    mutate(name = recode_vars(name, "legitimacy"),
+    mutate(name = recode_vars(name, "cleanlegitimacy"),
            cluster_survey = paste0("class", cluster_survey),
            cluster_survey = fct_recode(cluster_survey, !!!lca_class_interpretation)) %>% 
     filter(!is.na(value)) %>% 
@@ -176,7 +176,7 @@ plot_exoomni_by_otheromni <- function(survey){
              omni_stream_genres_hhi,
              sd_exo_pca) %>% 
     pivot_longer(-hashed_id) %>% 
-    mutate(name = recode_vars(name, "legitimacy")) %>% 
+    mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
     pivot_wider(names_from = name, values_from = value)
   l <- vector("list", 2L)
   l[[1]] <- ggplot(s, aes(`Cultural holes played`, `SD exo. leg.`)) +
@@ -205,7 +205,7 @@ plot_omni_socdem <- function(survey){
            degree,
            age) %>% 
     pivot_longer(omni_survey_cultural_holes_played:sd_exo_pca) %>% 
-    mutate(name = recode_vars(name, "legitimacy"))
+    mutate(name = recode_vars(name, "cleanlegitimacy"))
   s %>% 
     filter(!is.na(degree), !is.na(value)) %>% 
     group_by(name) %>% 

@@ -37,8 +37,6 @@ list(
   tar_target(artists, join_artist(exo_radio)), #endo_leg, exo_press, exo_senscritique
   tar_target(artists_filtered, filter_artists(artists)),
   tar_target(genres, make_genres_data()),
-  tar_target(genres_aliases_file, "data/genres.csv", format="file"),
-  tar_target(genres_aliases, make_genres_aliases(genres_aliases_file)),
   tar_target(artists_pop, make_artist_popularity_data(user_artist_peryear_merged_artists )),
 
   ## Analysis Omni 1 ------
@@ -66,13 +64,13 @@ list(
   tar_target(survey_raw, make_survey_data()),
   
   # Omnivorousness
-  tar_target(omni_from_survey, compute_omnivorourness_from_survey(survey_raw, genres_aliases)),
+  tar_target(omni_from_survey, compute_omnivorourness_from_survey(survey_raw)),
   tar_target(omni_from_streams, compute_omnivorourness_from_streams(user_artist_peryear_merged_artists , artists_filtered, genres, rescale_by = "user")),
   
   # Latent classes
   ## Make many models
   tar_target(latent_classes_from_surveys_multiple, 
-             compute_latent_classes_from_survey(survey_raw, genres_aliases, nclass = 1L:15L)),
+             compute_latent_classes_from_survey(survey_raw, nclass = 1L:15L)),
   tar_target(latent_classes_from_streams_multiple, 
              compute_latent_classes_from_streams(user_artist_peryear_merged_artists , genres, nclass = 1L:15L)),
   tar_target(latent_classes_from_streams_multiple_proportion, 

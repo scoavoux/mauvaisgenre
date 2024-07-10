@@ -342,16 +342,6 @@ make_genres_data <- function(source = "deezer_editorial_playlists", senscritique
   return(genres)
 }
 
-make_genres_aliases <- function(.file = "data/genres.csv"){
-  require(tidyverse)
-  genres_aliases <- read_csv(.file)
-  genres_aliases_char <- c(genres_aliases$streaminggenre, 
-                           genres_aliases$streaminggenre)
-  names(genres_aliases_char) <- c(genres_aliases$surveygenre,
-                                  genres_aliases$question)
-  return(genres_aliases_char)
-}
-
 # Compute aggregate stats on artists ------
 # compute_endo_leg <- function(){
 #   # input is stream data + user data

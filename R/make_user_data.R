@@ -1,5 +1,5 @@
 # Compute omnivorism by user ------
-compute_omnivorourness_from_survey <- function(survey, genres_aliases){
+compute_omnivorourness_from_survey <- function(survey){
   # Compute from genres liked and consumed.
   # TODO: cultural holes
   require(tidyverse)
@@ -7,7 +7,7 @@ compute_omnivorourness_from_survey <- function(survey, genres_aliases){
   person_genre_survey <- survey %>%
     select(hashed_id, matches("B_genres_\\d+")) %>%
     pivot_longer(-hashed_id) %>% 
-    mutate(value = genres_aliases[value]) %>% 
+    mutate(value = recode_vars(value, "survey_question")) %>% 
     filter(value != "", !is.na(value)) %>% 
     distinct(hashed_id, value) %>% 
     select(hashed_id, genre = "value")
@@ -18,7 +18,7 @@ compute_omnivorourness_from_survey <- function(survey, genres_aliases){
 
   person_genre_liked_survey <- make_genre_preference_data(survey) %>%
     # Consolidate genres to agree between survey and streaming
-    mutate(genre = genres_aliases[genre]) %>% 
+    mutate(genre = recode_vars(genre, "survey_questionno")) %>% 
     filter(genre != "", !is.na(genre)) %>%
     # only loved and liked genres
     filter(group %in% c("0", "1")) %>% 
@@ -107,14 +107,14 @@ compute_omnivorourness_from_survey <- function(survey, genres_aliases){
 }
 
 # Make latent classes
-compute_latent_classes_from_survey <- function(survey, genres_aliases, nclass){
+compute_latent_classes_from_survey <- function(survey, nclass){
   require(tidyverse)
 
   genre_matrix <- survey %>%
     select(hashed_id, matches("B_genres_\\d+")) %>%
     pivot_longer(-hashed_id) %>%
     # consolidate genres
-    mutate(value = genres_aliases[value]) %>% 
+    mutate(value = recode_vars(value, "survey_question")) %>% 
     filter(value != "", !is.na(value)) %>%
     distinct(hashed_id, value) %>% 
     mutate(name = 2) %>% 

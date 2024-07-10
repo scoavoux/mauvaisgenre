@@ -1,0 +1,739 @@
+scheme,orig,replacement
+cleangenres,"rock","Rock"
+cleangenres,"raphiphop","Rap & Hip-Hop"
+cleangenres,"frenchsongs","Chanson"
+cleangenres,"reggae","Reggae"
+cleangenres,"soulfunk","Soul & Funk"
+cleangenres,"edm","EDM"
+cleangenres,"pop","Pop"
+cleangenres,"jazz","Jazz"
+cleangenres,"frenchrap","French Rap"
+cleangenres,"latino","Latino"
+cleangenres,"rnb","R&B"
+cleangenres,"metal","Metal"
+cleangenres,"classical","Classical"
+cleangenres,"african","African"
+cleangenres,"country","Country"
+cleangenres,"alternative","Alternative"
+cleangenres,"folk","Folk"
+cleangenres,"blues","Blues"
+cleanlegitimacy,"sc_endo_isei","Endogenous legitimacy\n(ISEI)"
+cleanlegitimacy,"sc_endo_educ","Endogenous legitimacy\n(education)"
+cleanlegitimacy,"sc_exo_press","Exogenous legitimacy\n(media)"
+cleanlegitimacy,"sc_exo_score","Exogenous legitimacy\n(score)"
+cleanlegitimacy,"sc_exo_radio","Exogenous legitimacy\n(radio)"
+cleanlegitimacy,"sc_exo_pca"  ,"Exogenous legitimacy\n(PCA)"
+cleanlegitimacy,"endo_isei_mean_pond","Endogenous legitimacy\n(ISEI, unscaled)"
+cleanlegitimacy,"endo_share_high_education_pond","Endogenous legitimacy\n(education, unscaled)"
+cleanlegitimacy,"total_n_pqnt_texte","Exogenous legitimacy\n(media, unscaled)"
+cleanlegitimacy,"senscritique_meanscore","Exogenous legitimacy\n(score, unscaled)"
+cleanlegitimacy,"radio_leg","Exogenous legitimacy\n(radio, unscaled)"
+cleanlegitimacy,"omni_survey_sum_genres_played","Richness played"
+cleanlegitimacy,"omni_survey_sum_genres_liked","Richness liked"
+cleanlegitimacy,"omni_stream_genres_hhi","HHI genres streamed"
+cleanlegitimacy,"mean_exo_pca","Mean exo. leg."
+cleanlegitimacy,"sd_exo_pca","SD exo. leg."
+cleanlegitimacy,"omni_survey_cultural_holes_played","Cultural holes played"
+cleanlegitimacy,"omni_survey_cultural_holes_liked","Cultural holes liked"
+survey_questionno,"B_genres_18",blues
+survey_questionno,"B_genres_19",country
+survey_questionno,"B_genres_20",edm
+survey_questionno,"B_genres_4",edm
+survey_questionno,"B_genres_15",folk
+survey_questionno,"B_genres_8",raphiphop
+survey_questionno,"B_genres_13",alternative
+survey_questionno,"B_genres_5",jazz
+survey_questionno,"B_genres_21",
+survey_questionno,"B_genres_10",classical
+survey_questionno,"B_genres_14",
+survey_questionno,"B_genres_23",latino
+survey_questionno,"B_genres_16",latino
+survey_questionno,"B_genres_24",african
+survey_questionno,"B_genres_22",african
+survey_questionno,"B_genres_17",
+survey_questionno,"B_genres_12",metal
+survey_questionno,"B_genres_2",pop
+survey_questionno,"B_genres_1",frenchrap
+survey_questionno,"B_genres_11",reggae
+survey_questionno,"B_genres_6",rnb
+survey_questionno,"B_genres_3",rock
+survey_questionno,"B_genres_7",soulfunk
+survey_questionno,"B_genres_9",frenchsongs
+survey_question,"Blues",blues
+survey_question,"Country",country
+survey_question,"Dance & EDM",edm
+survey_question,"Electro",edm
+survey_question,"Folk & Acoustique",folk
+survey_question,"Hip Hop / Rap",raphiphop
+survey_question,"Indé / Alternatif",alternative
+survey_question,"Jazz",jazz
+survey_question,"K-pop",
+survey_question,"Musique Classique",classical
+survey_question,"Musique de Film",
+survey_question,"Musique Brésilienne",latino
+survey_question,"Musique Latino",latino
+survey_question,"Musiques Africaines",african
+survey_question,"Musiques Arabes",african
+survey_question,"Musiques Asiatiques",
+survey_question,"Métal",metal
+survey_question,"Pop",pop
+survey_question,"Rap français",frenchrap
+survey_question,"Reggae",reggae
+survey_question,"RnB",rnb
+survey_question,"Rock",rock
+survey_question,"Soul / Funk",soulfunk
+survey_question,"Variété française",frenchsongs
+playlist,"african","african"
+playlist,"alternative","alternative"
+playlist,"blues","blues"
+playlist,"classical","classical"
+playlist,"country","country"
+playlist,"folk","folk"
+playlist,"frenchrap","frenchrap"
+playlist,"frenchsongs","frenchsongs"
+playlist,"jazz","jazz"
+playlist,"latino","latino"
+playlist,"metal","metal"
+playlist,"pop","pop"
+playlist,"raphiphop","raphiphop"
+playlist,"reggae","reggae"
+playlist,"rnb","rnb"
+playlist,"rock","rock"
+playlist,"soulfunk","soulfunk"
+playlist,"electro","edm"
+playlist,"dance","edm"
+deezer_maingenre,"african_music","african"
+deezer_maingenre,"alternative","alternative"
+deezer_maingenre,"arabic_music","african"
+deezer_maingenre,"asian_music",
+deezer_maingenre,"blues","blues"
+deezer_maingenre,"brazilian_christian_music","latino"
+deezer_maingenre,"brazilian_funk","latino"
+deezer_maingenre,"christian",
+deezer_maingenre,"classical","classical"
+deezer_maingenre,"country","country"
+deezer_maingenre,"edm","edm"
+deezer_maingenre,"electronic","edm"
+deezer_maingenre,"european_music",
+deezer_maingenre,"folk","folk"
+deezer_maingenre,"forro","latino"
+deezer_maingenre,"french_music","frenchsongs"
+deezer_maingenre,"hip_hop","raphiphop"
+deezer_maingenre,"indian_music",
+deezer_maingenre,"jazz","jazz"
+deezer_maingenre,"k_pop",
+deezer_maingenre,"latin_american_music","latino"
+deezer_maingenre,"metal","metal"
+deezer_maingenre,"mpb","latino"
+deezer_maingenre,"new_age",
+deezer_maingenre,"nonmusic",
+deezer_maingenre,"pop","pop"
+deezer_maingenre,"r&b","rnb"
+deezer_maingenre,"reggae","reggae"
+deezer_maingenre,"rock","rock"
+deezer_maingenre,"samba_pagode","latino"
+deezer_maingenre,"sertanejo","latino"
+deezer_maingenre,"soul","soul"
+deezer_maingenre,"soundtrack",
+senscritique,Electronic,edm
+senscritique,Rock,rock
+senscritique,Pop,pop
+senscritique,Pop rock,rock
+senscritique,Jazz,jazz
+senscritique,Hip Hop,raphiphop
+senscritique,Experimental,
+senscritique,House,edm
+senscritique,"Folk, World, & Country",folk
+senscritique,Synth-pop,pop
+senscritique,Funk / Soul,soulfunk
+senscritique,Indie Rock,alternative
+senscritique,Alternative Rock,alternative
+senscritique,Techno,edm
+senscritique,Punk,rock
+senscritique,Electro,edm
+senscritique,Ambient,edm
+senscritique,Downtempo,edm
+senscritique,Industrial,edm
+senscritique,Trance,edm
+senscritique,Hardcore punk,rock
+senscritique,Disco,pop
+senscritique,Classical,classical
+senscritique,Drum'n'Bass,edm
+senscritique,Folk Rock,rock
+senscritique,Black Metal,metal
+senscritique,Stage & Screen,
+senscritique,New Wave,rock
+senscritique,Heavy Metal,metal
+senscritique,Prog Rock,rock
+senscritique,Reggae,reggae
+senscritique,Soul,soulfunk
+senscritique,Psychedelic Rock,rock
+senscritique,Abstract,classical
+senscritique,Blues,blues
+senscritique,Electro/techno,edm
+senscritique,Minimal,edm
+senscritique,Hard Rock,metal
+senscritique,Euro House,edm
+senscritique,Tech House,edm
+senscritique,Deep House,edm
+senscritique,Latin,latino
+senscritique,Vocal,
+senscritique,Ballad,folk
+senscritique,IDM,edm
+senscritique,Death Metal,metal
+senscritique,Folk,folk
+senscritique,Funk,soulfunk
+senscritique,Soundtrack,
+senscritique,Noise,metal
+senscritique,Chanson,frenchsongs
+senscritique,Dub,edm
+senscritique,Classic Rock,rock
+senscritique,Rock & Roll,rock
+senscritique,Acoustic,
+senscritique,Breakbeat,edm
+senscritique,EBM,edm
+senscritique,Goth Rock,rock
+senscritique,Progressive Trance,edm
+senscritique,Blues Rock,rock
+senscritique,Progressive House,edm
+senscritique,Country,country
+senscritique,Soft Rock,rock
+senscritique,Garage Rock,rock
+senscritique,Modern Classical,classical
+senscritique,Leftfield,edm
+senscritique,RnB/Swing,rnb
+senscritique,Europop,pop
+senscritique,Doom metal,metal
+senscritique,Avantgarde,
+senscritique,Breaks,edm
+senscritique,Post Rock,rock
+senscritique,Contemporary Jazz,jazz
+senscritique,Thrash,metal
+senscritique,Hard Trance,edm
+senscritique,Trip Hop,
+senscritique,Acid,edm
+senscritique,Future Jazz,jazz
+senscritique,Psy-Trance,edm
+senscritique,Dubstep,edm
+senscritique,Rhythm & Blues,rnb
+senscritique,Non-Music,
+senscritique,Art Rock,rock
+senscritique,Bande-originale,
+senscritique,Easy Listening,
+senscritique,Pop Rap,pop
+senscritique,Country Rock,country
+senscritique,Drone,edm
+senscritique,Contemporary,
+senscritique,Ska,reggae
+senscritique,Dark Ambient,edm
+senscritique,Fusion,
+senscritique,Score,
+senscritique,Grindcore,metal
+senscritique,Schlager,pop
+senscritique,Jazz-Funk,jazz
+senscritique,Lo-Fi,pop
+senscritique,Gangsta,raphiphop
+senscritique,Conscious,raphiphop
+senscritique,Jungle,edm
+senscritique,Jazz-Rock,jazz
+senscritique,Tribal,edm
+senscritique,Power Pop,rock
+senscritique,Soul-Jazz,jazz
+senscritique,Hard/metal,metal
+senscritique,Rap/hip hop/R&B,raphiphop
+senscritique,Free Jazz,jazz
+senscritique,Darkwave,rock
+senscritique,Italo-Disco,edm
+senscritique,Symphonic Rock,rock
+senscritique,Stoner Rock,rock
+senscritique,J-pop,pop
+senscritique,Romantic,
+senscritique,Post-Punk,rock
+senscritique,Goa Trance,edm
+senscritique,Roots Reggae,reggae
+senscritique,Garage House,edm
+senscritique,Gabber,edm
+senscritique,Happy Hardcore,edm
+senscritique,Breakcore,edm
+senscritique,Emo,
+senscritique,Free Improvisation,
+senscritique,Modern,
+senscritique,Neofolk,folk
+senscritique,Shoegaze,rock
+senscritique,Glitch,edm
+senscritique,Swing,jazz
+senscritique,Glam,rock
+senscritique,Acid Jazz,jazz
+senscritique,Big Band,jazz
+senscritique,Hard House,edm
+senscritique,Indie Pop,alternative
+senscritique,Krautrock,rock
+senscritique,Rockabilly,rock
+senscritique,Space Rock,rock
+senscritique,Brit Pop,pop
+senscritique,UK Garage,edm
+senscritique,Big Beat,edm
+senscritique,Dancehall,reggae
+senscritique,Classique,classical
+senscritique,Grunge,rock
+senscritique,Smooth Jazz,jazz
+senscritique,Oi,rock
+senscritique,Instrumental,
+senscritique,Ethereal,rock
+senscritique,Latin Jazz,jazz
+senscritique,Acid House,edm
+senscritique,New Age,
+senscritique,Rhythmic Noise,edm
+senscritique,Hard Bop,jazz
+senscritique,Post Bop,jazz
+senscritique,Baroque,classical
+senscritique,Dub Techno,edm
+senscritique,Broken Beat,edm
+senscritique,Hi NRG,edm
+senscritique,Parody,
+senscritique,Hardstyle,edm
+senscritique,Comedy,
+senscritique,Field Recording,
+senscritique,Bop,jazz
+senscritique,Nu Metal,metal
+senscritique,Math Rock,rock
+senscritique,Thug Rap,raphiphop
+senscritique,Children's,
+senscritique,Surf,rock
+senscritique,Electro House,edm
+senscritique,Southern Rock,rock
+senscritique,Bossa Nova,latino
+senscritique,Speed Metal,metal
+senscritique,Metalcore,metal
+senscritique,Musique Concrète,classical
+senscritique,Cool Jazz,jazz
+senscritique,Lounge,pop
+senscritique,Reggae-Pop,reggae
+senscritique,Spoken Word,raphiphop
+senscritique,Hardcore (EDM),edm
+senscritique,Neo-Classical,classical
+senscritique,Theme,
+senscritique,African,african
+senscritique,Chiptune,edm
+senscritique,Psychobilly,rock
+senscritique,Arena Rock,rock
+senscritique,Jazzdance,jazz
+senscritique,Shoegazer,rock
+senscritique,Funk/soul,soulfunk
+senscritique,Italodance,edm
+senscritique,Power Electronics,edm
+senscritique,Tribal House,edm
+senscritique,Gospel,
+senscritique,Grime,edm
+senscritique,Beat,rock
+senscritique,Country Blues,country
+senscritique,Celtic,folk
+senscritique,Afrobeat,african
+senscritique,Neo Soul,soulfunk
+senscritique,Viking Metal,metal
+senscritique,Bluegrass,country
+senscritique,Mod,rock
+senscritique,Rocksteady,reggae
+senscritique,Electric Blues,blues
+senscritique,Musical,
+senscritique,Modal,
+senscritique,Novelty,
+senscritique,Power Metal,metal
+senscritique,Freestyle,raphiphop
+senscritique,Hip-House,raphiphop
+senscritique,Bass Music,edm
+senscritique,MPB,latino
+senscritique,Sludge Metal,metal
+senscritique,Hardcore,metal
+senscritique,Salsa,latino
+senscritique,Pop Punk,rock
+senscritique,Psychedelic,rock
+senscritique,Illbient,edm
+senscritique,Opera,classical
+senscritique,Dance-pop,pop
+senscritique,Avant-garde Jazz,jazz
+senscritique,Flamenco,latino
+senscritique,Ragga HipHop,raphiphop
+senscritique,Eurodance,edm
+senscritique,Samba,latino
+senscritique,Funk metal,metal
+senscritique,Post-Hardcore,rock
+senscritique,Progressive Metal,metal
+senscritique,Chicago Blues,blues
+senscritique,Hardcore Hip-Hop,raphiphop
+senscritique,Speedcore,metal
+senscritique,Religious,
+senscritique,Contemporary R&B,rnb
+senscritique,Screamo,rock
+senscritique,Space-Age,pop
+senscritique,Cut-up/DJ,edm
+senscritique,Drum n Bass,edm
+senscritique,Éntekhno,edm
+senscritique,New Beat,
+senscritique,Ragga,reggae
+senscritique,World,
+senscritique,Jazzy Hip-Hop,raphiphop
+senscritique,Gothic metal,metal
+senscritique,Afro-Cuban Jazz,jazz
+senscritique,Indian Classical,
+senscritique,Doo Wop,
+senscritique,Brass & Military,
+senscritique,Medieval,
+senscritique,Vaporwave,
+senscritique,Hindustani,
+senscritique,Berlin-School,
+senscritique,Ghetto,
+senscritique,Trap,
+senscritique,Jumpstyle,
+senscritique,Delta Blues,
+senscritique,Folk metal,metal
+senscritique,Tango,
+senscritique,P.Funk,
+senscritique,Interview,
+senscritique,Modern Electric Blues,
+senscritique,Lovers Rock,
+senscritique,Post-Modern,
+senscritique,Laïkó,
+senscritique,Mathcore,
+senscritique,Post-Metal,metal
+senscritique,Acid Rock,
+senscritique,Afro-Cuban,
+senscritique,Neo-Romantic,
+senscritique,Poetry,
+senscritique,Dixieland,
+senscritique,New Jack Swing,
+senscritique,Nordic,
+senscritique,Gypsy Jazz,
+senscritique,Piano Blues,
+senscritique,Speed Garage,
+senscritique,Dungeon Synth,
+senscritique,Crust,
+senscritique,Texas Blues,
+senscritique,Horrorcore,
+senscritique,Indie Folk,
+senscritique,Makina,
+senscritique,No Wave,
+senscritique,Mambo,
+senscritique,Dialogue,
+senscritique,Honky Tonk,
+senscritique,Minimal Techno,
+senscritique,Ragtime,
+senscritique,Synthwave,
+senscritique,Renaissance,
+senscritique,Noise rock,
+senscritique,Bolero,
+senscritique,Cumbia,
+senscritique,Calypso,
+senscritique,Radioplay,
+senscritique,Alternative metal,metal
+senscritique,Rumba,
+senscritique,Louisiana Blues,
+senscritique,Deathrock,
+senscritique,Guaguancó,
+senscritique,Euro-Disco,
+senscritique,Crunk,
+senscritique,Melodic Hardcore,
+senscritique,Bollywood,
+senscritique,Impressionist,
+senscritique,Rock expérimental,
+senscritique,Free Funk,
+senscritique,Political,
+senscritique,Brass Band,
+senscritique,Melodic Death Metal,metal
+senscritique,Music Hall,
+senscritique,Bounce,
+senscritique,Dream Pop,
+senscritique,Eurobeat,
+senscritique,Harmonica Blues,
+senscritique,Art Pop,
+senscritique,Bayou Funk,
+senscritique,Beatdown,
+senscritique,Tech Trance,
+senscritique,Boogaloo,
+senscritique,Nueva Cancion,
+senscritique,Boom Bap,
+senscritique,Deathcore,
+senscritique,Rap rock,
+senscritique,G-Funk,
+senscritique,Klezmer,
+senscritique,Reggaeton,
+senscritique,Zouk,
+senscritique,Cajun,
+senscritique,Cha-Cha,
+senscritique,Military,
+senscritique,Witch House,
+senscritique,AOR,
+senscritique,Electropop,
+senscritique,Juke,
+senscritique,Neo-Psychedelia,
+senscritique,Fado,
+senscritique,Merengue,
+senscritique,Folk Pop,
+senscritique,Screw,
+senscritique,Story,
+senscritique,Aboriginal,
+senscritique,Cubano,
+senscritique,K-Pop,
+senscritique,Progressive Electronic,
+senscritique,Educational,
+senscritique,Monolog,
+senscritique,Nu-Disco,
+senscritique,Raï,
+senscritique,Swingbeat,
+senscritique,Soca,
+senscritique,Jump Blues,
+senscritique,Pub Rock,
+senscritique,Son,
+senscritique,Sámi Music,
+senscritique,Descarga,
+senscritique,Highlife,
+senscritique,Pacific,
+senscritique,Speech,
+senscritique,Industrial metal,metal
+senscritique,Rap metal,metal
+senscritique,Symphonic Metal,metal
+senscritique,Audiobook,
+senscritique,Gamelan,
+senscritique,Sound Collage,
+senscritique,Powerviolence,
+senscritique,Holiday,
+senscritique,Metal symphonique,metal
+senscritique,Nursery Rhymes,
+senscritique,Zydeco,
+senscritique,Polka,
+senscritique,Slowcore,
+senscritique,Metal avant-gardiste,metal
+senscritique,Video Game Music,
+senscritique,Marches,
+senscritique,Mariachi,
+senscritique,Special Effects,
+senscritique,Electroclash,
+senscritique,Indietronica,
+senscritique,Persian Classical,
+senscritique,Turntablism,
+senscritique,Boogie rock,
+senscritique,Groove metal,
+senscritique,Hyphy,
+senscritique,Romani,
+senscritique,Go-Go,
+senscritique,Britpop,
+senscritique,Dub Poetry,
+senscritique,Axé,
+senscritique,Chinese Classical,
+senscritique,East Coast Blues,
+senscritique,Tejano,
+senscritique,Americana,
+senscritique,City Pop,
+senscritique,Djent,
+senscritique,Electroacoustic,
+senscritique,Psychedelic Pop,
+senscritique,Batucada,
+senscritique,Hard Techno,
+senscritique,Early,
+senscritique,Midwest Emo,
+senscritique,Andalusian Classical,
+senscritique,Chamber Folk,
+senscritique,Cloud Rap,
+senscritique,Nitzhonot,
+senscritique,Instrumental Hip Hop,
+senscritique,Norteño,
+senscritique,Tropical House,
+senscritique,Boogie,
+senscritique,Neoclassical Darkwave,
+senscritique,Ranchera,
+senscritique,Rebetiko,
+senscritique,Alternative R&B,
+senscritique,Chamber Pop,
+senscritique,Coldwave,
+senscritique,Karaoke,
+senscritique,Pachanga,
+senscritique,Bassline,
+senscritique,Deep Techno,
+senscritique,Education,
+senscritique,Experimental Hip Hop,
+senscritique,Sephardic,
+senscritique,Skiffle,
+senscritique,Therapy,
+senscritique,Bachata,
+senscritique,Bhangra,
+senscritique,DJ Battle Tool,
+senscritique,Overtone Singing,
+senscritique,Soukous,
+senscritique,Cape Jazz,
+senscritique,Progressive Breaks,
+senscritique,Bossanova,
+senscritique,Miami Bass,
+senscritique,East Coast Hip Hop,
+senscritique,Psychedelic Folk,
+senscritique,Vallenato,
+senscritique,West Coast Hip Hop,
+senscritique,Alt-Pop,
+senscritique,Chillwave,
+senscritique,Skweee,
+senscritique,Canzone Napoletana,
+senscritique,Compas,
+senscritique,Enka,
+senscritique,Ghetto House,
+senscritique,J-Core,
+senscritique,Lambada,
+senscritique,Nueva Trova,
+senscritique,Ottoman Classical,
+senscritique,Ambient Pop,
+senscritique,Beguine,
+senscritique,Griot,
+senscritique,Kwaito,
+senscritique,Piedmont Blues,
+senscritique,Pop Soul,
+senscritique,Serial,
+senscritique,Sound Art,
+senscritique,UK Bass,
+senscritique,Atmospheric Black Metal,
+senscritique,Bubblegum,
+senscritique,Dark Folk,
+senscritique,Funk Rock,
+senscritique,Industrial Hip Hop,
+senscritique,Steel Band,
+senscritique,Symphonic Prog,
+senscritique,Britcore,
+senscritique,Forro,
+senscritique,Mento,
+senscritique,Minneapolis Sound,
+senscritique,Carnatic,
+senscritique,Guaracha,
+senscritique,Promotional,
+senscritique,Thai Classical,
+senscritique,Abstract Hip Hop,
+senscritique,Italo House,
+senscritique,Kayōkyoku,
+senscritique,Progressive Pop,
+senscritique,Schranz,
+senscritique,Art Punk,
+senscritique,Bleep,
+senscritique,Doomcore,
+senscritique,Glitch Hop,
+senscritique,Hands Up,
+senscritique,Industrial Rock,
+senscritique,Trova,
+senscritique,Twelve-tone,
+senscritique,Future Bass,
+senscritique,Ghettotech,
+senscritique,Gogo,
+senscritique,Luk Thung,
+senscritique,Mizrahi,
+senscritique,Roots Rock,
+senscritique,Swamp Rock,
+senscritique,Technical Death Metal,
+senscritique,Timba,
+senscritique,Anison,
+senscritique,Charanga,
+senscritique,Folktronica,
+senscritique,Piano Rock,
+senscritique,Quechua,
+senscritique,Arabic music,
+senscritique,Corrido,
+senscritique,Dance-Punk,
+senscritique,Danzon,
+senscritique,Funeral Doom Metal,
+senscritique,Harsh Noise Wall,
+senscritique,Hiplife,
+senscritique,J-Rock,
+senscritique,K-Rock,
+senscritique,Post-Industrial,
+senscritique,Swamp Pop,
+senscritique,Western Swing,
+senscritique,Cantopop,
+senscritique,Dark Electro,
+senscritique,Electro-Industrial,
+senscritique,Goregrind,
+senscritique,Gothic Country,
+senscritique,Harsh Noise,
+senscritique,Reggae Gospel,
+senscritique,Rune Singing,
+senscritique,Ambient House,
+senscritique,Baltimore Club,
+senscritique,Blue-Eyed Soul,
+senscritique,Boogie Woogie,
+senscritique,Boogie-woogie,
+senscritique,Copla,
+senscritique,Guajira,
+senscritique,Operetta,
+senscritique,Oratorio,
+senscritique,Rock Opera,
+senscritique,Balearic,
+senscritique,Baroque Pop,
+senscritique,Depressive Black Metal,
+senscritique,Drill,
+senscritique,Favela Funk,
+senscritique,Footwork,
+senscritique,Gagaku,
+senscritique,Hillbilly,
+senscritique,Jangle Pop,
+senscritique,Japanese Music,
+senscritique,Kaseko,
+senscritique,Korean Court Music,
+senscritique,Lao Music,
+senscritique,Mandopop,
+senscritique,Movie Effects,
+senscritique,Mugham,
+senscritique,Noisecore,
+senscritique,Pipe & Drum,
+senscritique,Plunderphonics,
+senscritique,Psychedelic Soul,
+senscritique,Sea Shanties,
+senscritique,Technical,
+senscritique,Twist,
+senscritique,Volksmusik,
+senscritique,Andean Music,
+senscritique,Appalachian Music,
+senscritique,Beatbox,
+senscritique,Choral,
+senscritique,Conjunto,
+senscritique,Erotic,
+senscritique,French House,
+senscritique,Halftime,
+senscritique,Hawaiian,
+senscritique,Horror Rock,
+senscritique,Hyperpop,
+senscritique,Jersey Club,
+senscritique,Junkanoo,
+senscritique,Light Music,
+senscritique,Mouth Music,
+senscritique,Nerdcore Techno,
+senscritique,Népzene,
+senscritique,Plena,
+senscritique,Post-Grunge,
+senscritique,Sermon,
+senscritique,Son Montuno,
+senscritique,Sonero,
+senscritique,Synth Punk,
+senscritique,Bakersfield Sound,
+senscritique,Ballroom,
+senscritique,Bomba,
+senscritique,Cambodian Classical,
+senscritique,Candombe,
+senscritique,Cantorial,
+senscritique,Dark Cabaret,
+senscritique,Donk,
+senscritique,Freak Folk,
+senscritique,Freetekno,
+senscritique,Hard Beat,
+senscritique,Jibaro,
+senscritique,Klasik,
+senscritique,Latin Pop,
+senscritique,Lowercase,
+senscritique,Memphis Blues,
+senscritique,NDW,
+senscritique,Nhạc Vàng,
+senscritique,Organ,
+senscritique,Phonk,
+senscritique,Public Service Announcement,
+senscritique,Qawwali,
+senscritique,Rapso,
+senscritique,Russian Pop,
+senscritique,Sound Poetry,
+senscritique,Sunshine Pop,
+senscritique,Tamil Film Music,
+senscritique,UK Street Soul,
+senscritique,Yemenite Jewish,
+senscritique,Yé-Yé,
+senscritique,Zarzuela,
