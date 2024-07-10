@@ -18,7 +18,8 @@ opts_chunk$set(echo = FALSE,
 ```{r packages}
 library(targets)
 library(tidyverse)
-source("R/common_functions.R")
+library(here)
+source(here("R", "common_functions.R"))
 set_ggplot_options()
 ```
 
@@ -26,7 +27,7 @@ set_ggplot_options()
 
 ```{r}
 #| label: data
-tar_load(artists_filtered)
+tar_load(artists_filtered, store = "../_targets/")
 ```
 
 
@@ -36,7 +37,7 @@ library(FactoMineR)
 library(factoextra)
 pca_mod <- compute_pca(artists_filtered)
 fviz_pca_var(pca_mod)
-ggsave("pca_var.pdf", path="output", device="pdf")
+ggsave("pca_var.pdf", path = here("output", "omni1"), device="pdf")
 ```
 
 
@@ -46,66 +47,66 @@ ggsave("pca_var.pdf", path="output", device="pdf")
 ```{r}
 #| label: gg_endoexoleg_bygenre
 #| fig-height: 6
-tar_load(gg_endoexoleg_bygenre)
+tar_load(gg_endoexoleg_bygenre, store = "../_targets/")
 print(gg_endoexoleg_bygenre)
-ggsave("gg_endoexoleg_bygenre.pdf", gg_endoexoleg_bygenre, path = "output", device = "pdf")
+ggsave("gg_endoexoleg_bygenre.pdf", gg_endoexoleg_bygenre, path = here("output", "omni1"), device = "pdf")
 ```
 
 ```{r}
 #| label: gg_endoexoleg_bygenre_mean_errorbar
 
-tar_load(gg_endoexoleg_bygenre_mean_errorbar)
+tar_load(gg_endoexoleg_bygenre_mean_errorbar, store = "../_targets/")
 print(gg_endoexoleg_bygenre_mean_errorbar)
-ggsave("gg_endoexoleg_bygenre_mean_errorbar.pdf", gg_endoexoleg_bygenre_mean_errorbar, path = "output", device = "pdf")
+ggsave("gg_endoexoleg_bygenre_mean_errorbar.pdf", gg_endoexoleg_bygenre_mean_errorbar, path = here("output", "omni1"), device = "pdf")
 ```
 
 
 ```{r}
 #| label: gg_endoexoleg_genrerank
-tar_load(gg_endoexoleg_genrerank)
+tar_load(gg_endoexoleg_genrerank, store = "../_targets/")
 print(gg_endoexoleg_genrerank)
-ggsave("gg_endoexoleg_genrerank.pdf", gg_endoexoleg_genrerank, path = "output", device = "pdf")
+ggsave("gg_endoexoleg_genrerank.pdf", gg_endoexoleg_genrerank, path = here("output", "omni1"), device = "pdf")
 ```
 
 
 ```{r}
 #| label: gg_endoexoleg_correlation
 #| fig-height: 6
-tar_load(gg_endoexoleg_correlation)
+tar_load(gg_endoexoleg_correlation, store = "../_targets/")
 print(gg_endoexoleg_correlation)
-ggsave("gg_endoexoleg_correlation.pdf", gg_endoexoleg_correlation, path = "output", device = "pdf")
+ggsave("gg_endoexoleg_correlation.pdf", gg_endoexoleg_correlation, path = here("output", "omni1"), device = "pdf")
 ```
 
 ```{r}
 #| label: gg_endoexoleg_correlation_genremean
 #| fig-height: 6
-tar_load(gg_endoexoleg_correlation_genremean)
+tar_load(gg_endoexoleg_correlation_genremean, store = "../_targets/")
 print(gg_endoexoleg_correlation_genremean)
-ggsave("gg_endoexoleg_correlation_genremean.pdf", gg_endoexoleg_correlation_genremean, path = "output", device = "pdf")
+ggsave("gg_endoexoleg_correlation_genremean.pdf", gg_endoexoleg_correlation_genremean, path = here("output", "omni1"), device = "pdf")
 ```
 
 
 ```{r}
 #| label: gg_endoexoleg_correlation_bygenre
 #| fig-height: 9
-tar_load(gg_endoexoleg_correlation_bygenre)
+tar_load(gg_endoexoleg_correlation_bygenre, store = "../_targets/")
 print(gg_endoexoleg_correlation_bygenre)
-ggsave("gg_endoexoleg_correlation_bygenre.pdf", gg_endoexoleg_correlation_bygenre, path = "output", device = "pdf")
+ggsave("gg_endoexoleg_correlation_bygenre.pdf", gg_endoexoleg_correlation_bygenre, path = here("output", "omni1"), device = "pdf")
 ```
 
 ```{r}
 #| label: gg_endoexoleg_correlation_bygenre_pres
 #| fig-height: 6
 #| fig-width: 10
-tar_load(gg_endoexoleg_correlation_bygenre_pres)
+tar_load(gg_endoexoleg_correlation_bygenre_pres, store = "../_targets/")
 print(gg_endoexoleg_correlation_bygenre_pres)
-ggsave("gg_endoexoleg_correlation_bygenre_pres.pdf", gg_endoexoleg_correlation_bygenre_pres, path = "output", device = "pdf")
+ggsave("gg_endoexoleg_correlation_bygenre_pres.pdf", gg_endoexoleg_correlation_bygenre_pres, path = here("output", "omni1"), device = "pdf")
 ```
 
 
 ```{r}
 #| label: tb_leg_variance
-tar_load(tb_leg_variance)
+tar_load(tb_leg_variance, store = "../_targets/")
 kable(tb_leg_variance)
 ```
 
@@ -116,9 +117,9 @@ We use the measure of overlap proposed by https://www.frontiersin.org/journals/p
 #| label: overlap
 #| fig-height: 6
 #gg_genre_overlap
-tar_load(gg_genre_overlap)
+tar_load(gg_genre_overlap, store = "../_targets/")
 print(gg_genre_overlap)
-ggsave("gg_genre_overlap.pdf", gg_genre_overlap, path="output", device="pdf")
+ggsave("gg_genre_overlap.pdf", gg_genre_overlap, path = here("output", "omni1"), device="pdf")
 
 ```
 
@@ -131,7 +132,7 @@ artists_filtered %>%
   ggplot(aes(sc_endo_isei, fill = genre)) +
     geom_density(alpha=.5) +
     labs(y = "Density", x = "Endogenous legitimacy (ISEI)", fill = "")
-ggsave("example_overlap.pdf", path = "output", device = "pdf")
+ggsave("example_overlap.pdf", path = here("output", "omni1"), device = "pdf")
     
 ```
 
@@ -145,15 +146,15 @@ ggsave("example_overlap.pdf", path = "output", device = "pdf")
 ```{r}
 #| label: gg_endoleg_bygenre
 #| fig-height: 6
-tar_load(gg_endoleg_bygenre)
+tar_load(gg_endoleg_bygenre, store = "../_targets/")
 gg_endoleg_bygenre
-ggsave("gg_endoleg_bygenre.pdf", gg_endoleg_bygenre, path = "output", device = "pdf")
+ggsave("gg_endoleg_bygenre.pdf", gg_endoleg_bygenre, path = here("output", "omni1"), device = "pdf")
 ```
 
 ```{r}
 #| label: gg_exoleg_bygenre
 #| fig-height: 9
-tar_load(gg_exoleg_bygenre)
+tar_load(gg_exoleg_bygenre, store = "../_targets/")
 gg_exoleg_bygenre
-ggsave("gg_exoleg_bygenre.pdf", gg_exoleg_bygenre, path = "output", device = "pdf")
+ggsave("gg_exoleg_bygenre.pdf", gg_exoleg_bygenre, path = here("output", "omni1"), device = "pdf")
 ```

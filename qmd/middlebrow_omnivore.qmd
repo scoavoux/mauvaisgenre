@@ -23,19 +23,20 @@ opts_chunk$set(echo = FALSE,
 library(targets)
 library(tidyverse)
 library(janitor)
+library(here)
 ```
 
 ```{r}
 #| label: load data and recode
 # loading data
-tar_load("survey")
+tar_load("survey", store = "../_targets/")
 
 # make aliases
 ## For genres names
-tar_load("genres_aliases")
+tar_load("genres_aliases", store = "../_targets/")
 
 ## for omnivorousness variables
-source("R/common_functions.R")
+source(here("R", "common_functions.R"))
 
 # Recode
 ## Make LCA classes a factor rather than integer/numeric
