@@ -9,6 +9,7 @@ exec 1>log.out 2>&1
 cd ~/work/mauvaisgenre
 R -f init.R
 
+mkdir data/temp
 mkdir output
 mkdir output/omni1
 mkdir output/omni2

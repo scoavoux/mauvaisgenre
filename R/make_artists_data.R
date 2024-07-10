@@ -16,8 +16,10 @@ make_artist_popularity_data <- function(user_artist_peryear){
               n_play = sum(n_play, na.rm=TRUE))
   
   # separate between survey respondants and control group
-  f <- s3$download_file(Bucket = "scoavoux", Key = "records_w3/RECORDS_hashed_user_group.parquet", Filename = "data/RECORDS_hashed_user_group.parquet")
-  us <- read_parquet("data/RECORDS_hashed_user_group.parquet")
+  f <- s3$download_file(Bucket = "scoavoux", 
+                        Key = "records_w3/RECORDS_hashed_user_group.parquet", 
+                        Filename = "data/temp/RECORDS_hashed_user_group.parquet")
+  us <- read_parquet("data/temp/RECORDS_hashed_user_group.parquet")
   rm(f)
   
   pop_control <- us %>% 
@@ -301,8 +303,8 @@ make_genres_data <- function(source = "deezer_editorial_playlists", senscritique
   } else if(source == "deezer_maingenre"){
     s3$download_file(Bucket = "scoavoux", 
                      Key = "records_w3/items/artists_data.snappy.parquet",
-                     Filename = "data/artists_data.snappy.parquet")
-    artists <- read_parquet("data/artists_data.snappy.parquet", col_select = 1:3)
+                     Filename = "data/temp/artists_data.snappy.parquet")
+    artists <- read_parquet("data/temp/artists_data.snappy.parquet", col_select = 1:3)
     artists <- artists %>% 
       filter(!is.na(main_genre))
     genres <- artists %>% select(artist_id, genre = "main_genre")
