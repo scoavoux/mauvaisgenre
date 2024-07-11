@@ -69,8 +69,8 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei, survey_ra
     group_by(artist_id) %>% 
     mutate(f = l_play / sum(l_play)) %>% 
     summarise(n_isei = n(),
-              mean_isei = sum(f*isei)) %>% 
-    filter(!is.na(mean_isei))
+              endo_isei_mean_pond = sum(f*isei)) %>% 
+    filter(!is.na(endo_isei_mean_pond))
   
   ed <- survey_raw %>% 
     filter(E_diploma != "", !is.na(E_diploma)) %>% 
@@ -82,8 +82,8 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei, survey_ra
     inner_join(ed) %>% 
     group_by(artist_id) %>% 
     mutate(f = l_play / sum(l_play)) %>% 
-    summarise(share_higher_ed = sum(f*higher_ed)) %>% 
-    filter(!is.na(share_higher_ed))
+    summarise(endo_share_high_education_pond = sum(f*higher_ed)) %>% 
+    filter(!is.na(endo_share_high_education_pond))
   
   return(full_join(artist_mean_isei, artist_share_higher_education))
 }
@@ -274,7 +274,7 @@ filter_artists <- function(artists_raw){
   artists <- artists_raw %>% 
     filter(!is.na(genre),
            !is.na(senscritique_meanscore), # has score on senscritique
-           !is.na(mean_isei),
+           !is.na(endo_isei_mean_pond),
            n_isei > 5
            #parse # has been looked up in press data
     )
@@ -283,8 +283,8 @@ filter_artists <- function(artists_raw){
     # turn NA to 0 in radio plays
     mutate(across(starts_with("radio|total_n"), ~if_else(is.na(.x), 0, .x))) %>% 
     # Scaling legitimacy variables
-    mutate(sc_endo_isei = center_scale(mean_isei),
-           sc_endo_educ = center_scale(share_higher_ed),
+    mutate(sc_endo_isei = center_scale(endo_isei_mean_pond),
+           sc_endo_educ = center_scale(endo_share_high_education_pond),
            sc_exo_press = center_scale(log(total_n_pqnt_texte+1)),
            sc_exo_score = center_scale(senscritique_meanscore),
            sc_exo_radio = center_scale(log(radio_leg+1))
