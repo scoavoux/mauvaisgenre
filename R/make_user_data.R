@@ -106,7 +106,7 @@ compute_omnivorourness_from_survey <- function(survey){
   return(omni)
 }
 
-# Make latent classes
+# Make latent classes from survey ------
 compute_latent_classes_from_survey <- function(survey, nclass){
   require(tidyverse)
 
@@ -135,7 +135,7 @@ compute_latent_classes_from_survey <- function(survey, nclass){
   return(mod)
 }
 
-compute_latent_classes_from_streams <- function(user_artist_peryear, genres, nclass, proportion=FALSE){
+compute_latent_classes_from_streams <- function(user_artist_peryear_merged_artists, genres, nclass, proportion=FALSE){
   require(mclust)
   require(tidyverse)
   require(tidytable)
@@ -147,13 +147,13 @@ compute_latent_classes_from_streams <- function(user_artist_peryear, genres, ncl
   # conflicts_prefer(tidytable::pivot_wider)
   
   # summarize across years
-  user_artist_peryear <- user_artist_peryear %>% 
+  user_artist_peryear_merged_artists <- user_artist_peryear_merged_artists %>% 
     group_by(hashed_id, artist_id) %>% 
     summarize(l_play = sum(l_play)) %>% 
     ungroup() %>% 
     filter(l_play > 0)
   
-  user_genre <- user_artist_peryear %>% 
+  user_genre <- user_artist_peryear_merged_artists %>% 
     left_join(genres) %>% 
     filter(!is.na(genre)) %>% 
     group_by(hashed_id, genre) %>% 
@@ -164,7 +164,10 @@ compute_latent_classes_from_streams <- function(user_artist_peryear, genres, ncl
   if(proportion){
     user_genre <- user_genre %>% 
       group_by(hashed_id) %>% 
-      mutate(f_play = l_play / sum(l_play)) %>% 
+      mutate(f_play = (l_play / sum(l_play)) * 100) %>% 
+      # hard solution to avoid svd errors caused by figures being too close to
+      # zero => we remove genres with less than 1% in total consumption.
+      filter(f_play > 1) %>% 
       select(-l_play) %>% 
       rename(l_play = "f_play")
   }
@@ -187,11 +190,11 @@ select_latent_class_model <- function(models_list, nclass){
   return(models_list[[paste0("k", nclass)]])
 }
 
-compute_omnivorourness_from_streams <- function(user_artist_peryear, artists, genres, rescale_by = "artist"){
+compute_omnivorourness_from_streams <- function(user_artist_peryear_merged_artists, artists, genres, rescale_by = "artist"){
   require(tidyverse)
   require(tidytable)
   
-  user_artist_peryear <- user_artist_peryear %>% 
+  user_artist_peryear_merged_artists <- user_artist_peryear_merged_artists %>% 
     filter(!is.na(artist_id)) %>% 
     group_by(hashed_id, artist_id) %>% 
     # we use number of play
@@ -201,7 +204,7 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists, ge
   
   ## diversity over genres actually listened
   ### HHI over stream by genre
-  omni_HHI <- user_artist_peryear %>% 
+  omni_HHI <- user_artist_peryear_merged_artists %>% 
     filter(!is.na(genre)) %>% 
     group_by(hashed_id, genre) %>% 
     summarize(l_play = sum(l_play)) %>% 
@@ -212,7 +215,7 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists, ge
   ## diversity over individual legitimacy
   ### weighted mean and sd of each artist's average legitimacy
   ### as highbrow dim (mean) and omnivorous dim (sd)
-  omni_exo <- user_artist_peryear %>% 
+  omni_exo <- user_artist_peryear_merged_artists %>% 
     group_by(hashed_id) %>% 
     mutate(f_play = l_play / sum(l_play)) %>% 
     left_join(select(artists, artist_id, sc_exo_pca)) %>% 
@@ -227,7 +230,7 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists, ge
     artists <- artists %>%
       group_by(genre) %>%
       mutate(sc_exo_pca_scbygenre = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca))
-    omni_exo_bygenre <- user_artist_peryear %>%
+    omni_exo_bygenre <- user_artist_peryear_merged_artists %>%
       group_by(hashed_id) %>%
       mutate(f_play = l_play / sum(l_play)) %>%
       # We must first rescale by genre
@@ -246,7 +249,7 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear, artists, ge
       pivot_wider(names_from = name, values_from=value)
   } else if(rescale_by == "user"){
     # or rescale among individuals  
-    omni_exo_bygenre <- user_artist_peryear %>% 
+    omni_exo_bygenre <- user_artist_peryear_merged_artists %>% 
       group_by(hashed_id) %>% 
       mutate(f_play = l_play / sum(l_play)) %>% 
       # We must first rescale by genre
