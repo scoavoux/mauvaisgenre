@@ -56,7 +56,7 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
       group_by(genre, name) %>% 
       summarize(n = n(),
                 m = mean(value),
-                se = 1.96*sd(value)/sqrt(n))
+                se = 1.96*sd(value)/sqrt(n()))
     g <- ggplot(d, aes(x = genre, y = m, ymin = m-se, ymax=m+se)) +
       geom_point() +
       geom_errorbar(width = 0)
