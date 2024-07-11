@@ -107,16 +107,20 @@ make_press_data <- function(){
 }
 
 # Make senscritique ratings ------
-make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
+make_senscritique_ratings_data <- function(senscritique_mb_deezer_id, track_weight = .2){
+  # track_weight is the weight given to tracks relative to albums for computing 
+  # average at the artist level. Defaults to .2 => one track is 1/5 of one album
   require(tidyverse)
   s3 <- initialize_s3()
+
+  ## Albums ratings
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/ratings.csv")
   ratings <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts_albums_link.csv")
   contacts_albums_list <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
-    
+
   # signification of contact_subtype_id?
   # 11 = personne artiste
   # 12 = label
@@ -126,22 +130,47 @@ make_senscritique_ratings_data <- function(senscritique_mb_deezer_id){
   contacts_albums_list <- contacts_albums_list %>% 
     filter(contact_subtype_id %in% c(11, 13))
   
-  cora <- ratings %>%
+  albums_ratings <- ratings %>%
     group_by(product_id) %>% 
     summarize(n = n(),
-              mean = mean(rating),
-              sd = sd(rating)) %>% 
+              mean = mean(rating)) %>% 
     # OK let us consider that 4 grades is enough
     filter(n > 3) %>% 
     inner_join(contacts_albums_list) %>% 
+    mutate(weight = 1) %>% 
+    select(-contact_subtype_id)
+  
+  ## Tracks ratings
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/tracks.csv")
+  tracks <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contact_tracks_link.csv")
+  contacts_tracks_list <- f$Body %>% rawToChar() %>% read_csv()
+  rm(f)
+  tracks
+  contacts_tracks_list
+  
+  tracks_ratings <- tracks %>% 
+      filter(rating_count > 3) %>% 
+      mutate(mean = rating_average/10, weight = track_weight) %>% 
+      select(product_id, mean, n= "rating_count", weight) %>% 
+      inner_join(contacts_tracks_list)
+      
+  only_tracks <- bind_rows(albums_ratings, tracks_ratings) %>%
+    count(contact_id, weight) %>%
+    mutate(only_tracks = !any(weight == 1), .by = contact_id) %>%
+    filter(only_tracks)
+  
+  cora <- bind_rows(albums_ratings, tracks_ratings) %>% 
     inner_join(select(senscritique_mb_deezer_id, contact_id, consolidated_artist_id) %>% 
                  distinct()) %>% 
     group_by(consolidated_artist_id) %>% 
     summarise(senscritique_maxscore = max(mean),
               senscritique_minscore = min(mean),
-              senscritique_meanscore = mean(mean), 
-              senscritique_n_albums = n(),
-              senscritique_mean_sd = mean(sd)) %>% 
+              senscritique_meanscore = sum(mean * weight)/sum(weight),
+              senscritique_meanscore_onlyalbums = sum(mean * (weight-track_weight))/sum(weight-track_weight),
+              senscritique_n_albums = sum(weight == 1),
+              senscritique_n_tracks = sum(weight == track_weight)) %>% 
     rename(artist_id = "consolidated_artist_id")
   return(cora)
 }

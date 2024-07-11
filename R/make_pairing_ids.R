@@ -97,8 +97,13 @@ make_senscritique_pairing_data <- function(){
   # Also need to check whether this is a problem with SC spotify links or
   # with wikidata not having spotify/deezer match.
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts.csv")
-  co <- f$Body %>% rawToChar() %>% fread()
+  co <- f$Body %>% rawToChar() %>% fread() %>% distinct()
   rm(f)
+  
+  f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts_tracks.csv")
+  co_tr <- f$Body %>% rawToChar() %>% fread()
+  rm(f)
+  co <- bind_rows(co, co_tr) %>% distinct()
   
   co <- distinct(co) %>% 
     mutate(spotify_id = str_remove(spotify_id, "spotify:artist:"),
