@@ -147,21 +147,22 @@ make_senscritique_ratings_data <- function(senscritique_mb_deezer_id, track_weig
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contact_tracks_link.csv")
   contacts_tracks_list <- f$Body %>% rawToChar() %>% read_csv()
   rm(f)
-  tracks
-  contacts_tracks_list
   
   tracks_ratings <- tracks %>% 
       filter(rating_count > 3) %>% 
       mutate(mean = rating_average/10, weight = track_weight) %>% 
       select(product_id, mean, n= "rating_count", weight) %>% 
       inner_join(contacts_tracks_list)
-      
-  only_tracks <- bind_rows(albums_ratings, tracks_ratings) %>%
-    count(contact_id, weight) %>%
-    mutate(only_tracks = !any(weight == 1), .by = contact_id) %>%
-    filter(only_tracks)
+
+  # in_sc_not_deezer <- bind_rows(albums_ratings, tracks_ratings) %>% 
+  #   distinct(contact_id) %>% 
+  #   anti_join(select(senscritique_mb_deezer_id, contact_id, consolidated_artist_id) %>% 
+  #                distinct())
+  
   
   cora <- bind_rows(albums_ratings, tracks_ratings) %>% 
+    # HERE IS A BOTTLENECK: artists that have ratings but senscritique id is 
+    # not paired to deezer id. Let us try to find a link
     inner_join(select(senscritique_mb_deezer_id, contact_id, consolidated_artist_id) %>% 
                  distinct()) %>% 
     group_by(consolidated_artist_id) %>% 
