@@ -9,6 +9,11 @@ s3 <- initialize_s3()
 f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts.csv")
 co <- f$Body %>% rawToChar() %>% fread()
 rm(f)
+f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/contacts_tracks.csv")
+co_tr <- f$Body %>% rawToChar() %>% fread()
+rm(f)
+
+co <- bind_rows(co, co_tr) %>% distinct()
 
 ## tous les artists non identifiés dans deezer
 co <- anti_join(co, senscritique_mb_deezer_id)
