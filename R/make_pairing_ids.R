@@ -12,9 +12,8 @@ make_senscritique_pairing_data <- function(){
   ## Import various pairings ------
   
   ### Spotify/deezer id pairings from WIKIDATA ------
-  wikidata_spotify_deezer <- query_wikidata('SELECT DISTINCT ?spotify_id ?deezer_id #?item ?itemLabel 
+  wikidata_spotify_deezer <- query_wikidata('SELECT DISTINCT ?spotify_id ?deezer_id
   WHERE {
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
     ?item p:P1902 ?statement0.
     ?statement0 (ps:P1902) _:anyValueP1902.
     ?item p:P2722 ?statement1.
@@ -24,9 +23,8 @@ make_senscritique_pairing_data <- function(){
   }')
   
   ### Wikidata/deezer id pairs from WIKIDATA ------
-  wikidata_deezer <- query_wikidata('SELECT DISTINCT ?item ?deezer_id #?item ?itemLabel 
+  wikidata_deezer <- query_wikidata('SELECT DISTINCT ?item ?deezer_id
   WHERE {
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
     ?item p:P2722 ?statement1.
     ?statement1 (ps:P2722) _:anyValueP2722.
     ?item wdt:P2722 ?deezer_id.
