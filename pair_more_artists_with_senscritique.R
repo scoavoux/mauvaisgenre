@@ -20,7 +20,7 @@ co <- anti_join(co, senscritique_mb_deezer_id)
 
 s3$download_file(Bucket = "scoavoux", 
                  Key = "records_w3/items/artists_data.snappy.parquet",
-                 Filename = "data/artists_data.snappy.parquet")
+                 Filename = "data/temp/artists_data.snappy.parquet")
 artists <- read_parquet("data/artists_data.snappy.parquet", col_select = 1:3)
 artists <- artists %>% 
   filter(!is.na(main_genre))
