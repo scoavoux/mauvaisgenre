@@ -33,6 +33,7 @@ list(
   tar_target(artists_pop, make_artist_popularity_data(user_artist_peryear_merged_artists )),
   tar_target(senscritique_mb_deezer_id, make_senscritique_pairing_data()),
   # tar_target(artist_names)
+  tar_target(corpus_raw, make_raw_corpus()),
   tar_target(exo_press, make_press_data()),
   tar_target(exo_radio, compute_exo_radio()),
   tar_target(exo_senscritique, make_senscritique_ratings_data(senscritique_mb_deezer_id)),

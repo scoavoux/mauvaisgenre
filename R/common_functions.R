@@ -14,6 +14,17 @@ initialize_s3 <- function(){
   return(s3)
 }
 
+s3_read <- function(.file){
+  require(paws)
+  require(tidyverse)
+  if(str_detect(.file, "\\.csv$")){
+    s3 <- initialize_s3()
+    f <- s3$get_object(Bucket = "scoavoux", Key = .file)
+    d <- f$Body %>% rawToChar() %>% read_csv()
+  }
+  return(d)
+}
+
 set_ggplot_options <- function(){
   theme_set(theme_bw(base_size = 12))
   theme_update(panel.grid=element_blank())

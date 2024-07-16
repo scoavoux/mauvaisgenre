@@ -88,24 +88,6 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei, survey_ra
   return(full_join(artist_mean_isei, artist_share_higher_education))
 }
 
-# Make press data ------
-## BEWARE: THIS IS A VARIABLE FROM A PREVIOUS VERSION OF THE DATABASE WITH
-## ONLY 7K ARTISTS SEARCHED IN THE PRESS
-make_press_data <- function(){
-  
-  require(tidyverse)
-  s3 <- initialize_s3()
-  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists.csv")
-  artists <- f$Body %>% rawToChar %>% read_csv()
-  artists <- mutate(artists, 
-                    total_n_pqnt_texte = n_presse_texte_le_figaro + 
-                      n_presse_texte_liberation + 
-                      n_presse_texte_le_monde + 
-                      n_presse_texte_telerama) %>% 
-    select(artist_id, total_n_pqnt_texte)
-  return(artists)
-}
-
 # Make senscritique ratings ------
 make_senscritique_ratings_data <- function(senscritique_mb_deezer_id, track_weight = .2){
   # track_weight is the weight given to tracks relative to albums for computing 
