@@ -135,7 +135,7 @@ make_raw_corpus <- function(){
 train_bert_model <- function(){}
 
 # Make aliases ------
-make_aliases <- function(){
+make_aliases <- function(senscritique_mb_deezer_id){
   require(tidyverse)
   require(tidytable)
   require(arrow)
@@ -235,7 +235,7 @@ make_aliases <- function(){
   
 }
 
-make_citation_data <- function(corpus_raw, artists_names_aliases){
+make_citation_data <- function(corpus_raw, artist_names_and_aliases){
   require(tidyverse)
   require(quanteda)
   require(spacyr)
