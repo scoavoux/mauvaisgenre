@@ -162,15 +162,57 @@ make_aliases <- function(senscritique_mb_deezer_id){
     filter(!is.na(consolidated_artist_id)) %>% 
     select(consolidated_artist_id, name, type) %>% 
     arrange(desc(type))
-  
-  
+
   consolidated_id_name_alias <- bind_rows(artists, mb_aliases) %>% 
     # separate names where several artists ;
     tidyr::separate_longer_delim(name, delim = ";") %>% 
     mutate(name = str_trim(name)) %>% 
     distinct(consolidated_artist_id, name, .keep_all = TRUE) %>% 
     rename(artist_id = consolidated_artist_id)
-  return(consolidated_id_name_alias)
+  regexify <- function(str){
+    str %>% 
+      #stringi::stri_trans_general(id = "Latin-ASCII") %>% 
+      # escape regex special character
+      str_replace_all(fixed("\\"), "\\\\") %>%
+      str_replace_all(fixed("."), "\\.") %>%
+      str_replace_all(fixed("+"), "\\+") %>%
+      str_replace_all(fixed("*"), "\\*") %>%
+      str_replace_all(fixed("?"), "\\?") %>%
+      str_replace_all(fixed("^"), "\\^") %>%
+      str_replace_all(fixed("$"), "\\$") %>%
+      str_replace_all(fixed("("), "\\(") %>%
+      str_replace_all(fixed(")"), "\\)") %>%
+      str_replace_all(fixed("["), "\\[") %>%
+      str_replace_all(fixed("]"), "\\]") %>%
+      str_replace_all(fixed("{"), "\\{") %>%
+      str_replace_all(fixed("}"), "\\}") %>%
+      str_replace_all(fixed("|"), "\\|") %>%
+      str_replace_all(fixed("-"), "\\-") %>%
+      str_replace_all(fixed("\'"), ".") %>% 
+      ifelse(str_detect(substr(., 1, 1), "[A-Za-z]"), paste0("\\b", .), .) %>% 
+      ifelse(str_detect(substr(., nchar(.), nchar(.)), "[A-Za-z]"), paste0(., "\\b"), .) %>% 
+      str_replace_all(c("à" = "[àa]",
+                        "â" = "[âa]",
+                        "ç" = "[çc]",
+                        "è" = "[èe]",
+                        "é" = "[ée]",
+                        "ê" = "[êe]",
+                        "ë" = "[ëe]",
+                        "î" = "[îi]",
+                        "ï" = "[ïi]",
+                        "ô" = "[ôo]",
+                        "ö" = "[öo]",
+                        "ù" = "[ùu]",
+                        "û" = "[ûu]",
+                        "ü" = "[üu]",
+                        "\\b[Tt]he\\b" = "([Tt]he|[Ll]es)",
+                        "^[Tt]he\\b" = "([Tt]he|[Ll]es)",
+                        "\\b[Aa]nd\\b|\\b[Ee]t\\b|&" = "([Aa]nd|[Ee]t|&)"))
+  }
+  
+  artist_names_and_aliases <- consolidated_id_name_alias %>% 
+    mutate(regex = regexify(name))
+  return(artist_names_and_aliases)
   
   # require(WikidataQueryServiceR)
   # 
@@ -235,28 +277,90 @@ make_aliases <- function(senscritique_mb_deezer_id){
   
 }
 
-make_citation_data <- function(corpus_raw, artist_names_and_aliases){
+make_artists_names <- function(artist_names_and_aliases){
+  require(tidyverse)
+  artist_names <- artist_names_and_aliases %>% 
+    mutate(type = factor(type, levels = c("deezername", "name", "alias"))) %>% 
+    arrange(type) %>% 
+    slice(1, .by = artist_id) %>% 
+    select(artist_id, name)
+  return(artist_names)
+}
+
+make_corpus_tokenized_sentences <- function(corpus_raw){
   require(tidyverse)
   require(quanteda)
   require(spacyr)
-  corpus(corpus_raw$article_text[1:10]) %>% spacy_tokenize(what = "sentence")
-  filter(corpus_raw, str_detect(article_text, consolidated_id_name_alias$name[1]))
+  spacy_initialize()
+  co <- corpus_raw %>%
+    pull(article_text) %>%
+    spacy_tokenize(what = "sentence") %>%
+    unlist()
+  return(co)
 }
 
 # Make press data ------
-## BEWARE: THIS IS A VARIABLE FROM A PREVIOUS VERSION OF THE DATABASE WITH
-## ONLY 7K ARTISTS SEARCHED IN THE PRESS
-make_press_data <- function(){
-  
+
+make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, exo_senscritique){
   require(tidyverse)
-  s3 <- initialize_s3()
-  f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/artists.csv")
-  artists <- f$Body %>% rawToChar %>% read_csv()
-  artists <- mutate(artists, 
-                    total_n_pqnt_texte = n_presse_texte_le_figaro + 
-                      n_presse_texte_liberation + 
-                      n_presse_texte_le_monde + 
-                      n_presse_texte_telerama) %>% 
-    select(artist_id, total_n_pqnt_texte)
-  return(artists)
+  require(parallel)
+  require(foreach)
+  require(doParallel)
+  
+  # for now we filter by exo_senscritique because this is the bottleneck
+  # and running this function already takes forever
+  artist_names_and_aliases <- artist_names_and_aliases %>% 
+    inner_join(select(exo_senscritique, artist_id))
+  
+  # We clean up the regexes a bit
+  
+  artist_names_and_aliases <- artist_names_and_aliases %>% 
+    filter(
+      str_length(name)>1,# remove names of length 1
+      !str_detect(name, "^[a-zA-Z]{2}$"), # remove names of two letters
+      !str_detect(name, "^\\d+$"),# and those of just numbers
+      !str_detect(name, "^[\u0621-\u064A]+$"), # those only in arabic
+      # And those only in non-ascii characters (ie japanese, chinese, 
+      # arabic, korean, russian, greek alphabets)
+      !str_detect(name, "^[^ -~]+$")
+    )
+  # Finally we group various aliases together to speed up search
+  artist_names_and_aliases <- artist_names_and_aliases %>% 
+    group_by(artist_id) %>% 
+    summarise(regex = paste(regex, collapse = "|"))
+  
+  # Function to search and count (with xan)
+  ## Needs rust and xan installed, see init.sh
+  xan_count_matches <- function(.pattern, .corpus = "~/work/mauvaisgenre/data/temp/corpus_raw_tokenized.csv"){
+    system(str_glue("~/.cargo/bin/xan search '{.pattern}' {.corpus} | ~/.cargo/bin/xan count"),
+           intern = TRUE)
+  }
+  
+  # We need the text as a csv file
+  tidytable::fwrite(corpus_raw_tokenized, "data/temp/corpus_raw_tokenized.csv")
+  
+  
+  # Set up parrallel computing
+  # To play it safe we leave 20 cores (on a 128 core machine)
+  n.cores <- parallel::detectCores()-20
+  if(n.cores < 1) n.cores <- 1
+  
+  my.cluster <- makeCluster(
+    n.cores, 
+    type = "FORK"
+  )
+  
+  registerDoParallel(cl = my.cluster)
+  
+  # Perform search
+  x <- foreach(
+    i = seq_len(100),
+    .combine = "c"
+  ) %dopar% {
+    xan_count_matches(artist_names_and_aliases$regex[i])
+  }
+  
+  res <- tibble(artist_id = artist_names_and_aliases$artist_id,
+                total_n_pqnt_texte = x)
+  return(res)
 }

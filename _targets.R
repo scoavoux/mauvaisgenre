@@ -34,20 +34,24 @@ list(
   tar_target(senscritique_mb_deezer_id, make_senscritique_pairing_data()),
   
   tar_target(corpus_raw, make_raw_corpus()),
+  tar_target(corpus_raw_tokenized, make_corpus_tokenized_sentences(corpus_raw)),
   tar_target(artist_names_and_aliases, make_aliases(senscritique_mb_deezer_id)),
-  tar_target(exo_press, make_press_data()),
+  tar_target(artist_names, make_artists_names(artist_names_and_aliases)),
+  
+  tar_target(exo_press, make_press_data(corpus_raw_tokenized, artist_names_and_aliases, exo_senscritique)),
   tar_target(exo_radio, compute_exo_radio()),
   tar_target(exo_senscritique, make_senscritique_ratings_data(senscritique_mb_deezer_id)),
   tar_target(isei, make_isei_data(survey_raw)),
   tar_target(endo_legitimacy, make_endogenous_legitimacy_data(user_artist_peryear_merged_artists, isei, survey_raw)),
 
   # tar_target(exo_pca, compute_exo_pca()),
-  tar_target(artists_raw, join_artist(genres, 
-                                  artists_pop, 
-                                  exo_radio, 
-                                  exo_senscritique, 
-                                  endo_legitimacy,
-                                  exo_press)), #artists_name
+  tar_target(artists_raw, join_artist(artist_names,
+                                      genres, 
+                                      artists_pop, 
+                                      exo_radio, 
+                                      exo_senscritique, 
+                                      endo_legitimacy,
+                                      exo_press)), #artists_name
   tar_target(artists, filter_artists(artists_raw)),
 
   ## Analysis Omni 1 ------

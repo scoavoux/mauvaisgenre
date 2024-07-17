@@ -25,7 +25,7 @@ tar_load("artists_pop", store = "../_targets/")
 
 ```{r}
 endo_legitimacy <- endo_legitimacy %>% 
-  filter(n_isei > 10)
+  filter(n_isei > 5)
 
 # x <- inner_join(exo_senscritique, exo_radio) %>% 
 #   inner_join(endo_legitimacy) %>% 
@@ -43,7 +43,6 @@ x <- select(senscritique_mb_deezer_id, -artist_id) %>% select(artist_id = "conso
 group_by(x, senscritique, senscritiquerating, endo_legitimacy, genre) %>% 
   summarise(n = n(), f_play = sum(control_f_l_play, na.rm=TRUE)) %>% 
   arrange(desc(f_play)) %>% 
-  filter(endo_legitimacy) %>% 
   ungroup() %>% 
   mutate(cum_f = cumsum(f_play)) %>% 
   kable()
