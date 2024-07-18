@@ -1,4 +1,5 @@
-plot_lca_diag <- function(latent_classes_from_surveys){
+plot_lca_diag <- function(latent_classes_from_surveys_multiple){
+  require(tidyverse)
   set_ggplot_options()
   diag_lca <- tibble(nclass = names(latent_classes_from_surveys_multiple) %>% 
                        str_remove("k") %>% 

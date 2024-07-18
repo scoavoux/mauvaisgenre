@@ -292,13 +292,14 @@ filter_artists <- function(artists_raw){
     filter(!is.na(genre),
            !is.na(senscritique_meanscore), # has score on senscritique
            !is.na(endo_isei_mean_pond),
-           n_isei > 5
+           n_isei > 5,
+           !is.na(total_n_pqnt_texte) # has been searched in the press data
            #parse # has been looked up in press data
     )
   
   artists <- artists %>% 
     # turn NA to 0 in radio plays
-    mutate(across(starts_with("radio|total_n"), ~if_else(is.na(.x), 0, .x))) %>% 
+    mutate(across(starts_with("radio"), ~if_else(is.na(.x), 0, .x))) %>% 
     # Scaling legitimacy variables
     mutate(sc_endo_isei = center_scale(endo_isei_mean_pond),
            sc_endo_educ = center_scale(endo_share_high_education_pond),

@@ -27,7 +27,7 @@ set_ggplot_options()
 
 ```{r}
 #| label: data
-tar_load(artists_filtered, store = "../_targets/")
+tar_load(artists, store = "../_targets/")
 ```
 
 
@@ -35,7 +35,7 @@ tar_load(artists_filtered, store = "../_targets/")
 #| label: PCA
 library(FactoMineR)
 library(factoextra)
-pca_mod <- compute_pca(artists_filtered)
+pca_mod <- compute_pca(artists)
 fviz_pca_var(pca_mod)
 ggsave("pca_var.pdf", path = here("output", "omni1"), device="pdf")
 ```
@@ -126,9 +126,9 @@ ggsave("gg_genre_overlap.pdf", gg_genre_overlap, path = here("output", "omni1"),
 ```{r}
 #| label: example overlap
 #| height: 6
-artists_filtered %>% 
-  filter(genre %in% c("frenchrap", "rock")) %>% 
-  mutate(genre = recode_vars(genre, "genres")) %>% 
+artists %>% 
+  filter(genre %in% c("frenchrap", "rock", "classical")) %>% 
+  mutate(genre = recode_vars(genre, "cleangenres")) %>% 
   ggplot(aes(sc_endo_isei, fill = genre)) +
     geom_density(alpha=.5) +
     labs(y = "Density", x = "Endogenous legitimacy (ISEI)", fill = "")
