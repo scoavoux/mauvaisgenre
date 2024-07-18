@@ -7,13 +7,18 @@ make_artist_popularity_data <- function(user_artist_peryear){
   library(tidytable)
   library(arrow)
   s3 <- initialize_s3()
+  
+  # To remove "fake" artists: accounts that compile anonymous music
+  to_remove <- fread("data/artists_to_remove.csv") %>% 
+    select(artist_id)
 
   # compute artist/hashed_id pairs (collapse years)
   pop_raw <- user_artist_peryear %>% 
     filter(!is.na(artist_id)) %>% 
     group_by(artist_id, hashed_id) %>% 
     summarise(l_play = sum(l_play, na.rm=TRUE),
-              n_play = sum(n_play, na.rm=TRUE))
+              n_play = sum(n_play, na.rm=TRUE)) %>% 
+    anti_join(to_remove)
   
   # separate between survey respondants and control group
   f <- s3$download_file(Bucket = "scoavoux", 
