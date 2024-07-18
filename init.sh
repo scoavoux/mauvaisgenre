@@ -7,6 +7,7 @@ exec 1>log.out 2>&1
 
 # Install rust and xan
 curl https://sh.rustup.rs -sSf | sh -s -- -y
+source "$HOME/.cargo/env"
 cargo install xan
 
 # Go into
