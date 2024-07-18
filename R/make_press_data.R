@@ -189,22 +189,9 @@ make_aliases <- function(senscritique_mb_deezer_id){
       str_replace_all(fixed("|"), "\\|") %>%
       str_replace_all(fixed("-"), "\\-") %>%
       str_replace_all(fixed("\'"), ".") %>% 
-      ifelse(str_detect(substr(., 1, 1), "[A-Za-z]"), paste0("\\b", .), .) %>% 
-      ifelse(str_detect(substr(., nchar(.), nchar(.)), "[A-Za-z]"), paste0(., "\\b"), .) %>% 
-      str_replace_all(c("à" = "[àa]",
-                        "â" = "[âa]",
-                        "ç" = "[çc]",
-                        "è" = "[èe]",
-                        "é" = "[ée]",
-                        "ê" = "[êe]",
-                        "ë" = "[ëe]",
-                        "î" = "[îi]",
-                        "ï" = "[ïi]",
-                        "ô" = "[ôo]",
-                        "ö" = "[öo]",
-                        "ù" = "[ùu]",
-                        "û" = "[ûu]",
-                        "ü" = "[üu]",
+      ifelse(str_detect(substr(., 1, 1), "\\w"), paste0("\\b", .), .) %>% 
+      ifelse(str_detect(substr(., nchar(.), nchar(.)), "\\w"), paste0(., "\\b"), .) %>% 
+      str_replace_all(c("é" = "[ée]",
                         "\\b[Tt]he\\b" = "([Tt]he|[Ll]es)",
                         "^[Tt]he\\b" = "([Tt]he|[Ll]es)",
                         "\\b[Aa]nd\\b|\\b[Ee]t\\b|&" = "([Aa]nd|[Ee]t|&)"))
@@ -312,12 +299,23 @@ make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, exo_
   artist_names_and_aliases <- artist_names_and_aliases %>% 
     inner_join(select(exo_senscritique, artist_id))
   
-  # We clean up the regexes a bit
+  regex_fixes <- read_csv("data/regex_fixes.csv") %>% 
+    select(-total_n_pqnt_texte)
   
+  artist_names_and_aliases <- artist_names_and_aliases %>% 
+    anti_join(regex_fixes, by = "artist_id")
+  
+  regex_fixes <- regex_fixes %>% 
+    filter(type != "remove")
+  
+  artist_names_and_aliases <- artist_names_and_aliases %>% 
+    bind_rows(regex_fixes)
+  
+  # We clean up the regexes a bit
   artist_names_and_aliases <- artist_names_and_aliases %>% 
     filter(
       str_length(name)>1,# remove names of length 1
-      !str_detect(name, "^[a-zA-Z]{2}$"), # remove names of two letters
+      !str_detect(name, "^\'*[a-zA-Zéèê]{1,2}\'*$"), # remove names of two letters
       !str_detect(name, "^\\d+$"),# and those of just numbers
       !str_detect(name, "^[\u0621-\u064A]+$"), # those only in arabic
       # And those only in non-ascii characters (ie japanese, chinese, 
@@ -327,40 +325,64 @@ make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, exo_
   # Finally we group various aliases together to speed up search
   artist_names_and_aliases <- artist_names_and_aliases %>% 
     group_by(artist_id) %>% 
-    summarise(regex = paste(regex, collapse = "|"))
+    summarise(regex = paste(regex, collapse = "|"),
+              negative = any(type == "negative"))
+  
+  # When there is a negative lookbefore/ahead we cant use xan, so good
+  # old str_detect
+  artist_names_and_aliases_negative <- artist_names_and_aliases %>% 
+    filter(negative)
+  artist_names_and_aliases <- artist_names_and_aliases %>% 
+    filter(!negative)
+  results_negative <- vector("list", length = nrow(artist_names_and_aliases_negative))
+  for(i in seq_len(nrow(artist_names_and_aliases_negative))) {
+    x <- str_detect(corpus_raw_tokenized, artist_names_and_aliases_negative$regex[i]) %>% 
+      sum()
+    results_negative[[i]] <- tibble(artist_id = artist_names_and_aliases_negative$artist_id[i],
+                                    total_n_pqnt_texte = as.numeric(x))
+  }
+  results_negative <- bind_rows(results_negative)
   
   # Function to search and count (with xan)
   ## Needs rust and xan installed, see init.sh
   xan_count_matches <- function(.pattern, .corpus = "~/work/mauvaisgenre/data/temp/corpus_raw_tokenized.csv"){
-    system(str_glue("~/.cargo/bin/xan search '{.pattern}' {.corpus} | ~/.cargo/bin/xan count"),
+    system(stringr::str_glue("~/.cargo/bin/xan search '{.pattern}' {.corpus} | ~/.cargo/bin/xan count"),
            intern = TRUE)
   }
   
   # We need the text as a csv file
-  tidytable::fwrite(corpus_raw_tokenized, "data/temp/corpus_raw_tokenized.csv")
+  tidytable::fwrite(tibble(corpus_raw_tokenized), "data/temp/corpus_raw_tokenized.csv")
   
   
   # Set up parrallel computing
   # To play it safe we leave 20 cores (on a 128 core machine)
-  n.cores <- parallel::detectCores()-20
+  #n.cores <- parallel::detectCores()-20
+  n.cores = 40 # ok let's try that
   if(n.cores < 1) n.cores <- 1
   
   my.cluster <- makeCluster(
-    n.cores, 
-    type = "FORK"
+    n.cores#, type = "FORK"
   )
   
   registerDoParallel(cl = my.cluster)
   
+  iterator <- artist_names_and_aliases %>% 
+    nrow()
+  
   # Perform search
+  library(tictoc)
+
+  tic()
   x <- foreach(
-    i = seq_len(100),
+    i = seq_len(iterator),
     .combine = "c"
-  ) %dopar% {
+    ) %dopar% {
     xan_count_matches(artist_names_and_aliases$regex[i])
   }
-  
+  toc()
+  stopCluster(my.cluster)
   res <- tibble(artist_id = artist_names_and_aliases$artist_id,
-                total_n_pqnt_texte = x)
+                total_n_pqnt_texte = as.numeric(x)) %>% 
+    bind_rows(results_negative)
   return(res)
 }
