@@ -65,70 +65,32 @@ tabyl(survey$cluster_survey) %>%
   kable(caption = "Distribution of clusters from LCA on survey data")
 ```
 
-
-We first interpret the classes based on the distribution of genres
-
-```{r}
-#| label: cluster from survey, interpretation
-tb <- survey %>%
-  select(hashed_id, cluster_survey, matches("B_genres_\\d+")) %>%
-  # consolidate genres
-  pivot_longer(matches("B_genres_\\d+")) %>%
-  mutate(name = genres_aliases[name],
-         value = ifelse(value != "", 1, 0)) %>% 
-  # remove empty genres
-  filter(!is.na(name)) %>% 
-  distinct() %>% 
-  group_by(cluster_survey, name) %>% 
-  summarise(m=sum(value)/n()) %>% 
-  pivot_wider(names_from = cluster_survey, values_from = m) %>% 
-  rename(genre = "name")
-tb %>% 
-  adorn_pct_formatting() %>% 
-  kable(caption = "Profils of clusters")
-```
+We interpret the classes based on genre distribution.
 
 ```{r}
 #| label: plot LCA cluster profiles
-#| fig.height: 12
+#| fig.height: 6
 tar_load(gg_lca_profile)
 print(gg_lca_profile)
 ```
 
-```{r}
-#| label: plot LCA cluster profiles most significant genres
-#| fig.height: 8
-
-sig_genres <- c("rock", "classical", "jazz", "frenchrap", "frenchsongs")
-tb %>% 
-  filter(genre %in% sig_genres) %>% 
-  pivot_longer(-genre) %>% 
-  ggplot(aes(value, genre, fill=genre)) +
-    geom_col() +
-    facet_wrap(~name)
-```
 
 We then look at how these classes are distributed in the population, 
 across gender, age, and SES.
 
 ```{r}
 #| label: cluster from survey, demographic data
-tar_load(tbl_lca_socdem)
-tbl_lca_socdem
+tar_load(gg_lca_socdem)
+gg_lca_socdem
 ```
 
+Finally, we look at the diversity according to legacy metric/ new sd on legitimacy metric.
 
 ```{r}
 #| label: cluster from survey, correlation with omnivorousness metrics
-survey %>% 
-  select(cluster_survey, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
-  pivot_longer(-cluster_survey) %>% 
-  mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
-  filter(!is.na(value)) %>% 
-  group_by(cluster_survey, name) %>% 
-  summarize(value = mean(value)) %>% 
-  pivot_wider(names_from = name, values_from = value) %>% 
-  kable()
+#| fig-height: 6
+tar_load(gg_lca_omni_paper)
+print(gg_lca_omni_paper)
 ```
 
 ## Legitimacy by cluster
@@ -141,50 +103,28 @@ TODO: RESCALE THESE BY GENRE (AT THE ARTIST LEVEL) FOR HOMOGENOUS X
 
 ```{r}
 #| label: legitimacy of specific genres by cluster, survey
-#| fig.height: 12
+#| fig.height: 6
 #| fig.width: 8
-survey %>% 
-  select(cluster_survey, starts_with("mean_exo_pca_")) %>% 
-  pivot_longer(-cluster_survey) %>% 
-  filter(!is.na(cluster_survey), !is.na(value)) %>% 
-  mutate(name = str_remove(name, "mean_exo_pca_")) %>% 
-  group_by(cluster_survey, name) %>% 
-  summarize(m = mean(value), se = 1.96 * sd(value) / sqrt(n())) %>% 
-  ggplot(aes(y=m, x=factor(cluster_survey), ymin = m-se, ymax=m+se)) +
-    geom_point() +
-    geom_linerange() +
-    coord_flip() +
-    facet_wrap(~name, scales = "free_x") +
-    labs(x = "Mean exo. leg.", y = "Cluster", title = "Mean legitimacy of music from each genre")
+tar_load(gg_lca_omni_bygenre)
+print(gg_lca_omni_bygenre)
 ```
 
 
 # Second strategy: looking at continuous metrics
 
-```{r}
-#| eval: false
-library(GGally)
-select(survey, starts_with("omni"), mean_exo_pca, sd_exo_pca) %>% 
-  ggpairs()
-```
 
 ## The link between diversity over legitimacy level and other measures of omnivorousness
 
 ```{r}
 #| label: pairwise omnivorousness, exo vs. HHI streams
-tar_load(gg_omni_socdem)
-print(gg_omni_socdem)
+#| fig-height: 3
+tar_load(gg_exoomni_by_otheromni)
+print(gg_exoomni_by_otheromni)
 ```
 
 ```{r}
-#| label: pairwise omnivorousness, exo vs. richness listened
-survey %>% 
-  filter(!is.na(omni_survey_sum_genres_played)) %>% 
-  ggplot(aes(factor(omni_survey_sum_genres_played), sd_exo_pca)) +
-    geom_boxplot() +
-    labs(title = "The more genres someone declares to listen, the lower the diversity over legitimacy levels",
-         x = "# of genres declared played", y = "exo omnivorousness") +
-    ylim(c(0, .4))
+#| label: correlations between exo and endo leg
+
 ```
 
 ## Demographic correlates of omnivorousness
@@ -211,29 +151,7 @@ select(survey, omni_stream_genres_hhi, gender, degree) %>%
     labs(title = "HHI omnivorousness by degree and gender", x="", y = "HHI omnivorousness")
 ```
 
-```{r}
-#| label: HHI omnivorousness by gender and degree, boxplot
-select(survey, omni_stream_genres_hhi, gender, degree) %>% 
-  filter(!is.na(gender), !is.na(degree)) %>% 
-  pivot_longer(-omni_stream_genres_hhi) %>% 
-  ggplot(aes(value, omni_stream_genres_hhi)) +
-    geom_boxplot(notch = TRUE) +
-    ylim(c(0, .25)) +
-    facet_wrap(~name, scales = "free_x") +
-    labs(title = "HHI omnivorousness by degree and gender", x="", y = "HHI omnivorousness")
 
-```
-
-```{r}
-#| label: HHI omnivorousness by age
-select(survey, omni_stream_genres_hhi, age) %>% 
-  ggplot(aes(age, omni_stream_genres_hhi)) +
-    geom_point() +
-    geom_smooth(method="lm") +
-    labs(x = "age", y="HHI omnivorousness",
-         title = "The older one is, the higher the HHI omnivorouness")
-
-```
 
 
 ## Demographic correlates of exo omnivorousness
@@ -255,29 +173,9 @@ select(survey, sd_exo_pca, gender, degree) %>%
     labs(title = "Exo omnivorousness by degree and gender", x="", y = "exo omnivorousness")
 ```
 
-```{r}
-#| label: exo omnivorousness by gender and degree, boxplot
-select(survey, sd_exo_pca, gender, degree) %>% 
-  filter(!is.na(gender), !is.na(degree)) %>% 
-  pivot_longer(-sd_exo_pca) %>% 
-  ggplot(aes(value, sd_exo_pca)) +
-    geom_boxplot(notch = TRUE) +
-    ylim(c(0, .25)) +
-    facet_wrap(~name, scales = "free_x") +
-    labs(title = "Exo omnivorousness by degree and gender", x="", y = "exo omnivorousness")
 
-```
 
-```{r}
-#| label: exo omnivorousness by age
-select(survey, sd_exo_pca, age) %>% 
-  ggplot(aes(age, sd_exo_pca)) +
-    geom_point() +
-    geom_smooth(method="lm") +
-    labs(x = "age", y="exo omnivorousness",
-         title = "The older one is, the lower the diversity of exogenous legitimacy")
 
-```
 
 # Misc
 

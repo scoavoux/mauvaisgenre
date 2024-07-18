@@ -9,3 +9,4 @@ output
 *.pdf
 *.png
 data/temp/*
+_targets.yaml

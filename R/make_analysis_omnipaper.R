@@ -53,7 +53,7 @@ plot_lca_profile <- function(latent_classes_from_surveys,
       labs(x = "Genres", y = "Prevalence") 
 }
 
-table_lca_socdem <- function(survey, lca_class_interpretation){
+plot_lca_socdem <- function(survey, lca_class_interpretation){
   require(tidyverse)
   require(cowplot)
   set_ggplot_options()
@@ -102,13 +102,16 @@ table_lca_socdem <- function(survey, lca_class_interpretation){
     mutate(age = cut(age, breaks = c(0, 25, 35, 55, 100), labels = c("<25yo", "26-35yo", "36-55yo", ">55yo"))) %>% 
     filter(!is.na(age), !is.na(degree), !is.na(cluster_survey)) %>% 
     count(cluster_survey, age, degree) %>% 
-    mutate(degree = factor(degree, levels = rev(c("high", "middle", "low")))) %>% 
+    mutate(degree = factor(degree, 
+                           levels = rev(c("high", "middle", "low")),
+                           labels = rev(c("High", "Middle", "Low")))) %>% 
     group_by(cluster_survey, age) %>% 
     mutate(f = n/sum(n)) %>% 
     ggplot(aes(age, f, fill = degree)) +
       geom_col() +
       coord_flip() +
-      labs(x = "Age") +
+      scale_fill_brewer() + 
+      labs(x = "Age", fill = "Education level", y ="") +
       #scale_fill_discrete(palette = "Set1") +
       facet_wrap(~cluster_survey)
 }
@@ -167,6 +170,29 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
   return(gg)
 }
 
+plot_lca_omni_bygenre <- function(survey, lca_class_interpretation){
+  require(tidyverse)
+  survey %>% 
+    select(cluster_survey, starts_with("mean_exo_pca_")) %>% 
+    pivot_longer(-cluster_survey) %>% 
+    filter(!is.na(cluster_survey), !is.na(value)) %>% 
+    mutate(name = str_remove(name, "mean_exo_pca_"),
+           name = recode_vars(name, "cleangenres"),
+           cluster_survey = paste0("class", cluster_survey),
+           cluster_survey = fct_recode(cluster_survey, !!!lca_class_interpretation)) %>% 
+    # rescale by genre
+    group_by(name) %>% 
+    mutate(value = center_scale(value)) %>% 
+    group_by(cluster_survey, name) %>% 
+    summarize(m = mean(value), se = 1.96 * sd(value) / sqrt(n())) %>% 
+    ggplot(aes(y=m, x=factor(cluster_survey), ymin = m-se, ymax=m+se)) +
+    geom_point() +
+    geom_linerange() +
+    coord_flip() +
+    facet_wrap(~name, scales = "free_x", ncol = 6) +
+    labs(y = "Mean exo. leg.", x = "Cluster")
+}
+
 plot_exoomni_by_otheromni <- function(survey){
   require(tidyverse)
   require(cowplot)
@@ -183,11 +209,13 @@ plot_exoomni_by_otheromni <- function(survey){
   l[[1]] <- ggplot(s, aes(`Cultural holes played`, `SD exo. leg.`)) +
     #geom_point(shape = ".")
     geom_density_2d_filled() +
+    guides(fill = "none") +
     scale_y_continuous(limits = c(0, .3)) +
     scale_x_continuous(limits = c(0, 7))
   l[[2]] <- ggplot(s, aes(`HHI genres streamed`, `SD exo. leg.`)) +
     #geom_point(shape = ".")
     geom_density_2d_filled() +
+    guides(fill = "none") +
     scale_y_continuous(limits = c(0, .3)) +
     scale_x_continuous(limits = c(.4, 1))
   plot_grid(l[[1]], l[[2]])

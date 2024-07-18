@@ -125,9 +125,10 @@ list(
              plot_lca_omni(survey, lca_class_interpretation, format="presentation2")),
   tar_target(gg_lca_diag, 			       plot_lca_diag(latent_classes_from_surveys_multiple)),
   tar_target(gg_lca_profile, 			     plot_lca_profile(latent_classes_from_surveys, lca_class_interpretation)),
+  tar_target(gg_lca_omni_bygenre, plot_lca_omni_bygenre(survey, lca_class_interpretation)),
   tar_target(gg_exoomni_by_otheromni,	 plot_exoomni_by_otheromni(survey)),
   tar_target(gg_omni_socdem, 			     plot_omni_socdem(survey)),
-  tar_target(tbl_lca_socdem,	 		     table_lca_socdem(survey, lca_class_interpretation)),
+  tar_target(gg_lca_socdem,	 		       plot_lca_socdem(survey, lca_class_interpretation)),
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
   
   ## Supplementary analyses ------  
