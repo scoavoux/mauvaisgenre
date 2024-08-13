@@ -5,10 +5,12 @@ plot_lca_diag <- function(latent_classes_from_surveys_multiple){
                        str_remove("k") %>% 
                        as.numeric(),
                      bic = map(latent_classes_from_surveys_multiple, ~.x$bic) %>%  unlist())
-  ggplot(diag_lca, aes(nclass, bic)) +
+  g <- ggplot(diag_lca, aes(nclass, bic)) +
     geom_point() +
     geom_line() +
     labs(x = "Number of clusters", y = "BIC")
+  ggsave("gg_lca_diag.pdf", g, path = "output/omni2", device = "pdf")
+  return("output/omni2/gg_lca_diag.pdf")
 }
 
 make_lca_class_interpretation <- function(){
@@ -43,7 +45,7 @@ plot_lca_profile <- function(latent_classes_from_surveys,
     res <- res %>% 
       rename(lca_class_interpretation)
   }
-  res %>% 
+  g <- res %>% 
     pivot_longer(-genre) %>% 
     mutate(genre = factor(genre, levels = genre_order)) %>% 
     ggplot(aes(genre, value)) +
@@ -51,6 +53,8 @@ plot_lca_profile <- function(latent_classes_from_surveys,
       coord_flip() +
       facet_wrap(~name) +
       labs(x = "Genres", y = "Prevalence") 
+  ggsave("gg_lca_profile.pdf", g, path = "output/omni2", device = "pdf")
+  return("output/omni2/gg_lca_profile.pdf")
 }
 
 plot_lca_socdem <- function(survey, lca_class_interpretation){
@@ -98,7 +102,7 @@ plot_lca_socdem <- function(survey, lca_class_interpretation){
     draw_plot(gg_degree, x = .5, y = .5, width = .5, height = .5) +
     draw_plot(gg_age,    x = 0 , y = 0 , width =  1, height = .5)
   
-  s %>% 
+  g <- s %>% 
     mutate(age = cut(age, breaks = c(0, 25, 35, 55, 100), labels = c("<25yo", "26-35yo", "36-55yo", ">55yo"))) %>% 
     filter(!is.na(age), !is.na(degree), !is.na(cluster_survey)) %>% 
     count(cluster_survey, age, degree) %>% 
@@ -114,6 +118,8 @@ plot_lca_socdem <- function(survey, lca_class_interpretation){
       labs(x = "Age", fill = "Education level", y ="") +
       #scale_fill_discrete(palette = "Set1") +
       facet_wrap(~cluster_survey)
+  ggsave("gg_lca_socdem.pdf", g, path = "output/omni2", device = "pdf")
+  return("output/omni2/gg_lca_socdem.pdf")
 }
 
 plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
@@ -167,12 +173,18 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
         facet_wrap(~name, scales="free_x") +
         labs(x = "", y = "")
   }
-  return(gg)
+  if(format == "paper"){
+    height <- 7
+  } else if(format != "paper"){
+    height <- 5
+  }
+  ggsave(paste0("gg_lca_omni_", format, ".pdf"), gg, path = "output/omni2", device = "pdf", height = height)
+  return(paste0("output/omni2/gg_lca_omni_", format, ".pdf"))
 }
 
 plot_lca_omni_bygenre <- function(survey, lca_class_interpretation){
   require(tidyverse)
-  survey %>% 
+  g <- survey %>% 
     select(cluster_survey, starts_with("mean_exo_pca_")) %>% 
     pivot_longer(-cluster_survey) %>% 
     filter(!is.na(cluster_survey), !is.na(value)) %>% 
@@ -186,11 +198,13 @@ plot_lca_omni_bygenre <- function(survey, lca_class_interpretation){
     group_by(cluster_survey, name) %>% 
     summarize(m = mean(value), se = 1.96 * sd(value) / sqrt(n())) %>% 
     ggplot(aes(y=m, x=factor(cluster_survey), ymin = m-se, ymax=m+se)) +
-    geom_point() +
-    geom_linerange() +
-    coord_flip() +
-    facet_wrap(~name, scales = "free_x", ncol = 6) +
-    labs(y = "Mean exo. leg.", x = "Cluster")
+      geom_point() +
+      geom_linerange() +
+      coord_flip() +
+      facet_wrap(~name, scales = "free_x", ncol = 6) +
+      labs(y = "Mean exo. leg.", x = "Cluster")
+  ggsave("gg_lca_omni_bygenre.pdf", g, path = "output/omni2", device = "pdf", width = 9)
+  return("output/omni2/gg_lca_omni_bygenre.pdf")
 }
 
 plot_exoomni_by_otheromni <- function(survey){
@@ -218,7 +232,9 @@ plot_exoomni_by_otheromni <- function(survey){
     guides(fill = "none") +
     scale_y_continuous(limits = c(0, .3)) +
     scale_x_continuous(limits = c(.4, 1))
-  plot_grid(l[[1]], l[[2]])
+  g <- plot_grid(l[[1]], l[[2]])
+  ggsave("gg_exoomni_by_otheromni.pdf", g, path = "output/omni2", device = "pdf", width = 11)
+  return("output/omni2/gg_exoomni_by_otheromni.pdf")
 }
 
 plot_omni_socdem <- function(survey){
@@ -235,7 +251,7 @@ plot_omni_socdem <- function(survey){
            age) %>% 
     pivot_longer(omni_survey_cultural_holes_played:sd_exo_pca) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy"))
-  s %>% 
+  g <- s %>% 
     filter(!is.na(degree), !is.na(value)) %>% 
     group_by(name) %>% 
     filter(value < quantile(value, .95),
@@ -245,4 +261,6 @@ plot_omni_socdem <- function(survey){
       coord_flip() +
       labs(x = "Education", y="") +
       facet_wrap(~name, scales="free_x")
+  ggsave("gg_omni_socdem.pdf", g, path = "output/omni2", device = "pdf")
+  return("output/omni2/gg_omni_socdem.pdf")
 }
