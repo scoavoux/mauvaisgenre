@@ -115,9 +115,11 @@ list(
                                                                               genremean = TRUE,
                                                                               output = "gg_endoexoleg_correlation_genremean.pdf"), 
              format = "file", repository = "local"),
+  tar_target(tb_mean_sd_leg, table_mean_sd_leg(artists), format = "file", repository = "local"),
   tar_target(gg_genre_overlap,         plot_genre_overlap(artists), format = "file", repository = "local"),
   tar_target(gg_example_genre_overlap, plot_example_genre_overlap(artists), format = "file", repository = "local"),
   tar_target(tb_leg_variance,          table_leg_variance(artists), format = "file", repository = "local"),
+  
   
   # Report Omni1
   # we remove it for now because it's the longest target to compile

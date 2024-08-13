@@ -317,3 +317,24 @@ plot_endoleg_pca <- function(artists){
   ggsave("pca_var.pdf", g, path = "output/omni1", device="pdf")
   return("output/omni1/pca_var.pdf")
 }
+
+table_mean_sd_leg <- function(artists){
+  require(tidyverse)
+  require(kableExtra)
+  artists %>% 
+    mutate(genre = recode_vars(genre, "cleangenres"), 
+           genre = fct_reorder(genre, endo_isei_mean_pond, mean)) %>% 
+    select(genre, sc_endo_isei, sc_exo_pca) %>% 
+    pivot_longer(-genre) %>% 
+    mutate(name = recode_vars(name, "cleanlegitimacy"),
+           name = str_replace_all(name, "\\\\n", " ")) %>% 
+    group_by(genre, name) %>% 
+    summarize(v = paste0(round(mean(value), 2), " (", round(sd(value), 2), ")")) %>% 
+    pivot_wider(names_from = name, values_from = v) %>% 
+    mutate(l = as.numeric(str_extract(`Endogenous legitimacy (ISEI)`, "^-?[\\d\\.]+"))) %>% 
+    arrange(l) %>% 
+    select(-l) %>% 
+    kbl(format = "latex", booktabs = TRUE, caption = "Mean (SD)") %>% 
+    save_kable("output/omni1/tb_mean_sd_leg.tex")
+  return("output/omni1/tb_mean_sd_leg.tex")
+}
