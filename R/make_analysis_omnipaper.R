@@ -9,7 +9,7 @@ plot_lca_diag <- function(latent_classes_from_surveys_multiple){
     geom_point() +
     geom_line() +
     labs(x = "Number of clusters", y = "BIC")
-  ggsave("gg_lca_diag.pdf", g, path = "output/omni2", device = "pdf")
+  ggsave("gg_lca_diag.pdf", g, path = "output/omni2", device = "pdf", height = 5)
   return("output/omni2/gg_lca_diag.pdf")
 }
 
@@ -64,7 +64,7 @@ plot_lca_profile <- function(latent_classes_from_surveys,
       coord_flip() +
       facet_wrap(~name) +
       labs(x = "Genres", y = "Prevalence") 
-  ggsave("gg_lca_profile.pdf", g, path = "output/omni2", device = "pdf")
+  ggsave("gg_lca_profile.pdf", g, path = "output/omni2", device = "pdf", height = 6)
   return("output/omni2/gg_lca_profile.pdf")
 }
 
@@ -129,7 +129,7 @@ plot_lca_socdem <- function(survey, lca_class_interpretation){
       labs(x = "Age", fill = "Education level", y ="") +
       #scale_fill_discrete(palette = "Set1") +
       facet_wrap(~cluster_survey)
-  ggsave("gg_lca_socdem.pdf", g, path = "output/omni2", device = "pdf")
+  ggsave("gg_lca_socdem.pdf", g, path = "output/omni2", device = "pdf", height = 5)
   return("output/omni2/gg_lca_socdem.pdf")
 }
 
@@ -185,9 +185,9 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
         labs(x = "", y = "")
   }
   if(format == "paper"){
-    height <- 7
+    height <- 6
   } else if(format != "paper"){
-    height <- 5
+    height <- 4
   }
   ggsave(paste0("gg_lca_omni_", format, ".pdf"), gg, path = "output/omni2", device = "pdf", height = height)
   return(paste0("output/omni2/gg_lca_omni_", format, ".pdf"))
@@ -214,7 +214,7 @@ plot_lca_omni_bygenre <- function(survey, lca_class_interpretation){
       coord_flip() +
       facet_wrap(~name, scales = "free_x", ncol = 6) +
       labs(y = "Mean exo. leg.", x = "Cluster")
-  ggsave("gg_lca_omni_bygenre.pdf", g, path = "output/omni2", device = "pdf", width = 9)
+  ggsave("gg_lca_omni_bygenre.pdf", g, path = "output/omni2", device = "pdf", width = 9, height = 6)
   return("output/omni2/gg_lca_omni_bygenre.pdf")
 }
 
@@ -244,7 +244,7 @@ plot_exoomni_by_otheromni <- function(survey){
     scale_y_continuous(limits = c(0, .3)) +
     scale_x_continuous(limits = c(.4, 1))
   g <- plot_grid(l[[1]], l[[2]])
-  ggsave("gg_exoomni_by_otheromni.pdf", g, path = "output/omni2", device = "pdf", width = 11)
+  ggsave("gg_exoomni_by_otheromni.pdf", g, path = "output/omni2", device = "pdf", width = 11, height = 5)
   return("output/omni2/gg_exoomni_by_otheromni.pdf")
 }
 
@@ -272,6 +272,6 @@ plot_omni_socdem <- function(survey){
       coord_flip() +
       labs(x = "Education", y="") +
       facet_wrap(~name, scales="free_x")
-  ggsave("gg_omni_socdem.pdf", g, path = "output/omni2", device = "pdf")
+  ggsave("gg_omni_socdem.pdf", g, path = "output/omni2", device = "pdf", height = 5)
   return("output/omni2/gg_omni_socdem.pdf")
 }
