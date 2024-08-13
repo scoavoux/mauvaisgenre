@@ -13,11 +13,22 @@ plot_lca_diag <- function(latent_classes_from_surveys_multiple){
   return("output/omni2/gg_lca_diag.pdf")
 }
 
-make_lca_class_interpretation <- function(){
-  c("Omnivore" = "class1", 
-    "Highbrow omnivore" = "class2", 
-    "Popular" = "class3", 
-    "Rap" = "class4")
+make_lca_class_interpretation <- function(survey){
+  require(tidyverse)
+  require(janitor)
+  tb <- tabyl(survey, cluster_survey) %>% 
+    filter(!is.na(cluster_survey)) %>% 
+    select(cluster_survey, n)
+  tb$interp <- c("Omnivore",
+                 "Highbrow omnivore", 
+                 "Popular", 
+                 "Rap")
+  tb <- mutate(tb, 
+               interp = paste0(interp, "\n(n=", n, ")"),
+               cluster_survey = paste0("class", cluster_survey))
+  res <- tb$cluster_survey
+  names(res) <- tb$interp
+  return(res)
 }
 
 plot_lca_profile <- function(latent_classes_from_surveys, 
@@ -43,7 +54,7 @@ plot_lca_profile <- function(latent_classes_from_surveys,
     pull(genre)
   if(!is.null(lca_class_interpretation)){
     res <- res %>% 
-      rename(lca_class_interpretation)
+      rename(all_of(lca_class_interpretation))
   }
   g <- res %>% 
     pivot_longer(-genre) %>% 

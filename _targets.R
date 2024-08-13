@@ -127,7 +127,7 @@ list(
   
   
   ## Analysis Omni 2 ------
-  tar_target(lca_class_interpretation, make_lca_class_interpretation()),
+  tar_target(lca_class_interpretation, make_lca_class_interpretation(survey)),
   tar_target(gg_lca_omni_paper, 
              plot_lca_omni(survey, lca_class_interpretation, format="paper"), 
              format = "file", repository = "local"),
@@ -146,5 +146,5 @@ list(
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
   
   ## Supplementary analyses ------  
-  tar_target(tbl_coverage, make_tbl_coverage(artists_pop, artists))
+  tar_target(tbl_coverage, make_tbl_coverage(artists_pop, artists), format = "file", repository = "local")
 )

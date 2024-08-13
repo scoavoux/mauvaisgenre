@@ -1,3 +1,22 @@
+make_tbl_coverage <- function(artists_pop, artists){
+  require(tidyverse)
+  require(tidytable)
+  require(kableExtra)
+  
+  tb <- artists_pop %>% 
+    left_join(select(artists, artist_id, genre) %>% mutate(included = TRUE)) %>% 
+    mutate(included_in_study = ifelse(is.na(included), FALSE, included)) %>% 
+    summarize(n_artists = n(),
+              control_f_l_play = sum(control_f_l_play, na.rm = TRUE),
+              control_f_n_play = sum(control_f_n_play, na.rm = TRUE), 
+              respondent_f_l_play = sum(respondent_f_l_play, na.rm = TRUE),
+              respondent_f_n_play = sum(respondent_f_n_play, na.rm = TRUE), 
+              .by = included_in_study)
+  kbl(tb, format = latex, digits = 2, booktabs = TRUE) %>% 
+    save_kable(file = "output/omni1/tb_coverage.tex")
+  return("output/omni1/tb_coverage.tex")
+}
+
 plot_endoleg_bygenre <- function(artists){
   set_ggplot_options()
   g <- artists %>% 
