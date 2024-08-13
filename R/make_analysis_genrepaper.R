@@ -12,7 +12,7 @@ make_tbl_coverage <- function(artists_pop, artists){
               respondent_f_l_play = sum(respondent_f_l_play, na.rm = TRUE),
               respondent_f_n_play = sum(respondent_f_n_play, na.rm = TRUE), 
               .by = included_in_study)
-  kbl(tb, format = latex, digits = 2, booktabs = TRUE) %>% 
+  kbl(tb, format = "latex", digits = 2, booktabs = TRUE) %>% 
     save_kable(file = "output/omni1/tb_coverage.tex")
   return("output/omni1/tb_coverage.tex")
 }
