@@ -69,7 +69,7 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
       mutate(name = recode_vars(name, "cleanlegitimacy"),
              name = str_replace_all(name, "\\\\n", "\n")) %>% 
       ggplot(aes(x= genre, y = value)) +
-      geom_half_violin(side="t")
+      geom_violin()
     # geom_half_point(side = "l", size=.7)
   } else if(type == "estimate"){
     d <- d %>% 
@@ -87,7 +87,7 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
   }
   
   g <- g + 
-    facet_wrap(~name) +
+    facet_wrap(~name, scales = "free_x") +
     coord_flip() +
     labs(y="", x="")
   if(type == "density"){
@@ -100,6 +100,8 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
 }
 
 plot_endoexoleg_genrerank <- function(artists){
+  require(tidyverse)
+  set_ggplot_options()
   x <- artists %>% 
     select(genre, starts_with("sc")) %>% 
     pivot_longer(-genre) %>% 
@@ -334,7 +336,8 @@ table_mean_sd_leg <- function(artists){
     mutate(l = as.numeric(str_extract(`Endogenous legitimacy (ISEI)`, "^-?[\\d\\.]+"))) %>% 
     arrange(l) %>% 
     select(-l) %>% 
-    kbl(format = "latex", booktabs = TRUE, caption = "Mean (SD)") %>% 
+    rename(Genre = "genre") %>% 
+    kbl(format = "latex", booktabs = TRUE) %>% 
     save_kable("output/omni1/tb_mean_sd_leg.tex")
   return("output/omni1/tb_mean_sd_leg.tex")
 }

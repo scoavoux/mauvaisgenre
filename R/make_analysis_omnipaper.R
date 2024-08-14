@@ -13,10 +13,11 @@ plot_lca_diag <- function(latent_classes_from_surveys_multiple){
   return("output/omni2/gg_lca_diag.pdf")
 }
 
-make_lca_class_interpretation <- function(survey){
+make_lca_class_interpretation <- function(latent_classes_from_surveys){
   require(tidyverse)
   require(janitor)
-  tb <- tabyl(survey, cluster_survey) %>% 
+  cluster_survey <- latent_classes_from_surveys$predclass
+  tb <- tabyl(cluster_survey) %>% 
     filter(!is.na(cluster_survey)) %>% 
     select(cluster_survey, n)
   tb$interp <- c("Omnivore",

@@ -312,7 +312,7 @@ filter_artists <- function(artists_raw){
   # Add PCA
   x <- compute_pca(artists)
   artists <- artists %>% 
-    mutate(sc_exo_pca = x$ind$coord[,1])
+    mutate(sc_exo_pca = center_scale(x$ind$coord[,1]))
   
   return(artists)
 }

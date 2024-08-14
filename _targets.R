@@ -129,7 +129,7 @@ list(
   
   
   ## Analysis Omni 2 ------
-  tar_target(lca_class_interpretation, make_lca_class_interpretation(survey)),
+  tar_target(lca_class_interpretation, make_lca_class_interpretation(latent_classes_from_surveys)),
   tar_target(gg_lca_omni_paper, 
              plot_lca_omni(survey, lca_class_interpretation, format="paper"), 
              format = "file", repository = "local"),
