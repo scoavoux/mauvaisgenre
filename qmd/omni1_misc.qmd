@@ -1,0 +1,156 @@
+---
+title: "Misc informations for Omni1 Paper"
+format:
+  html: 
+    embed-resources: true
+editor: source
+---
+
+```{r}
+#|label: knitr options
+library(knitr)
+opts_chunk$set(echo = FALSE, 
+               warning = FALSE, 
+               error = FALSE,
+               message = FALSE,
+               results = 'asis')
+```
+
+```{r}
+#|label: packages
+library(targets)
+tar_config_set(store = "../_targets/")
+tar_source()
+library(tidyverse)
+library(arrow)
+library(janitor)
+library(kableExtra)
+require(lubridate)
+library(here)
+```
+
+```{r}
+#|label: data
+tar_load(artists)
+# tar_load("endo_legitimacy", store = "../_targets/")
+# tar_load("exo_radio", store = "../_targets/")
+# tar_load("exo_senscritique", store = "../_targets/")
+# tar_load("senscritique_mb_deezer_id", store = "../_targets/")
+# tar_load("genres", store = "../_targets/")
+# tar_load("artists_pop", store = "../_targets/")
+```
+
+# Data
+
+```{r}
+#|label: streams years nb users artists
+tar_load("user_artist_peryear")
+summarize(user_artist_peryear, 
+          min_year = min(year),
+          max_year = max(year),
+          nb_streams = sum(l_play),
+          nb_users = n_distinct(hashed_id),
+          nb_artists = n_distinct(artist_id)) %>% 
+  kbl(format.args = list(big.mark=" "))
+
+```
+
+```{r}
+
+f <- s3$download_file(Bucket = "scoavoux", 
+                      Key = "records_w3/RECORDS_hashed_user_group.parquet", 
+                      Filename = here("data", "temp", "RECORDS_hashed_user_group.parquet"))
+us <- read_parquet(here("data", "temp", "RECORDS_hashed_user_group.parquet"))
+rm(f)
+us %>% 
+  select(starts_with("is_")) %>% 
+  pivot_longer(everything()) %>% 
+  count(name, value) %>% 
+  filter(value) %>% 
+  select(-value) %>% 
+  kbl(format.args = list(big.mark=" "))
+
+```
+
+```{r}
+#|label: nb of non-null ISEI
+tar_load("survey")
+tar_load("isei")
+tibble(nb_isei = nrow(isei),
+       nb_respondants = nrow(survey),
+       ratio = nb_isei / nb_respondants) %>% 
+  kbl(caption = "Nb of people with valid ISEI", digits = 2, format.args = list(big.mark=" "))
+```
+
+
+```{r}
+#|label: radio years
+
+s3 <- initialize_s3()
+f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/radio/radio_plays_with_artist_id.csv")
+radio <- f$Body %>% rawToChar() %>% read_csv()
+radio %>% 
+  mutate(year = year(ts)) %>% 
+  count(year) %>% 
+  kbl(caption = "Years of radio plays")
+```
+```{r}
+#| label: radio number
+tibble(nb_radio = n_distinct(radio$radio)) %>% 
+  kbl(caption = "Number of different radio stations")
+```
+
+```{r}
+#|label: radio_audience
+library(rvest)
+rtb <- read_html("https://www.acpm.fr/Les-chiffres/Frequentation-Radios/Classement-des-Radios-Digitales/Par-marque/Classement-France") %>% 
+  html_nodes("div.classement-data") %>% 
+  html_table() %>% 
+  as.data.frame() %>% 
+  tibble() %>% 
+  clean_names() %>% 
+  select(radios = "marques", ecoutes_actives_france, duree_d_ecoute_france_en_h)
+rtb <- rtb %>% 
+  mutate(radios = str_remove(radios, fixed("(*)")),
+         ecoutes_actives_france = str_remove_all(ecoutes_actives_france, "\\s") %>% 
+           as.numeric(),
+         duree_d_ecoute_france_en_h = str_remove_all(duree_d_ecoute_france_en_h, "\\s") %>% 
+           as.numeric())
+rtb <- rtb %>% 
+  mutate(radios = str_replace(radios, "^Mouv$", "Mouv'"),
+         radios = str_replace(radios, "^Oui FM$", "Ouï FM"),
+         radios = str_replace(radios, "^Europe 2$", "Virgin Radio"),
+         radios = str_replace(radios, "^Cherie FM$", "Chérie FM"),
+         radios = str_replace(radios, "^Radio Contact$", "Contact FM"),
+         radios = str_replace(radios, "^Radio FG$", "FG"),
+         radios = str_replace(radios, "^FIP$", "Fip"),
+         radios = str_replace(radios, "^Sud Radio$", "Sud radio"),
+         radios = str_replace(radios, "^Voltage$", "Voltage FM"),
+         radios = str_replace(radios, "^Rire et Chansons$", "Rire & Chansons")
+         )
+arrange(rtb, radios)
+```
+
+```{r}
+#| label: radio list
+radio_sum <- radio %>% 
+  count(radio) %>% 
+  rename(radios = "radio") %>% 
+  left_join(rtb)
+kbl(radio_sum, caption = "Radio list")
+```
+
+```{r}
+#|label: main missing stations
+rtb %>% 
+  anti_join(rename(radio, radios = "radio"))
+```
+
+
+```{r}
+tibble(sum_hours_radios_in_sample = sum(radio_sum$duree_d_ecoute_france_en_h, na.rm=TRUE),
+       sum_hours_radios_total = sum(rtb$duree_d_ecoute_france_en_h, na.rm=TRUE),
+       sum_hours_radios_in_sample / sum_hours_radios_total) %>% 
+  kbl(format.args = list(big.mark = " "))
+```
+
