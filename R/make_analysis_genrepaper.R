@@ -341,3 +341,45 @@ table_mean_sd_leg <- function(artists){
     save_kable("output/omni1/tb_mean_sd_leg.tex")
   return("output/omni1/tb_mean_sd_leg.tex")
 }
+
+plot_senscritique_users_from_quentin_survey <- function(){
+  require(tidyverse)
+  set_ggplot_options()
+  require(readxl)
+  s3 <- initialize_s3()
+  f <- s3$download_file(Bucket = "scoavoux", 
+                        Key = "enquete_quentin/DTBExpCult pour Samuel 160824.xlsx", 
+                        Filename = "data/temp/DTBExpCult pour Samuel 160824.xlsx")
+  qu <- read_excel("data/temp/DTBExpCult pour Samuel 160824.xlsx")
+  rm(f, s3)
+  # Make a variable that is TRUE if R declares writing reviews on allocine,
+  # senscritique, etc., FALSE if not
+  q <- qu %>% 
+    mutate(sc = str_detect(Q55tot, "2"),
+           # nb of different ways to discover culture
+           nb_discover = (ifelse(Q42tot == "13", "", Q42tot) %>% nchar())/2,
+           # score cultural outings (cinema, theater, etc.) frequency
+           across(starts_with("repQ27"), ~ifelse(.x == 4, 0, .x)),
+           score_sortie = repQ27l1 + repQ27l2 + repQ27l3 + repQ27l4 + repQ27l5,
+           # score cultural passion (says they are passionante (3), amateur (2), occasional (1), non consumer (0))
+           # on five items: films, series, music, video games, books
+           across(starts_with("Q39repL"), ~-(.x-4)),
+           score_passion_culturelle = Q39repL1 + Q39repL2 + Q39repL3 + Q39repL4 + Q39repL5
+    )
+  
+  ggplot(q, aes(nb_discover, sc)) +
+    geom_boxplot()
+  ggplot(q, aes(score_sortie, sc)) +
+   geom_boxplot()
+  ggplot(q, aes(score_passion_culturelle, sc)) + 
+    geom_boxplot()
+  
+  q %>% 
+    select(sc, sexe, age9, professionact, recodeCSP9, Q57, Q39repL3) %>% 
+    count(sc, Q39repL3) %>% 
+    group_by(sc) %>% 
+    mutate(f = n / sum(n)) %>% 
+    select(-n) %>% 
+    pivot_wider(names_from = sc, values_from = f)
+
+}
