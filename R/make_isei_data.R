@@ -9,8 +9,8 @@ make_isei_data <- function(survey_raw){
   s3 <- initialize_s3()
   s3$download_file(Bucket = "scoavoux", 
                    Key = "PCS2020/L66_Matrice_codification_PCS2020_collecte_2023.xlsx", 
-                   Filename = "data/L66_Matrice_codification_PCS2020_collecte_2023.xlsx")
-  pcs <- read_excel("data/L66_Matrice_codification_PCS2020_collecte_2023.xlsx", sheet = 2, skip=8)
+                   Filename = "data/temp/L66_Matrice_codification_PCS2020_collecte_2023.xlsx")
+  pcs <- read_excel("data/temp/L66_Matrice_codification_PCS2020_collecte_2023.xlsx", sheet = 2, skip=8)
   
   pcs <- clean_names(pcs) %>% 
     filter(libm != "2023") %>% 
@@ -108,7 +108,7 @@ make_isei_data <- function(survey_raw){
   recoprof <- recoprof %>% 
     select(-n, -PCS3, -PCS2, -Inclassable)
   
-  pppcs <- read_excel("data/L66_Matrice_codification_PCS2020_collecte_2023.xlsx", sheet = 2, skip=8)
+  pppcs <- read_excel("data/temp/L66_Matrice_codification_PCS2020_collecte_2023.xlsx", sheet = 2, skip=8)
   pppcs <- pppcs %>% 
     slice(-1) %>% 
     select(-libf, -liste, -natlib) %>% 
@@ -147,9 +147,9 @@ make_isei_data <- function(survey_raw){
   ## Prepare ISCO encoding table
   s3$download_file(Bucket = "scoavoux", 
                    Key = "PCS2020/L72_Matrice_codification_ISCO_collecte_2023.xlsx", 
-                   Filename = "data/L72_Matrice_codification_ISCO_collecte_2023.xlsx")
+                   Filename = "data/temp/L72_Matrice_codification_ISCO_collecte_2023.xlsx")
   
-  isco_cod <- read_xlsx("data/L72_Matrice_codification_ISCO_collecte_2023.xlsx", sheet = 2, skip = 7) %>% 
+  isco_cod <- read_xlsx("data/temp/L72_Matrice_codification_ISCO_collecte_2023.xlsx", sheet = 2, skip = 7) %>% 
     filter(libm != "2023") %>% 
     select(-id, -liste, -codeu) %>% 
     pivot_longer(libm:libf, values_to = "clean_pcs_prof") %>% 
