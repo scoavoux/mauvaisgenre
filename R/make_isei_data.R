@@ -95,7 +95,7 @@ make_isei_data <- function(survey_raw){
   # Récupérer les codes
   library(googlesheets4)
   gs4_auth(email = "samuel.coavoux@gmail.com")
-  recoprof <- read_sheet("1DcVZkiNRS9XbLFJxl_qRtbF1Um9xKkothWOLuUb28vw") %>% 
+  recoprof <- read_sheet("1DcVZkiNRS9XbLFJxl_qRtbF1Um9xKkothWOLuUb28vw", col_types = "c") %>% 
     filter(!is.na(PCS4))
   recoprof <- recoprof %>% 
     mutate(

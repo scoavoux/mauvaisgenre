@@ -77,42 +77,42 @@ plot_lca_socdem <- function(survey, lca_class_interpretation){
     select(cluster_survey, gender, degree, age) %>% 
     filter(!is.na(cluster_survey)) %>% 
     mutate(cluster_survey = fct_recode(paste0("class", cluster_survey), !!!lca_class_interpretation))
-  gg_gender <- s %>% 
-    filter(!is.na(gender)) %>% 
-    ggplot(aes(cluster_survey, fill=gender)) +
-      geom_bar(position="fill") +
-      coord_flip() +
-      labs(x="LCA cluster", y="", fill="") +
-      theme(legend.position = "bottom")
-  gg_gender <- s %>% 
-    filter(!is.na(gender)) %>% 
-    ggplot(aes(cluster_survey, fill=gender)) +
-      geom_bar(position="fill") +
-      coord_flip() +
-      labs(x="", y="", fill="Gender") +
-      theme(legend.position = "bottom")
-  gg_degree <- s %>% 
-    filter(!is.na(degree)) %>% 
-    ggplot(aes(cluster_survey, fill=degree)) +
-      geom_bar(position="fill") +
-      scale_fill_brewer() +
-      coord_flip() +
-      labs(x="", y="", fill="Education") +
-      theme(legend.position = "bottom")
-  gg_age <- s %>% 
-    filter(!is.na(age)) %>% 
-    ggplot(aes(age, group = cluster_survey, color=cluster_survey)) +
-      geom_density() +
-      scale_fill_brewer() +
-  #    coord_flip() +
-      labs(x="Age", y="", color = "LCA cluster") +
-      scale_x_continuous(limits=c(10, 90), breaks = seq(10, 90, 10)) +
-      theme(legend.position = "bottom", base.size=12)
-  
-  ggdraw() +
-    draw_plot(gg_gender, x = 0 , y = .5, width = .5, height = .5) +
-    draw_plot(gg_degree, x = .5, y = .5, width = .5, height = .5) +
-    draw_plot(gg_age,    x = 0 , y = 0 , width =  1, height = .5)
+  # gg_gender <- s %>% 
+  #   filter(!is.na(gender)) %>% 
+  #   ggplot(aes(cluster_survey, fill=gender)) +
+  #     geom_bar(position="fill") +
+  #     coord_flip() +
+  #     labs(x="LCA cluster", y="", fill="") +
+  #     theme(legend.position = "bottom")
+  # gg_gender <- s %>% 
+  #   filter(!is.na(gender)) %>% 
+  #   ggplot(aes(cluster_survey, fill=gender)) +
+  #     geom_bar(position="fill") +
+  #     coord_flip() +
+  #     labs(x="", y="", fill="Gender") +
+  #     theme(legend.position = "bottom")
+  # gg_degree <- s %>% 
+  #   filter(!is.na(degree)) %>% 
+  #   ggplot(aes(cluster_survey, fill=degree)) +
+  #     geom_bar(position="fill") +
+  #     scale_fill_brewer() +
+  #     coord_flip() +
+  #     labs(x="", y="", fill="Education") +
+  #     theme(legend.position = "bottom")
+  # gg_age <- s %>% 
+  #   filter(!is.na(age)) %>% 
+  #   ggplot(aes(age, group = cluster_survey, color=cluster_survey)) +
+  #     geom_density() +
+  #     scale_fill_brewer() +
+  # #    coord_flip() +
+  #     labs(x="Age", y="", color = "LCA cluster") +
+  #     scale_x_continuous(limits=c(10, 90), breaks = seq(10, 90, 10)) +
+  #     theme(legend.position = "bottom", base.size=12)
+  # 
+  # ggdraw() +
+  #   draw_plot(gg_gender, x = 0 , y = .5, width = .5, height = .5) +
+  #   draw_plot(gg_degree, x = .5, y = .5, width = .5, height = .5) +
+  #   draw_plot(gg_age,    x = 0 , y = 0 , width =  1, height = .5)
   
   g <- s %>% 
     mutate(age = cut(age, breaks = c(0, 25, 35, 55, 100), labels = c("<25yo", "26-35yo", "36-55yo", ">55yo"))) %>% 
@@ -220,7 +220,7 @@ plot_lca_omni_bygenre <- function(survey, lca_class_interpretation){
 }
 
 plot_exoomni_by_otheromni <- function(survey){
-  require(tidyverse)
+  require(tidyverse, warn.conflicts = FALSE)
   require(cowplot)
   set_ggplot_options()
   s <- survey %>% 
@@ -232,18 +232,30 @@ plot_exoomni_by_otheromni <- function(survey){
     mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
     pivot_wider(names_from = name, values_from = value)
   l <- vector("list", 2L)
-  l[[1]] <- ggplot(s, aes(`Cultural holes played`, `SD exo. leg.`)) +
-    #geom_point(shape = ".")
-    geom_density_2d_filled() +
-    guides(fill = "none") +
-    scale_y_continuous(limits = c(0, .3)) +
-    scale_x_continuous(limits = c(0, 7))
-  l[[2]] <- ggplot(s, aes(`HHI genres streamed`, `SD exo. leg.`)) +
-    #geom_point(shape = ".")
-    geom_density_2d_filled() +
-    guides(fill = "none") +
-    scale_y_continuous(limits = c(0, .3)) +
-    scale_x_continuous(limits = c(.4, 1))
+  xlim <- c(0, 7)
+  ylim <- c(0, .3)
+  l[[1]] <- s %>% 
+    # to remove warning
+    filter(`Cultural holes played` < xlim[2], `Cultural holes played` > xlim[1],
+           `SD exo. leg.` < ylim[2],          `SD exo. leg.` > ylim[1]) %>% 
+    ggplot(aes(`Cultural holes played`, `SD exo. leg.`)) +
+      #geom_point(shape = ".")
+      geom_density_2d_filled() +
+      guides(fill = "none") +
+      scale_y_continuous(limits = ylim) +
+      scale_x_continuous(limits = xlim)
+  xlim <- c(.4, 1)
+  ylim <- c(0, .3)
+  l[[2]] <- s %>% 
+    # to remove warning
+    filter(`HHI genres streamed` < xlim[2], `HHI genres streamed` > xlim[1],
+           `SD exo. leg.` < ylim[2],          `SD exo. leg.` > ylim[1]) %>% 
+    ggplot(aes(`HHI genres streamed`, `SD exo. leg.`)) +
+      #geom_point(shape = ".")
+      geom_density_2d_filled() +
+      guides(fill = "none") +
+      scale_x_continuous(limits = xlim) +
+      scale_y_continuous(limits = ylim)
   g <- plot_grid(l[[1]], l[[2]])
   ggsave("gg_exoomni_by_otheromni.pdf", g, path = "output/omni2", device = "pdf", width = 11, height = 5)
   return("output/omni2/gg_exoomni_by_otheromni.pdf")
