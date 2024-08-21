@@ -288,17 +288,18 @@ make_corpus_tokenized_sentences <- function(corpus_raw){
 
 # Make press data ------
 
-make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, exo_senscritique){
+make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases){
   require(tidyverse)
   require(parallel)
   require(foreach)
   require(doParallel)
   
-  # for now we filter by exo_senscritique because this is the bottleneck
-  # and running this function already takes forever
-  artist_names_and_aliases <- artist_names_and_aliases %>% 
-    inner_join(select(exo_senscritique, artist_id))
+  # # for now we filter by exo_senscritique because this is the bottleneck
+  # # and running this function already takes forever
+  # artist_names_and_aliases <- artist_names_and_aliases %>% 
+  #   inner_join(select(exo_senscritique, artist_id))
   
+  # Apply regex fixes
   regex_fixes <- read_csv("data/regex_fixes.csv") %>% 
     select(-total_n_pqnt_texte)
   
@@ -370,16 +371,16 @@ make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, exo_
     nrow()
   
   # Perform search
-  library(tictoc)
-
-  tic()
+  # library(tictoc)
+  # 
+  # tic()
   x <- foreach(
     i = seq_len(iterator),
     .combine = "c"
     ) %dopar% {
     xan_count_matches(artist_names_and_aliases$regex[i])
   }
-  toc()
+  # toc()
   stopCluster(my.cluster)
   res <- tibble(artist_id = artist_names_and_aliases$artist_id,
                 total_n_pqnt_texte = as.numeric(x)) %>% 
