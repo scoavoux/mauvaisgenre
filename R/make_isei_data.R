@@ -137,7 +137,7 @@ make_isei_data <- function(survey_raw){
     select(-clean_pcs_prof2)
   
   ## Prepare PCS encoding table
-  pcs_cod <- read_xlsx("data/L66_Matrice_codification_PCS2020_collecte_2023.xlsx", sheet = 2, skip = 8) %>% filter(libm != "2023") %>% 
+  pcs_cod <- read_xlsx("data/temp/L66_Matrice_codification_PCS2020_collecte_2023.xlsx", sheet = 2, skip = 8) %>% filter(libm != "2023") %>% 
     select(-liste, -natlib, -codeu) %>% 
     pivot_longer(libm:libf, values_to = "clean_pcs_prof") %>% 
     select(-name) %>% 
