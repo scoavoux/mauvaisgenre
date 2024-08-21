@@ -34,6 +34,7 @@ make_lca_class_interpretation <- function(latent_classes_from_surveys){
 
 plot_lca_profile <- function(latent_classes_from_surveys, 
                              lca_class_interpretation){
+  require(tidyverse)
   set_ggplot_options()
   res <- vector("list", length(latent_classes_from_surveys$probs))
   for(i in 1:length(latent_classes_from_surveys$probs)){
@@ -67,6 +68,66 @@ plot_lca_profile <- function(latent_classes_from_surveys,
       labs(x = "Genres", y = "Prevalence") 
   ggsave("gg_lca_profile.pdf", g, path = "output/omni2", device = "pdf", height = 6)
   return("output/omni2/gg_lca_profile.pdf")
+}
+
+make_user_genre_summary_data <- function(user_artist_peryear_merged_artists,
+                                         genres,
+                                         proportion=TRUE){
+  require(tidyverse)
+  res <- user_artist_peryear_merged_artists %>% 
+    left_join(genres) %>% 
+    filter(!is.na(genre)) %>% 
+    group_by(hashed_id, genre) %>% 
+    summarize(l_play = sum(l_play, na.rm=TRUE))
+  if(proportion){
+    res <- res %>% 
+      group_by(hashed_id) %>% 
+      mutate(l_play = l_play / sum(l_play)) 
+  }
+  res <- res %>% 
+    ungroup() %>% 
+    pivot_wider(names_from = genre, values_from = l_play, values_fill = 0)
+  return(res)
+}
+
+plot_lca_profile_played <- function(latent_classes_from_surveys, 
+                                    lca_class_interpretation,
+                                    user_genre_summary_data_prop,
+                                    user_genre_summary_data_raw){
+
+  require(tidyverse)
+  set_ggplot_options()
+  ci <- names(lca_class_interpretation)
+  names(ci) <- lca_class_interpretation
+
+  res <- tibble(hashed_id = latent_classes_from_surveys$id, 
+         class = latent_classes_from_surveys$predclass) %>% 
+    left_join(pivot_longer(user_genre_summary_data_prop, -hashed_id, names_to = "genre", values_to = "prop")) %>% 
+    left_join(pivot_longer(user_genre_summary_data_raw, -hashed_id, names_to = "genre", values_to = "raw")) %>% 
+    group_by(class, genre) %>% 
+    summarise(prop = mean(prop),
+              raw = mean(raw)) %>% 
+    ungroup() %>% 
+    mutate(genre = recode_vars(genre, "cleangenres"),
+           class = ci[paste0("class", class)])
+
+  g1 <- res %>% 
+    ggplot(aes(genre, prop)) +
+      geom_col() +
+      coord_flip() +
+      facet_wrap(~class) +
+      labs(x = "Genres", y = "Proportion") 
+  # so we compute the same plot with raw numbers rather than proportions
+  # but it shows exactly the same 
+  # g2 <- res %>% 
+  #   ggplot(aes(genre, raw)) +
+  #   geom_col() +
+  #   coord_flip() +
+  #   facet_wrap(~class) +
+  #   labs(x = "Genres", y = "Prevalence") 
+  # g2
+  ggsave("gg_lca_profile_played_prop.pdf", g1, path = "output/omni2", device = "pdf", height = 6)
+  return("output/omni2/gg_lca_profile_played_prop.pdf")
 }
 
 plot_lca_socdem <- function(survey, lca_class_interpretation){
