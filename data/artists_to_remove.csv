@@ -1,69 +1,278 @@
 artist_id,artist_name
-100155,Various Artists - Azzurra Music
-100545,Génération 80
-101408,Generation 90
-102976,Chansons Du Soleil
-103045,Top TV 80
-103061,Generation R&B
-148326,Best Of Hits
-148354,Collection Grands Classiques
-154485,Un Siècle De Musiques De Films
-260250,Compilation Générique TV
-317527,Les Choeurs De Noël
-323538,Future Hitmakers
-326393,Christmas Songs
-342865,Generation Mix
-378599,Chansons et comptines
-607173,Fun Hits
-607174,Variété Française
-614025,Yoga
-1003732,100 Ans De Musiques De Films
-1184968,Zen Music Garden
-1198404,Pop 90 Orchestra
-1206296,New York Jazz Lounge
-1210321,Pop 80 Orchestra
-1351022,Nature Sounds Nature Music
-1622308,Universal Sound Machine
-1650516,Movie Sounds Unlimited
-1658572,Purple Disco Machine
-3159141,La playlist des vacances
-4293493,Chansons de Noel
-4293527,Musique de Noel Academie
-5143340,Le Choeur des Enfants
-5845951,8-Bit Arcade
-6721277,The Soundtrack Studio Stars
-6881923,Comptines TV
-7047655,La Superstar Des Comptines Rondes Et Berceuses
-7960308,Les années 90
-8241584,La Musique de Jazz de Détente
-9934148,Daily Classic
-111847281,Jazz douce musique d'ambiance
-12187072,100% Hits - Chanson Française
-12592840,Remix Sport Workout
-13670585,Monde des Titounis
-14385537,Tubes variété française
-303718,Musique De Film
-7149685,Ensemble Noël Forever
-9623960,Inconnu. Compositeur Auteur
-8953,Rock
-809170,NO ARTIST
-9219,Disney
-138663842,Comédie-Française
-5080,Various Artists
-72829,Nature
-82350,Anonymous
-9334696,Ensemble de Musique Zen Relaxante
-7047655,La Superstar Des Comptines Rondes Et Berceuses
-113877352,Lofi Fruits Music
-1351022,Nature Sounds Nature Music
-1384887,Rain Sounds
-7556588,Fearless Motivation Instrumentals
-7556588,Fearless Motivation
-1206296,New York Jazz Lounge
-10490735,Bouddha musique sanctuaire
-11206176,Geek Music
-123564162,Sleep Fruits Music
-1518108,Bar Lounge
-304587,Electro Lounge All Stars
-72042482,Music Travel Love
-171522057,sped up nightcore
+100155,"Various Artists - Azzurra Music"
+100545,"Génération 80"
+101408,"Generation 90"
+102976,"Chansons Du Soleil"
+103045,"Top TV 80"
+103061,"Generation R&B"
+148326,"Best Of Hits"
+148354,"Collection Grands Classiques"
+154485,"Un Siècle De Musiques De Films"
+260250,"Compilation Générique TV"
+317527,"Les Choeurs De Noël"
+323538,"Future Hitmakers"
+326393,"Christmas Songs"
+342865,"Generation Mix"
+378599,"Chansons et comptines"
+607173,"Fun Hits"
+607174,"Variété Française"
+614025,"Yoga"
+1003732,"100 Ans De Musiques De Films"
+1184968,"Zen Music Garden"
+1198404,"Pop 90 Orchestra"
+1206296,"New York Jazz Lounge"
+1210321,"Pop 80 Orchestra"
+1351022,"Nature Sounds Nature Music"
+1622308,"Universal Sound Machine"
+1650516,"Movie Sounds Unlimited"
+1658572,"Purple Disco Machine"
+3159141,"La playlist des vacances"
+4293493,"Chansons de Noel"
+4293527,"Musique de Noel Academie"
+5143340,"Le Choeur des Enfants"
+5845951,"8-Bit Arcade"
+6721277,"The Soundtrack Studio Stars"
+6881923,"Comptines TV"
+7047655,"La Superstar Des Comptines Rondes Et Berceuses"
+7960308,"Les années 90"
+8241584,"La Musique de Jazz de Détente"
+9934148,"Daily Classic"
+111847281,"Jazz douce musique d'ambiance"
+12187072,"100% Hits - Chanson Française"
+12592840,"Remix Sport Workout"
+13670585,"Monde des Titounis"
+14385537,"Tubes variété française"
+303718,"Musique De Film"
+7149685,"Ensemble Noël Forever"
+9623960,"Inconnu. Compositeur Auteur"
+8953,"Rock"
+809170,"NO ARTIST"
+9219,"Disney"
+138663842,"Comédie-Française"
+5080,"Various Artists"
+72829,"Nature"
+82350,"Anonymous"
+9334696,"Ensemble de Musique Zen Relaxante"
+7047655,"La Superstar Des Comptines Rondes Et Berceuses"
+113877352,"Lofi Fruits Music"
+1351022,"Nature Sounds Nature Music"
+1384887,"Rain Sounds"
+7556588,"Fearless Motivation Instrumentals"
+7556588,"Fearless Motivation"
+1206296,"New York Jazz Lounge"
+10490735,"Bouddha musique sanctuaire"
+11206176,"Geek Music"
+123564162,"Sleep Fruits Music"
+1518108,"Bar Lounge"
+304587,"Electro Lounge All Stars"
+72042482,"Music Travel Love"
+171522057,"sped up nightcore"
+874704,"The Kiboomers"
+10600841,"La Reine des chansons pour enfants et bébés"
+12387848","
+66006282","
+10278650","
+201397497","
+9003438","
+68260072,"Musique apaisante: d'Marie"
+8358182,"Bruit Blanc"
+9110932,"Sommeil profond"
+2228191,"Recherche sur le Bruit Blanc"
+11976468,"Comptines"
+12358858,"Sons de la Nature Projet France"
+1182806,"Oasis de Détente et Relaxation"
+8101459,"Zone de Détente"
+9631962,"La fée des berceuses"
+148551,"Sounds Of Nature"
+11847281,"Jazz douce musique d'ambiance"
+7903288,"Musique de Yoga"
+8222242,"Zone de la Musique Relaxante"
+11438486,"Zen Ambiance D'eau Calme"
+68032132,"Berceuse bébé"
+12062156,"Workout Music Tv"
+9461686,"Relaxation Meditation Songs Divine"
+10228572,"Oasis de sommeil"
+67912782,"Médecine Relaxante"
+1185978,"Musique Douce Ensemble"
+1351107,"Piano Relaxation Music Masters"
+9210076,"Contes pour enfants"
+98220252,"Bruit De La Mer"
+9751222,"Musique pour l'Étude Spécialiste"
+4624308,"Musique pour Enfants Dodo"
+10815132,"Club de Méditer de Détendre"
+11799649,"Sophrologie musique d'ambiance"
+11904883,"Canciones Para Bebés Y Música Para Bebé"
+1605060,"Piano Instrumental"
+78184482,"Les plus belles comptines d'Okoo"
+1420041,"Christmas Hits"
+152575,"Petit Ours Brun"
+59088142,"Histoires et contes pour enfants"
+67304572,"Relaxing Radiance"
+51971232,"ASMR Glow"
+342868,"50 Tubes Du Top"
+64147172,"Jazz Lounge Playlist"
+85070,"Les Voix De L'émotion"
+1461005,"Musique de Relaxation"
+7391966,"Bébé Berceuse"
+7574792,"Just Relax Music Universe"
+1461000,"Musique Relaxante et Détente"
+7484874,"Oasis de Musique Zen Spa"
+206916147,"Musique Calme Et Relaxation"
+10503705,"Piano musique académie pour bébé"
+1603349,"Interprètes Divers"
+1241690,"Les Amis Du Père Noël"
+5420819,"Meditative Mind"
+893887,"Disco Fever"
+59192102,"Bossa Nova Covers"
+83549342,"Bulles de Légèreté"
+13904747,"Motivation Sport Fitness"
+1351149,"Asian Zen Spa Music Meditation"
+6754503,"Retro X"
+7960252,"Tubes Top 40"
+9460316,"Musique pour Détendre en Temps Libre"
+8156502,"P'tit Loup"
+3842681,"Sleep Songs with Nature Sounds"
+607175,"Tubes De L'Eté"
+1947651,"Zen Meditation and Natural White Noise and New Age Deep Massage"
+10271416,"Spa Musique Collection"
+49688232,"Hypnose Meditation Relaxation"
+4520291,"Violin Music"
+99408,"Generation Fête"
+76096612,"Jazz Manouche Playlist"
+93822,"Studio Group"
+153059672,"Musique Pour Le Sommeil"
+518584","
+11704285,"Detente Spa Musique Collection"
+69602,"Le Top des Tout P'Tits"
+4514835,"Acoustic Hits"
+126739572,"Piano Fruits Music"
+651382,"Audio Idols"
+1221900,"Musique Relaxante"
+538986,"Chillout Lounge"
+3843191,"Sleep Songs 101"
+52408262,"Relaxation Sommeil et Détente"
+11681625,"Pure zone des bruits naturels"
+11682333,"Bien-être Spa Musique Collection"
+6133368,"Musique Zen"
+50191642,"Pop variété française"
+3841121,"Musique Ambiance Détente"
+148749,"Nature Sounds"
+13974583,"Jazz Relax"
+8512250,"Nature Académie"
+1171451,"Electronic Music"
+665971,"Relaxation Ensemble"
+13730535,"Instrumental Soon"
+4849520","
+5152752,"Musique Zen Garden"
+14612473,"Zen Musique Détente"
+11850469,"Guérir L'insomnie Académie"
+95626962,"Bethoven Masterpieces"
+6757017,"Hollywood Hits"
+13450043,"Chansons de Noël et Chants de Noël"
+9712754,"Zen Shiatsu Musique de Massage Spa Unité"
+14119633,"Sieste Illimitée"
+84870002,"Musique Zen!"
+10313524,"Buddhist méditation académie"
+1461006,"Bien Dormir"
+1019883,"Relaxing Zen Nature"
+82231542","
+9105008,"Nature des sons de guérison collection"
+7661734,"Musique Douce Academy"
+12414930,"Yoga Flow"
+3595391,"Anti Stress"
+378507,"Relaxing Music"
+102314042,"Sleep Deeply Brown Noise"
+1360235,"Sleeping Music"
+4086775,"Smooth Jazz All Stars"
+651387,"Friday Night At The Movies"
+326220,"50 Tubes Au Top"
+1416434,"The Beatles Recovered Band"
+364062,"Relaxation Big Band"
+77225192,"Musique Classique Maestro Mozy"
+8693734,"Sérénité Océan"
+97781,"Joyeux Anniversaire"
+1615255,"Le Monde d'Hugo"
+115060,"Biosphere: Nature Sounds & Music"
+1936951,"Musical Spa - Massage Music"
+74965762,"Musique Pour Faire Dormir Bébé"
+12828999,"Sleep Baby Sleep Music"
+52408222,"Musique Calme et Relaxation"
+1459747,"Sacrée Soirée"
+4401681,"Music Factory"
+51450732,"Disney Peaceful Piano"
+1376693,"Musical Mania"
+1534484,"Le Meilleur des Tubes en Karaoke"
+1187560,"Massage Therapy Music"
+10411336,"Piano bar musique masters"
+7764034,"Piano Bar Music Experts"
+439030","
+163315937,"Ambient Gate Music"
+9846472,"El hada de las canciones de cuna"
+4337827,"Musica Para Meditación Profunda"
+5018530,"Maher Shakhashero"
+1382074,"Abdul Rahman Al Sudais"
+4585991,"Emmanuel Music"
+50992852,"Music Body and Spirit"
+10069836,"Hillsong En Français"
+2047421,"Abderrahman Soudais"
+4088024,"Dangerous Minds Music from the Motion Picture"
+1313282,"Sheikh Maher Al Muaiqly"
+65403952,"Omar Hisham"
+10200920,"Caracol Televisión"
+10466017,"Muhammad Al Muqit"
+7262662,"Communauté De L'emmanuel"
+13102817,"Petit Papa Noël"
+4325843,"Maher El Muaiqli"
+1389928,"Tabata Songs"
+1518489,"WWE"
+5062319,"Dorothée Pousséo"
+5529186,"Sheikh Mishary Rashid Alfasay"
+6576739,"Nounours"
+4390413,"Maher al Muaiqly"
+13200837,"KALLY'S Mashup Cast"
+651061,"Karaoké Playback Français"
+104565652,"Julie and the Phantoms Cast"
+11786839,"Baby Mozart"
+11516921,"La La Land Cast"
+13513859,"Soft Sexy Guitar - Chill out Background Instrumental Music Songs, Ibiza Chill out Party, Relaxing Mindfulness Meditation Relaxation Maestro"
+88072992,"HeyKids Comptine Pour Bébé"
+462157,"Done Again"
+4088420,"Le silence des Mosquées"
+5994572,"Abdul Rahman Al Sodais"
+250294,"The Last Samurai"
+3196301,"Mishary Al Afasy"
+12872923,"Berceuse Pour Bébé"
+53747532,"Chantant Des Enfants"
+1517905,"Sleep Sounds of Nature"
+269805,"Céline Dion, Jean-Jacques Goldman"
+301885,"Ciao Italia !"
+434058,"Benny Hinn"
+13795,"Dr. Dre, Snoop Doggy Dogg"
+367346,"Zafè Chô"
+90491362,"Mishary Rashid Al-Afasy"
+157114942,"TELL YOUR STORY music by Ikson™"
+139079,"Limo"
+94221,"Studio Allstars"
+99395,"Rayan"
+52861042,"Salim Bahanan"
+110307,"Jane Winther"
+371840,"The Party Band"
+133492,"Esteban"
+11821739,"Relaxation mentale"
+14392,"Le Groupe Apollo"
+100322,"Daoudi"
+83515,"A.m.p."
+64485682,"Al Sheikh Maher Al Muaiqly"
+283643,"Jamie Llewellyn"
+458683,"Agrupación Reggaeton"
+96717,"Ágata"
+12790909,"Elvis Presley"
+89780,"Ambiente"
+309391,"Buddha Bar"
+52773332,"Chœurs - Bambi"
+4547677,"Piano 101"
+1597184,"Baby Music"
+1955681,"Sleep Music Lullabies"
+4513987,"The Yoga Mantra and Chant Music Project"
+52773092,"Chœurs - Peter Pan"
+52827172,"Nutolina"

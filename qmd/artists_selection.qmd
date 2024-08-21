@@ -13,13 +13,16 @@ require(arrow)
 library(knitr)
 library(janitor)
 
+tar_config_set(store = "../_targets/")
+
 tar_source()
-tar_load("endo_legitimacy", store = "../_targets/")
-tar_load("exo_radio", store = "../_targets/")
-tar_load("exo_senscritique", store = "../_targets/")
-tar_load("senscritique_mb_deezer_id", store = "../_targets/")
-tar_load("genres", store = "../_targets/")
-tar_load("artists_pop", store = "../_targets/")
+tar_load("endo_legitimacy")
+tar_load("exo_radio")
+tar_load("exo_senscritique")
+tar_load("senscritique_mb_deezer_id")
+tar_load("genres")
+tar_load("artists_pop")
+tar_load("artist_names")
 
 ```
 
@@ -58,6 +61,23 @@ group_by(x, senscritique, senscritiquerating, endo_legitimacy, genre) %>%
 
 
 
+```
+
+# Who are the missing artists
+
+```{r}
+x %>% filter(senscritique, !senscritiquerating, endo_legitimacy) %>% 
+  arrange(desc(control_f_l_play)) %>% 
+  left_join(artist_names)
+```
+
+
+```{r}
+x %>% filter(!senscritique, endo_legitimacy) %>% 
+  arrange(desc(control_f_l_play)) %>% 
+  #left_join(artist_names)
+  select(artist_id, control_f_l_play)
+  #write_csv("to_search.csv")
 ```
 
 ```{r}
