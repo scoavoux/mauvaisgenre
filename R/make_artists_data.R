@@ -2,23 +2,18 @@
 # For each artist, compute their use in control group
 # and in respondent group (criteria for selecting artists + assess
 # the coverage of our sample)
-make_artist_popularity_data <- function(user_artist_peryear){
+make_artist_popularity_data <- function(user_artist_peryear, to_remove_file){
   library(tidyverse)
   library(tidytable)
   library(arrow)
   s3 <- initialize_s3()
   
-  # To remove "fake" artists: accounts that compile anonymous music
-  to_remove <- fread("data/artists_to_remove.csv") %>% 
-    select(artist_id)
-
   # compute artist/hashed_id pairs (collapse years)
   pop_raw <- user_artist_peryear %>% 
     filter(!is.na(artist_id)) %>% 
     group_by(artist_id, hashed_id) %>% 
     summarise(l_play = sum(l_play, na.rm=TRUE),
-              n_play = sum(n_play, na.rm=TRUE)) %>% 
-    anti_join(to_remove)
+              n_play = sum(n_play, na.rm=TRUE))
   
   # separate between survey respondants and control group
   f <- s3$download_file(Bucket = "scoavoux", 
@@ -145,6 +140,14 @@ make_senscritique_ratings_data <- function(senscritique_mb_deezer_id, track_weig
   #   distinct(contact_id) %>% 
   #   anti_join(select(senscritique_mb_deezer_id, contact_id, consolidated_artist_id) %>% 
   #                distinct())
+  # x <- bind_rows(albums_ratings, tracks_ratings) %>% 
+  #   group_by(contact_id) %>% 
+  #   summarise(senscritique_n_ratings = sum(n),
+  #             senscritique_n_albums = sum(weight == 1),
+  #             senscritique_n_tracks = sum(weight == track_weight)) %>% 
+  #   arrange(desc(senscritique_n_ratings)) %>% 
+  #   anti_join(ungroup(senscritique_mb_deezer_id) %>% select(contact_id))
+  # x %>% write_csv("lots_of_ratings_not_in_deezer.csv")
   
   
   cora <- bind_rows(albums_ratings, tracks_ratings) %>% 

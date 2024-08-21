@@ -23,13 +23,15 @@ list(
   tar_target(streaming_data_files,               list_streaming_data_files()),
   tar_target(user_artist_peryear_onefile,        make_user_artist_peryear_table_onefile(streaming_data_files), pattern = streaming_data_files),
   tar_target(user_artist_peryear,                merge_user_artist_peryear_table(user_artist_peryear_onefile)),
-  tar_target(user_artist_peryear_merged_artists, merge_duplicate_artists_in_streams(user_artist_peryear, senscritique_mb_deezer_id)),
+  tar_target(to_remove_file,                     "data/artists_to_remove.csv"),
+  tar_target(user_artist_peryear_merged_artists, merge_duplicate_artists_in_streams(user_artist_peryear, senscritique_mb_deezer_id, to_remove_file)),
   tar_target(user_genre_summary_data_prop,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=TRUE)),
   tar_target(user_genre_summary_data_raw ,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=FALSE)),
   ## Prepare artists data ------
   
   ### Artists names, aliases, ids ------
-  tar_target(senscritique_mb_deezer_id,    make_senscritique_pairing_data()),
+  tar_target(manual_search_file,           "data/manual_search.csv"),
+  tar_target(senscritique_mb_deezer_id,    make_senscritique_pairing_data(manual_search_file)),
   tar_target(artist_names_and_aliases,     make_aliases(senscritique_mb_deezer_id)),
   tar_target(artist_names,                 make_artists_names(artist_names_and_aliases)),
   
@@ -47,7 +49,7 @@ list(
   tar_target(corpus_raw_tokenized,    make_corpus_tokenized_sentences(corpus_raw)),
 
   ### Legitimacy data ------
-  tar_target(exo_press,        make_press_data(corpus_raw_tokenized, artist_names_and_aliases, exo_senscritique)),
+  tar_target(exo_press,        make_press_data(corpus_raw_tokenized, artist_names_and_aliases)),
   tar_target(radio_leg,        c("France Inter", "France Musique", "Fip", "Radio Nova")),
   tar_target(exo_radio,        compute_exo_radio(senscritique_mb_deezer_id, radio_leg)),
   tar_target(exo_senscritique, make_senscritique_ratings_data(senscritique_mb_deezer_id)),

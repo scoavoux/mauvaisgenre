@@ -3,7 +3,7 @@
 # Starts from dump of senscritique SQL database,
 # made July, 1st 2024
 
-make_senscritique_pairing_data <- function(){
+make_senscritique_pairing_data <- function(manual_search_file){
   require(tidyverse)
   require(tidytable)
   require(WikidataQueryServiceR)
@@ -53,7 +53,7 @@ make_senscritique_pairing_data <- function(){
   
   ### SensCritique / deezer id ------
   #### From manual search by me... highly trustworthy ------
-  pairings0 <- read_csv("data/manual_search.csv")
+  pairings0 <- read_csv(manual_search_file)
   
   #### from Deezer api search (old) ------
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_id_deezer_id_pairing.csv")
@@ -149,6 +149,6 @@ make_senscritique_pairing_data <- function(){
     group_by(artist_id) %>% 
     mutate(consolidated_artist_id = first(inter_artist_id)) %>% 
     select(-inter_artist_id)
-  
+  co <- ungroup(co)
   return(co)  
 }

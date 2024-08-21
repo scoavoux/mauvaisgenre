@@ -107,11 +107,18 @@ merge_user_artist_peryear_table <- function(...){
   return(streams)
 }
 
-merge_duplicate_artists_in_streams <- function(user_artist_peryear, senscritique_mb_deezer_id){
-  library(tidyverse)
-  library(tidytable)
+# Merge duplicate artists and remove junk artists
+merge_duplicate_artists_in_streams <- function(user_artist_peryear, senscritique_mb_deezer_id, to_remove_file){
+  require(tidyverse)
+  require(tidytable)
+  
+  # To remove "fake" artists: accounts that compile anonymous music
+  to_remove <- fread(to_remove_file) %>% 
+    select(artist_id)
+  
   senscritique_mb_deezer_id <- distinct(senscritique_mb_deezer_id, artist_id, consolidated_artist_id)
   user_artist_peryear <- user_artist_peryear %>% 
+    anti_join(to_remove) %>% 
     left_join(senscritique_mb_deezer_id) %>% 
     mutate(artist_id = if_else(!is.na(consolidated_artist_id), consolidated_artist_id, artist_id)) %>% 
     summarise(l_play = sum(l_play),
