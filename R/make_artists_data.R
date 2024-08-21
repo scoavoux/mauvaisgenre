@@ -254,12 +254,19 @@ merge_genres <- function(...){
   return(genres)
 }
 
-compute_exo_radio <- function(){
+compute_exo_radio <- function(senscritique_mb_deezer_id, radio_leg){
+  require(tidyverse)
   require(tidytable)
   s3 <- initialize_s3()
   f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/radio/radio_plays_with_artist_id.csv")
   radio <- f$Body %>% rawToChar() %>% fread()
-  radio_leg <- c("France Inter", "France Musique", "Fip", "Radio Nova")
+  radio <- radio %>% 
+    left_join(select(senscritique_mb_deezer_id, artist_id, consolidated_artist_id)) %>% 
+    mutate(consolidated_artist_id = ifelse(is.na(consolidated_artist_id), artist_id, consolidated_artist_id))
+  radio <- radio %>% 
+    select(-artist_id) %>% 
+    rename(artist_id = "consolidated_artist_id")
+  
   r <- radio %>%
     filter(!is.na(artist_id)) %>% 
     count(artist_id, radio) %>% 
