@@ -114,18 +114,20 @@ plot_endoexoleg_genrerank <- function(artists){
     select(-m) %>% 
     pivot_wider(names_from = name, values_from = rank)
   
+  labs <- recode_vars(c("sc_endo_isei", "sc_exo_pca"), "cleanlegitimacy") %>% 
+    str_replace("\\\\n", " ")
   g <- x %>% 
     select(genre, sc_endo_isei, sc_exo_pca) %>% 
     pivot_longer(-genre) %>% 
     mutate(genre = recode_vars(genre, "cleangenres")) %>% 
     ggplot(aes(x=name, y=value, group=genre)) +
-    geom_point() +
-    geom_line() +
-    geom_text(aes(x = 1, label=genre), data = ~ filter(.x, name == "sc_endo_isei"), hjust=1.2) +
-    geom_text(aes(x = 2, label=genre), data = ~ filter(.x, name == "sc_exo_pca"), hjust=-0.2) +
-    scale_y_reverse(breaks=1:18, minor_breaks = NULL) +
-    scale_x_discrete(labels = c("sc_endo_isei"="Endogenous (ISEI)", "sc_exo_pca" = "Exogenous (PCA)")) +
-    labs(y = "Rank", x = "Legitimacy scale")
+      geom_point() +
+      geom_line() +
+      geom_text(aes(x = 1, label=genre), data = ~ filter(.x, name == "sc_endo_isei"), hjust=1.2) +
+      geom_text(aes(x = 2, label=genre), data = ~ filter(.x, name == "sc_exo_pca"), hjust=-0.2) +
+      scale_y_reverse(breaks=1:18, minor_breaks = NULL) +
+      scale_x_discrete(labels = labs) +
+      labs(y = "Rank", x = "Legitimacy scale")
   ggsave("gg_endoexoleg_genrerank.pdf", g, path = "output/omni1", device = "pdf")
   return("output/omni1/gg_endoexoleg_genrerank.pdf")
 }
@@ -153,11 +155,14 @@ plot_endoexoleg_correlation <- function(artists,
   }
   artists <- artists %>% 
     mutate(genre = recode_vars(genre, "cleangenres")) 
+
+  labs <- recode_vars(c("sc_endo_isei", "sc_exo_pca"), "cleanlegitimacy") %>% 
+    str_replace("\\\\n", " ")
   
   g <- artists %>% 
     ggplot(aes(sc_exo_pca, sc_endo_isei)) +
     geom_smooth(se = FALSE, method="lm") +
-    labs(x="Exogenous legitimacy (PCA)", y = "Endogenous legitimacy (ISEI)")
+    labs(x = labs[2], y = labs[1])
   if(genremean){
     gm <- artists %>% 
       group_by(genre) %>% 
@@ -279,12 +284,14 @@ plot_genre_overlap <- function(artists){
 plot_example_genre_overlap <- function(artists){
   require(tidyverse)
   set_ggplot_options()
+  labs <- recode_vars(c("sc_endo_isei"), "cleanlegitimacy") %>% 
+    str_replace("\\\\n", " ")
   g <- artists %>% 
     filter(genre %in% c("frenchrap", "rock", "classical")) %>% 
     mutate(genre = recode_vars(genre, "cleangenres")) %>% 
     ggplot(aes(sc_endo_isei, fill = genre)) +
       geom_density(alpha=.5) +
-      labs(y = "Density", x = "Endogenous legitimacy (ISEI)", fill = "")
+      labs(y = "Density", x = labs, fill = "")
   ggsave("example_overlap.pdf", g, path = "output/omni1", device = "pdf", height = 5)
   return("output/omni1/example_overlap.pdf")
 }
@@ -331,11 +338,13 @@ table_mean_sd_leg <- function(artists){
     mutate(name = recode_vars(name, "cleanlegitimacy"),
            name = str_replace_all(name, "\\\\n", " ")) %>% 
     group_by(genre, name) %>% 
-    summarize(v = paste0(round(mean(value), 2), " (", round(sd(value), 2), ")")) %>% 
+    summarize(m = mean(value),
+              sd = sd(value)) %>% 
+    arrange(name, m) %>% 
+    mutate(genre = factor(genre, levels = unique(genre)),
+           v = paste0(round(m, 2), " (", round(sd, 2), ")")) %>% 
+    select(-m, -sd) %>% 
     pivot_wider(names_from = name, values_from = v) %>% 
-    mutate(l = as.numeric(str_extract(`Endogenous legitimacy (ISEI)`, "^-?[\\d\\.]+"))) %>% 
-    arrange(l) %>% 
-    select(-l) %>% 
     rename(Genre = "genre") %>% 
     kbl(format = "latex", booktabs = TRUE) %>% 
     save_kable("output/omni1/tb_mean_sd_leg.tex")
