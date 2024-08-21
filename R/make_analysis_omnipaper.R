@@ -275,7 +275,7 @@ plot_lca_omni_bygenre <- function(survey, lca_class_interpretation){
       geom_linerange() +
       coord_flip() +
       facet_wrap(~name, scales = "free_x", ncol = 6) +
-      labs(y = "Mean exo. leg.", x = "Cluster")
+      labs(y = "Mean gatkp. leg.", x = "Cluster")
   ggsave("gg_lca_omni_bygenre.pdf", g, path = "output/omni2", device = "pdf", width = 9, height = 6)
   return("output/omni2/gg_lca_omni_bygenre.pdf")
 }
@@ -298,8 +298,8 @@ plot_exoomni_by_otheromni <- function(survey){
   l[[1]] <- s %>% 
     # to remove warning
     filter(`Cultural holes played` < xlim[2], `Cultural holes played` > xlim[1],
-           `SD exo. leg.` < ylim[2],          `SD exo. leg.` > ylim[1]) %>% 
-    ggplot(aes(`Cultural holes played`, `SD exo. leg.`)) +
+           `SD gatkp. leg.` < ylim[2],          `SD gatkp. leg.` > ylim[1]) %>% 
+    ggplot(aes(`Cultural holes played`, `SD gatkp. leg.`)) +
       #geom_point(shape = ".")
       geom_density_2d_filled() +
       guides(fill = "none") +
@@ -310,8 +310,8 @@ plot_exoomni_by_otheromni <- function(survey){
   l[[2]] <- s %>% 
     # to remove warning
     filter(`HHI genres streamed` < xlim[2], `HHI genres streamed` > xlim[1],
-           `SD exo. leg.` < ylim[2],          `SD exo. leg.` > ylim[1]) %>% 
-    ggplot(aes(`HHI genres streamed`, `SD exo. leg.`)) +
+           `SD gatkp. leg.` < ylim[2],          `SD gatkp. leg.` > ylim[1]) %>% 
+    ggplot(aes(`HHI genres streamed`, `SD gatkp. leg.`)) +
       #geom_point(shape = ".")
       geom_density_2d_filled() +
       guides(fill = "none") +
