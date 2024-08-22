@@ -30,7 +30,7 @@ list(
   ## Prepare artists data ------
   
   ### Artists names, aliases, ids ------
-  tar_target(manual_search_file,           "data/manual_search.csv"),
+  tar_target(manual_search_file,           read_csv("data/manual_search.csv")),
   tar_target(senscritique_mb_deezer_id,    make_senscritique_pairing_data(manual_search_file)),
   tar_target(artist_names_and_aliases,     make_aliases(senscritique_mb_deezer_id)),
   tar_target(artist_names,                 make_artists_names(artist_names_and_aliases)),

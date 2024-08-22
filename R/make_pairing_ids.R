@@ -53,7 +53,7 @@ make_senscritique_pairing_data <- function(manual_search_file){
   
   ### SensCritique / deezer id ------
   #### From manual search by me... highly trustworthy ------
-  pairings0 <- read_csv(manual_search_file)
+  pairings0 <- manual_search_file
   
   #### from Deezer api search (old) ------
   f <- s3$get_object(Bucket = "scoavoux", Key = "senscritique/senscritique_id_deezer_id_pairing.csv")
