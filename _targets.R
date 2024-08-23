@@ -73,21 +73,23 @@ list(
   tar_target(omni_from_streams,   compute_omnivorourness_from_streams(user_artist_peryear_merged_artists, artists, genres, rescale_by = "user")),
   
   ### Latent classes ------
-  ## Make many models
+  ## Make many models and then select one
+  #### LCA from survey
   tar_target(latent_classes_from_surveys_multiple, 
              compute_latent_classes_from_survey(survey_raw, nclass = 1L:15L)),
-  tar_target(latent_classes_from_streams_multiple, 
-             compute_latent_classes_from_streams(user_artist_peryear_merged_artists , genres, nclass = 1L:15L)),
-  tar_target(latent_classes_from_streams_multiple_proportion, 
-             compute_latent_classes_from_streams(user_artist_peryear_merged_artists , genres, nclass = 1L:15L, proportion = TRUE)),
-  
-  ## Extract one
   tar_target(latent_classes_from_surveys, 
              select_latent_class_model(latent_classes_from_surveys_multiple, 4)),
+  #### LPA from streams
+  tar_target(latent_classes_from_streams_multiple, 
+             compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L)),
   tar_target(latent_classes_from_streams, 
              select_latent_class_model(latent_classes_from_streams_multiple, 5)),
-  tar_target(latent_classes_from_streams_proportion, 
-             select_latent_class_model(latent_classes_from_streams_multiple_proportion, 5)),
+  
+  #### LPA from streams, with proportions
+  tar_target(latent_classes_from_streams_multiple_proportion,
+             compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L, proportion = TRUE)),
+  tar_target(latent_classes_from_streams_proportion,
+           select_latent_class_model(latent_classes_from_streams_multiple_proportion, 5)),
   
   ### Put all user data together ------
   tar_target(survey, recode_survey_data(survey_raw, 
