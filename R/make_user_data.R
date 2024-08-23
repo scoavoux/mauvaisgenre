@@ -139,6 +139,10 @@ compute_latent_classes_from_streams <- function(user_artist_peryear_merged_artis
   require(mclust)
   require(tidyverse)
   require(tidytable)
+  require(parallel)
+  require(foreach)
+  require(doParallel)
+  
   # require(conflicted)
   # conflict_prefer("ungroup", "tidytable")
   # conflict_prefer("group_by", "tidytable")
@@ -176,13 +180,37 @@ compute_latent_classes_from_streams <- function(user_artist_peryear_merged_artis
     ungroup() %>% 
     pivot_wider(names_from = genre, values_from = l_play, values_fill = 0)
   
-  mod <- vector("list", length = length(nclass))
-  names(mod) <- paste0("k", nclass)
-  for(i in nclass){
-    mod[[paste0("k", i)]] <- Mclust(select(user_genre_matrix, -hashed_id), G = i)
-    # pass ids to be able to pair the values afterwards
-    mod[[paste0("k", i)]]$id <- user_genre_matrix$hashed_id
+  # Loop and make clustering
+  n.cores = 5 # ok let's try that
+  if(n.cores < 1) n.cores <- 1
+  
+  my.cluster <- makeCluster(
+    n.cores#, type = "FORK"
+  )
+  
+  registerDoParallel(cl = my.cluster)
+  
+  iterator <- length(nclass)
+  
+  # Perform search
+  # library(tictoc)
+  # 
+  # tic()
+  mod <- foreach(
+    i = seq_len(iterator),
+    .packages = c("mclust", "tidyverse")
+  ) %dopar% {
+    Mclust(select(user_genre_matrix, -hashed_id), G = i)
   }
+  # toc()
+  stopCluster(my.cluster)
+  
+  mod <- map(mod, function(.x){
+    .x$id = user_genre_matrix$hashed_id
+    return(.x)
+  })
+  names(mod) <- paste0("k", nclass)
+  
   return(mod)
 }
 
