@@ -113,7 +113,7 @@ merge_duplicate_artists_in_streams <- function(user_artist_peryear, senscritique
   require(tidytable)
   
   # To remove "fake" artists: accounts that compile anonymous music
-  to_remove <- fread(to_remove_file) %>% 
+  to_remove <- to_remove_file %>% 
     select(artist_id)
   
   senscritique_mb_deezer_id <- distinct(senscritique_mb_deezer_id, artist_id, consolidated_artist_id)
