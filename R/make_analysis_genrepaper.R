@@ -62,7 +62,7 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
   require(tidyverse)
   require(gghalves)
   d <- artists %>% 
-    select(genre, sc_endo_isei, sc_exo_pca) %>% 
+    select(genre, starts_with("sc_e")) %>% 
     mutate(genre = recode_vars(genre, "cleangenres"))
   
   if(type == "density") {
@@ -93,7 +93,7 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
     facet_wrap(~name, scales = "free_x") +
     coord_flip() +
     labs(y="", x="")
-  ggsave(paste0("gg_endoexoleg_bygenre_", type, ".pdf"), g, path = "output/omni1", device = "pdf")
+  ggsave(paste0("gg_endoexoleg_bygenre_", type, ".pdf"), g, path = "output/omni1", device = "pdf", height = 10)
   return(paste0("output/omni1/gg_endoexoleg_bygenre_", type, ".pdf"))
 }
 
@@ -126,7 +126,7 @@ plot_endoexoleg_genrerank <- function(artists){
       scale_y_reverse(breaks=1:18, minor_breaks = NULL) +
       scale_x_discrete(labels = labs) +
       labs(y = "Rank", x = "Legitimacy scale")
-  ggsave("gg_endoexoleg_genrerank.pdf", g, path = "output/omni1", device = "pdf")
+  ggsave("gg_endoexoleg_genrerank.pdf", g, path = "output/omni1", device = "pdf", width = 10)
   return("output/omni1/gg_endoexoleg_genrerank.pdf")
 }
 
@@ -182,9 +182,9 @@ tbl_endoexoleg_correlation <- function(artists, genremean=FALSE){
     pivot_longer(starts_with("sc_exo"),  names_to = "exo",  values_to = "exo_value") %>% 
     # correct names
     mutate(exo = recode_vars(exo, "cleanlegitimacy") %>% 
-             str_replace("\\\\n", "\n"),
+             str_replace("\\\\n", " "),
            endo = recode_vars(endo, "cleanlegitimacy") %>% 
-             str_replace("\\\\n", "\n"),
+             str_replace("\\\\n", " "),
            genre = recode_vars(genre, "cleangenres"))
   if(genremean){
     x <- x %>% 
@@ -299,18 +299,32 @@ plot_genre_overlap <- function(artists){
   # We use the measure of overlap proposed by 
   # https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.01089/full
   
-  lendo <- lexo <- vector("list", length = length(unique(artists$genre)))
+  lendo_isei <- lendo_educ <- lexo_score <- lexo_press <- lexo_radio <- lexo_pca <- vector("list", length = length(unique(artists$genre)))
   
-  names(lendo) <- unique(artists$genre)
+  names(lendo_isei) <- names(lendo_educ) <- names(lexo_score) <- names(lexo_press) <- names(lexo_radio) <- names(lexo_pca) <- unique(artists$genre)
+  
   for(ge in unique(artists$genre)){
-    lendo[[ge]] <- filter(artists, genre == ge) %>% pull(sc_endo_isei)
+    lendo_isei[[ge]] <- filter(artists, genre == ge) %>% pull(sc_endo_isei)
   }
   
-  
-  lexo <- vector("list", length = length(unique(artists$genre)))
-  names(lexo) <- unique(artists$genre)
   for(ge in unique(artists$genre)){
-    lexo[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_pca)
+    lendo_educ[[ge]] <- filter(artists, genre == ge) %>% pull(sc_endo_educ)
+  }
+  
+  for(ge in unique(artists$genre)){
+    lexo_pca[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_pca)
+  }
+  
+  for(ge in unique(artists$genre)){
+    lexo_score[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_score)
+  }
+  
+  for(ge in unique(artists$genre)){
+    lexo_press[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_press)
+  }
+  
+  for(ge in unique(artists$genre)){
+    lexo_radio[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_radio)
   }
   
   # order by mean ENDOGENOUS legitimacy
@@ -321,18 +335,38 @@ plot_genre_overlap <- function(artists){
     summarise(m = mean(sc_endo_isei)) %>% 
     arrange(m) 
   
-  lendo <- lendo[o$genre]
-  lexo  <- lexo[o$genre]
+  lendo_isei <- lendo_isei[o$genre]
+  lendo_educ <- lendo_educ[o$genre]
+  lexo_pca   <- lexo_pca[o$genre]
+  lexo_score <- lexo_score[o$genre]
+  lexo_press <- lexo_press[o$genre]
+  lexo_radio <- lexo_radio[o$genre]
   
-  ol_endo <- overlap(lendo, plot = FALSE)
-  ol_exo  <- overlap(lexo, plot = FALSE)
+  ol_endo_isei <- overlap(lendo_isei, plot = FALSE)
+  ol_endo_educ <- overlap(lendo_educ, plot = FALSE)
+  ol_exo_pca <- overlap(lexo_pca, plot = FALSE)
+  ol_exo_score <- overlap(lexo_score, plot = FALSE)
+  ol_exo_press <- overlap(lexo_press, plot = FALSE)
+  ol_exo_radio <- overlap(lexo_radio, plot = FALSE)
   
-  dp <- tibble(cp= names(ol_endo$OVPairs),
-               ol = ol_endo$OVPairs,
+  dp <- tibble(cp= names(ol_endo_isei$OVPairs),
+               ol = ol_endo_isei$OVPairs,
                leg = "sc_endo_isei") %>% 
-    bind_rows(tibble(cp= names(ol_exo$OVPairs),
-                     ol = ol_exo$OVPairs,
+    bind_rows(tibble(cp= names(ol_endo_educ$OVPairs),
+                     ol = ol_endo_educ$OVPairs,
+                     leg = "sc_endo_educ")) %>% 
+    bind_rows(tibble(cp= names(ol_exo_pca$OVPairs),
+                     ol = ol_exo_pca$OVPairs,
                      leg = "sc_exo_pca")) %>% 
+    bind_rows(tibble(cp= names(ol_exo_score$OVPairs),
+                     ol = ol_exo_score$OVPairs,
+                     leg = "sc_exo_score")) %>% 
+    bind_rows(tibble(cp= names(ol_exo_press$OVPairs),
+                     ol = ol_exo_press$OVPairs,
+                     leg = "sc_exo_press")) %>% 
+    bind_rows(tibble(cp= names(ol_exo_radio$OVPairs),
+                     ol = ol_exo_radio$OVPairs,
+                     leg = "sc_exo_radio")) %>% 
     separate(cp, into = c("g1", "g2"), sep = "-") %>% 
     add_count(g1, name = "n1") %>% 
     add_count(g2, name = "n2") %>% 
@@ -353,7 +387,7 @@ plot_genre_overlap <- function(artists){
     scale_fill_distiller(type = "seq",
                          direction = 1,
                          palette = "Greys")
-  ggsave("gg_genre_overlap.pdf", g, path = "output/omni1", device="pdf", width = 11)
+  ggsave("gg_genre_overlap.pdf", g, path = "output/omni1", device="pdf", width = 12, height=9)
   return("output/omni1/gg_genre_overlap.pdf")
 }
 
@@ -409,7 +443,7 @@ table_mean_sd_leg <- function(artists){
   artists %>% 
     mutate(genre = recode_vars(genre, "cleangenres"), 
            genre = fct_reorder(genre, endo_isei_mean_pond, mean)) %>% 
-    select(genre, sc_endo_isei, sc_exo_pca) %>% 
+    select(genre, starts_with("sc_e")) %>% 
     pivot_longer(-genre) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy"),
            name = str_replace_all(name, "\\\\n", " ")) %>% 
