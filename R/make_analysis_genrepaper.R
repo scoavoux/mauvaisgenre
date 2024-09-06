@@ -18,6 +18,7 @@ make_tbl_coverage <- function(artists_pop, artists){
 }
 
 plot_endoleg_bygenre <- function(artists){
+  require(tidyverse)
   set_ggplot_options()
   g <- artists %>% 
     mutate(genre = recode_vars(genre, "cleangenres"), 
@@ -36,6 +37,7 @@ plot_endoleg_bygenre <- function(artists){
 }
 
 plot_exoleg_bygenre <- function(artists){
+  require(tidyverse)
   set_ggplot_options()
   g <- artists %>% 
     mutate(total_n_pqnt_texte = log(total_n_pqnt_texte+1),
@@ -57,6 +59,7 @@ plot_exoleg_bygenre <- function(artists){
 
 plot_endoexoleg_bygenre <- function(artists, type="density"){
   set_ggplot_options()
+  require(tidyverse)
   require(gghalves)
   d <- artists %>% 
     select(genre, sc_endo_isei, sc_exo_pca) %>% 
@@ -90,20 +93,15 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
     facet_wrap(~name, scales = "free_x") +
     coord_flip() +
     labs(y="", x="")
-  if(type == "density"){
-    ggsave("gg_endoexoleg_bygenre_density.pdf", g, path = "output/omni1", device = "pdf")
-    return("output/omni1/gg_endoexoleg_bygenre_density.pdf")
-  } else if(type == "estimate"){
-    ggsave("gg_endoexoleg_bygenre_estimate.pdf", g, path = "output/omni1", device = "pdf")
-    return("output/omni1/gg_endoexoleg_bygenre_estimate.pdf")
-  }
+  ggsave(paste0("gg_endoexoleg_bygenre_", type, ".pdf"), g, path = "output/omni1", device = "pdf")
+  return(paste0("output/omni1/gg_endoexoleg_bygenre_", type, ".pdf"))
 }
 
 plot_endoexoleg_genrerank <- function(artists){
   require(tidyverse)
   set_ggplot_options()
   x <- artists %>% 
-    select(genre, starts_with("sc")) %>% 
+    select(genre, starts_with("sc"), -sc_exo_pca) %>% 
     pivot_longer(-genre) %>% 
     filter(!is.na(value)) %>% 
     group_by(genre, name) %>% 
@@ -114,17 +112,17 @@ plot_endoexoleg_genrerank <- function(artists){
     select(-m) %>% 
     pivot_wider(names_from = name, values_from = rank)
   
-  labs <- recode_vars(c("sc_endo_isei", "sc_exo_pca"), "cleanlegitimacy") %>% 
-    str_replace("\\\\n", " ")
+  labs <- recode_vars(names(x)[-1], "cleanlegitimacy") %>% 
+    str_replace("\\\\n", "\n")
   g <- x %>% 
-    select(genre, sc_endo_isei, sc_exo_pca) %>% 
+    #select(genre, sc_endo_isei, sc_exo_pca) %>% 
     pivot_longer(-genre) %>% 
     mutate(genre = recode_vars(genre, "cleangenres")) %>% 
     ggplot(aes(x=name, y=value, group=genre)) +
       geom_point() +
       geom_line() +
-      geom_text(aes(x = 1, label=genre), data = ~ filter(.x, name == "sc_endo_isei"), hjust=1.2) +
-      geom_text(aes(x = 2, label=genre), data = ~ filter(.x, name == "sc_exo_pca"), hjust=-0.2) +
+      geom_text(aes(x = 1, label=genre), data = ~ filter(.x, name == "sc_endo_educ"), hjust=1.2) +
+      geom_text(aes(x = 5, label=genre), data = ~ filter(.x, name == "sc_exo_score"), hjust=-0.2) +
       scale_y_reverse(breaks=1:18, minor_breaks = NULL) +
       scale_x_discrete(labels = labs) +
       labs(y = "Rank", x = "Legitimacy scale")
@@ -138,6 +136,7 @@ plot_endoexoleg_correlation <- function(artists,
                                         ncol=3, 
                                         output="gg_endoexoleg_correlation.pdf",
                                         .width = 7){
+  require(tidyverse)
   require(ggrepel)
   set_ggplot_options()
   if(genrefacets & genremean) error("genrefacets and genremean cannot both be TRUE")
