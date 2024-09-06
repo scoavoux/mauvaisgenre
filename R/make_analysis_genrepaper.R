@@ -130,90 +130,167 @@ plot_endoexoleg_genrerank <- function(artists){
   return("output/omni1/gg_endoexoleg_genrerank.pdf")
 }
 
-plot_endoexoleg_correlation <- function(artists, 
-                                        genrefacets=FALSE, 
-                                        genremean=FALSE, 
-                                        ncol=3, 
-                                        output="gg_endoexoleg_correlation.pdf",
-                                        .width = 7){
+plot_endoexoleg_correlation <- function(artists, genremean=FALSE){
   require(tidyverse)
   require(ggrepel)
   set_ggplot_options()
-  if(genrefacets & genremean) error("genrefacets and genremean cannot both be TRUE")
-  get_r2 <- function(.x, level = "artist"){
-    y <- lm(sc_endo_isei~sc_exo_pca, .x) %>% 
-      summary() %>% 
-      .$r.squared %>% 
-      round(2)
-    if(level == "artist") {
-      res <- paste0("{italic(R)^2} ==", y)
-    } else if(level != "artist"){
-      res <- paste0("{italic(R)^2} (", level, "~level) ==", y)
-    }
-    return(res)
-  }
-  artists <- artists %>% 
-    mutate(genre = recode_vars(genre, "cleangenres")) 
-
-  labs <- recode_vars(c("sc_endo_isei", "sc_exo_pca"), "cleanlegitimacy") %>% 
-    str_replace("\\\\n", " ")
+  x <- select(artists, starts_with("sc_e"), genre) %>% 
+    select(-sc_exo_pca) %>% 
+    pivot_longer(starts_with("sc_endo"), names_to = "endo", values_to = "endo_value") %>%
+    pivot_longer(starts_with("sc_exo"),  names_to = "exo",  values_to = "exo_value") %>% 
+    # manual adjustments
+    filter(!(exo == "sc_exo_score" & exo_value < -2.5),
+           !(exo == "sc_exo_press" & exo_value > 3.5),
+           !(exo == "sc_exo_radio" & exo_value > 3)) %>% 
+    # correct names
+    mutate(exo = recode_vars(exo, "cleanlegitimacy") %>% 
+             str_replace("\\\\n", "\n"),
+           endo = recode_vars(endo, "cleanlegitimacy") %>% 
+             str_replace("\\\\n", "\n"))
   
-  g <- artists %>% 
-    ggplot(aes(sc_exo_pca, sc_endo_isei)) +
-    geom_smooth(se = FALSE, method="lm") +
-    labs(x = labs[2], y = labs[1])
+  g <- ggplot(x, aes(exo_value, endo_value)) +
+    geom_point(shape = ".", alpha = .2) +
+    #geom_smooth(method = "lm") +
+    facet_grid(endo~exo, scales = "free") +
+    labs(x = "Gatekeeper legitimacy", y = "Audience status")
+  g
   if(genremean){
-    gm <- artists %>% 
-      group_by(genre) %>% 
-      summarize(mean_exo_pca = mean(sc_exo_pca), 
-                mean_endo_isei= mean(sc_endo_isei))
-    g <- g + 
-      geom_point(alpha=.2, color="grey") +
-      geom_point(data = gm, mapping = aes(mean_exo_pca, mean_endo_isei), shape = "x", size=5) +
-      geom_text_repel(data = gm, 
-                      mapping = aes(mean_exo_pca, mean_endo_isei, label = genre), 
-                      max.overlaps=18)
+    gm <- x %>% 
+      group_by(endo, exo, genre) %>% 
+      summarise(endo_value = mean(endo_value), exo_value = mean(exo_value)) %>% 
+      ungroup() %>% 
+      mutate(genre = recode_vars(genre, "cleangenres"))
+    g <- g +
+      geom_point(data = gm, shape = "x") +
+      geom_text_repel(aes(label = genre), data = gm, max.overlaps = 50)
+    ggsave("gg_endoexoleg_correlation_genremean.pdf", g, path = "output/omni1", device = "pdf", width = 9)
+    return("output/omni1/gg_endoexoleg_correlation_genremean.pdf")
   } else {
-    g <- g + geom_point()
+    ggsave("gg_endoexoleg_correlation.pdf", g, path = "output/omni1", device = "pdf", width = 9)
+    return("output/omni1/gg_endoexoleg_correlation.pdf")
   }
-  if(genrefacets){
-    l <- vector("list", length = length(unique(artists$genre)))
-    names(l) <- unique(artists$genre)
-    for(ge in unique(artists$genre)){
-      l[[ge]] <- artists %>% 
-        filter(genre == ge) %>%  
-        get_r2()
-    }
-    lab <- tibble(genre = names(l), r2 = unlist(l))
-    lab <- artists %>% 
-      #     group_by(genre) %>% 
-      summarize(x = max(sc_exo_pca)-.85, y = min(sc_endo_isei)+1) %>% 
-      #      right_join(lab)
-      bind_cols(lab)
-  } else if(!genremean){
-    lab <- tibble(r2 = get_r2(artists),
-                  x = max(artists$sc_exo_pca)-.85, 
-                  y = min(artists$sc_endo_isei)+1)
-  } else if(genremean){
-    r2_genre <- artists %>% 
-      group_by(genre) %>% 
-      summarize(sc_endo_isei = mean(sc_endo_isei),
-                sc_exo_pca = mean(sc_exo_pca)) %>% 
-      get_r2(level = "genre")
-    lab <- tibble(r2 = r2_genre,
-                  x = max(artists$sc_exo_pca)-.85, 
-                  y = min(artists$sc_endo_isei)+1)
-  }
-  g <- g + 
-    geom_text(data = lab, mapping = aes(x=x, y=y, label = r2), 
-              parse = TRUE, 
-              hjust=.75)
-  if(genrefacets) {
-    g <- g + facet_wrap(~genre, ncol=ncol)
-  }
-  ggsave(output, g, path = "output/omni1", device = "pdf", width = .width)
-  return(paste0("output/omni1/", output))
 }
+
+tbl_endoexoleg_correlation <- function(artists, genremean=FALSE){
+  require(tidyverse)
+  require(ggrepel)
+  require(kableExtra)
+  set_ggplot_options()
+  x <- select(artists, starts_with("sc_e"), genre) %>% 
+    select(-sc_exo_pca) %>% 
+    pivot_longer(starts_with("sc_endo"), names_to = "endo", values_to = "endo_value") %>%
+    pivot_longer(starts_with("sc_exo"),  names_to = "exo",  values_to = "exo_value") %>% 
+    # correct names
+    mutate(exo = recode_vars(exo, "cleanlegitimacy") %>% 
+             str_replace("\\\\n", "\n"),
+           endo = recode_vars(endo, "cleanlegitimacy") %>% 
+             str_replace("\\\\n", "\n"),
+           genre = recode_vars(genre, "cleangenres"))
+  if(genremean){
+    x <- x %>% 
+      group_by(endo, exo, genre) %>% 
+      summarise(endo_value = mean(endo_value), exo_value = mean(exo_value)) %>% 
+      ungroup()
+  }
+  al <- x %>% 
+    group_by(endo, exo) %>% 
+    summarise(cor = cor(endo_value, exo_value)) %>% 
+    ungroup() %>% 
+    rename(`Gatekeeper legitimacy` = "exo")
+  
+  caption <- paste0("Pearson correlation coefficient (", ifelse(genremean, "genre", "artist"), " level)")
+  
+  al %>% mutate(cor = round(cor, 2)) %>% 
+    pivot_wider(names_from = endo, values_from = cor) %>% 
+    kbl(format = "latex", digits = 2, booktabs = TRUE, caption = caption) %>% 
+    save_kable(file = paste0("output/omni1/tb_endo_exo_cor_", ifelse(genremean, "genre", "artist"),".tex"))
+  return(paste0("output/omni1/tb_endo_exo_cor_", ifelse(genremean, "genre", "artist"),".tex"))
+}
+
+# plot_endoexoleg_correlation2 <- function(artists, 
+#                                         genrefacets=FALSE, 
+#                                         genremean=FALSE, 
+#                                         ncol=3, 
+#                                         output="gg_endoexoleg_correlation.pdf",
+#                                         .width = 7){
+#   require(tidyverse)
+#   require(ggrepel)
+#   set_ggplot_options()
+#   if(genrefacets & genremean) error("genrefacets and genremean cannot both be TRUE")
+#   get_r2 <- function(.x, level = "artist"){
+#     y <- lm(sc_endo_isei~sc_exo_pca, .x) %>% 
+#       summary() %>% 
+#       .$r.squared %>% 
+#       round(2)
+#     if(level == "artist") {
+#       res <- paste0("{italic(R)^2} ==", y)
+#     } else if(level != "artist"){
+#       res <- paste0("{italic(R)^2} (", level, "~level) ==", y)
+#     }
+#     return(res)
+#   }
+#   artists <- artists %>% 
+#     mutate(genre = recode_vars(genre, "cleangenres")) 
+# 
+#   labs <- recode_vars(c("sc_endo_isei", "sc_exo_pca"), "cleanlegitimacy") %>% 
+#     str_replace("\\\\n", " ")
+#   
+#   g <- artists %>% 
+#     ggplot(aes(sc_exo_pca, sc_endo_isei)) +
+#     geom_smooth(se = FALSE, method="lm") +
+#     labs(x = labs[2], y = labs[1])
+#   if(genremean){
+#     gm <- artists %>% 
+#       group_by(genre) %>% 
+#       summarize(mean_exo_pca = mean(sc_exo_pca), 
+#                 mean_endo_isei= mean(sc_endo_isei))
+#     g <- g + 
+#       geom_point(alpha=.2, color="grey") +
+#       geom_point(data = gm, mapping = aes(mean_exo_pca, mean_endo_isei), shape = "x", size=5) +
+#       geom_text_repel(data = gm, 
+#                       mapping = aes(mean_exo_pca, mean_endo_isei, label = genre), 
+#                       max.overlaps=18)
+#   } else {
+#     g <- g + geom_point()
+#   }
+#   if(genrefacets){
+#     l <- vector("list", length = length(unique(artists$genre)))
+#     names(l) <- unique(artists$genre)
+#     for(ge in unique(artists$genre)){
+#       l[[ge]] <- artists %>% 
+#         filter(genre == ge) %>%  
+#         get_r2()
+#     }
+#     lab <- tibble(genre = names(l), r2 = unlist(l))
+#     lab <- artists %>% 
+#       #     group_by(genre) %>% 
+#       summarize(x = max(sc_exo_pca)-.85, y = min(sc_endo_isei)+1) %>% 
+#       #      right_join(lab)
+#       bind_cols(lab)
+#   } else if(!genremean){
+#     lab <- tibble(r2 = get_r2(artists),
+#                   x = max(artists$sc_exo_pca)-.85, 
+#                   y = min(artists$sc_endo_isei)+1)
+#   } else if(genremean){
+#     r2_genre <- artists %>% 
+#       group_by(genre) %>% 
+#       summarize(sc_endo_isei = mean(sc_endo_isei),
+#                 sc_exo_pca = mean(sc_exo_pca)) %>% 
+#       get_r2(level = "genre")
+#     lab <- tibble(r2 = r2_genre,
+#                   x = max(artists$sc_exo_pca)-.85, 
+#                   y = min(artists$sc_endo_isei)+1)
+#   }
+#   g <- g + 
+#     geom_text(data = lab, mapping = aes(x=x, y=y, label = r2), 
+#               parse = TRUE, 
+#               hjust=.75)
+#   if(genrefacets) {
+#     g <- g + facet_wrap(~genre, ncol=ncol)
+#   }
+#   ggsave(output, g, path = "output/omni1", device = "pdf", width = .width)
+#   return(paste0("output/omni1/", output))
+# }
 
 plot_genre_overlap <- function(artists){
   require(tidyverse)
