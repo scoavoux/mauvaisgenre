@@ -128,7 +128,8 @@ make_raw_corpus <- function(){
                        source_name = "Libération",
                        date = ymd(date))
   corpus_raw <- bind_rows(telerama, lemonde, liberation, lefigaro)  %>% 
-    filter(!is.na(article_text))
+    filter(!is.na(article_text)) %>% 
+    mutate(article_text = paste(article_title, ".\n", article_text))
   return(corpus_raw)
 }
 
