@@ -85,7 +85,6 @@ tibble(nb_isei = nrow(isei),
 
 ```{r}
 #|label: radio years
-
 s3 <- initialize_s3()
 f <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/radio/radio_plays_with_artist_id.csv")
 radio <- f$Body %>% rawToChar() %>% read_csv()
@@ -94,6 +93,7 @@ radio %>%
   count(year) %>% 
   kbl(caption = "Years of radio plays")
 ```
+
 ```{r}
 #| label: radio number
 tibble(nb_radio = n_distinct(radio$radio)) %>% 
@@ -139,6 +139,15 @@ radio_sum <- radio %>%
   left_join(rtb)
 kbl(radio_sum, caption = "Radio list")
 ```
+
+```{r}
+tar_load(radio_leg)
+radio_sum %>% 
+  mutate(f = round(ecoutes_actives_france / sum(ecoutes_actives_france, na.rm=TRUE)*100)) %>% 
+  filter(radios %in% radio_leg) %>% 
+  kable()
+```
+
 
 ```{r}
 #|label: main missing stations

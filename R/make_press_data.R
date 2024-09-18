@@ -130,10 +130,68 @@ make_raw_corpus <- function(){
   corpus_raw <- bind_rows(telerama, lemonde, liberation, lefigaro)  %>% 
     filter(!is.na(article_text)) %>% 
     mutate(article_text = paste(article_title, ".\n", article_text))
+  corpus_raw <- corpus_raw %>% 
+    mutate(id = row_number())
   return(corpus_raw)
 }
 
-train_bert_model <- function(){}
+# This is a part where we break the targets workflow because we need a GPU
+# and python. Make_corpus_for_BERT prepares the corpus in R. Then we
+# will run BERT in python. Then we export to s3 the results as a csv
+# and reimport them in R in the next function
+# Since it requires manual work anyway I'm not bothering with export/import to
+# and from s3 of intermediate files.
+make_corpus_for_BERT <- function(corpus_raw){
+  require(tidyverse)
+  ma <- s3_read("french_media/music_reviews_manual_annotations.csv") %>% 
+    select(date, article_title, article_author, review)
+  # merge
+  # There is a size limit for BERT. Truncate the corpus
+  # a cutoff at 10000 characters keeps intact 98% of the corpus and just cuts 
+  # the remaining 2% of all articles
+  # mutate(corpus_raw, l = str_length(article_text))$l %>% quantile(c(.25, .40, .5, .75, .80, .90, .95, .97, .98, .99))
+  corpus_raw <- corpus_raw %>% 
+    mutate(article_text = str_trunc(article_text, 10000))
+  # traintest <- corpus_raw %>% 
+  #   inner_join(ma) %>% 
+  #   select(id, article_text, review) %>% 
+  #   # randomiser traintest
+  #   mutate(traintest = sample(c("train", "test"), nrow(.), prob = c(.8, .2), replace = TRUE))
+  # # écrire le résultat
+  # tag <- corpus_raw %>% 
+  #   anti_join(ma) %>% 
+  #   select(id, article_text)
+  # filter(traintest, traintest == "train") %>% 
+  #   select(-traintest) %>% 
+  #   write_csv("data/temp/bert_train.csv")
+  # filter(traintest, traintest == "test") %>% 
+  #   select(-traintest) %>% 
+  #   write_csv("data/temp/bert_test.csv")
+  # tag %>% 
+  #   write_csv("data/temp/bert_tag.csv")
+  corpus_raw %>% 
+    select(id, article_text, article_title, date) %>% 
+    left_join(ma) %>% 
+    arrange(review) %>% 
+    select(id, article_text, review) %>% 
+    write_csv("data/temp/bert_tag.csv")
+  return("data/temp/bert_tag.csv")
+}
+# now, make a BERT.
+
+# Importing tags from BERT and only keep music reviews
+filter_corpus_raw <- function(corpus_raw, BERT_corpus){
+  require(tidyverse)
+  tags <- s3_read("french_media/music_review_BERT_tags.csv")
+  tags <- tags %>% 
+    mutate(review = ifelse(bertpred_music_review > .5, "music_review", "not_music_review")) %>% 
+    select(id, review)
+  cp <- corpus_raw %>% 
+    left_join(tags) %>% 
+    filter(review == "music_review") %>% 
+    select(-review)
+  return(cp)
+}
 
 # Make aliases ------
 make_aliases <- function(senscritique_mb_deezer_id){
@@ -262,7 +320,6 @@ make_aliases <- function(senscritique_mb_deezer_id){
   #                                    wikidata_mbid_aliases_fr) %>% 
   #   distinct()
   
-  
 }
 
 make_artists_names <- function(artist_names_and_aliases){
@@ -279,7 +336,8 @@ make_corpus_tokenized_sentences <- function(corpus_raw){
   require(tidyverse)
   require(quanteda)
   require(spacyr)
-  spacy_initialize()
+  spacy_install(ask = FALSE, lang_models = "fr_core_news_sm", force=FALSE)
+  spacy_initialize(model = "fr_core_news_sm")
   co <- corpus_raw %>%
     pull(article_text) %>%
     spacy_tokenize(what = "sentence") %>%

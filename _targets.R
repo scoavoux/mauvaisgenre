@@ -46,11 +46,15 @@ list(
   
   ### Press data ------
   tar_target(corpus_raw,              make_raw_corpus()),
-  tar_target(corpus_raw_tokenized,    make_corpus_tokenized_sentences(corpus_raw)),
+  tar_target(BERT_corpus,             make_corpus_for_BERT(corpus_raw), format = "file", repository = "local"),
+  tar_target(corpus_filtered,         filter_corpus_raw(corpus_raw, BERT_corpus)),
+  tar_target(corpus_tokenized,        make_corpus_tokenized_sentences(corpus_filtered)),
 
   ### Legitimacy data ------
-  tar_target(exo_press,        make_press_data(corpus_raw_tokenized, artist_names_and_aliases)),
-  tar_target(radio_leg,        c("France Inter", "France Musique", "Fip", "Radio Nova")),
+  tar_target(exo_press,        make_press_data(corpus_tokenized, artist_names_and_aliases)),
+  tar_target(radio_leg,        c("France Musique", "Radio Classique", "Jazz Radio", 
+                                 "ABC Lounge Jazz", "TSF Jazz", "France Inter", 
+                                 "Fip", "Radio Nova", "Radio Meuh", "Djam Radio")),
   tar_target(exo_radio,        compute_exo_radio(senscritique_mb_deezer_id, radio_leg)),
   tar_target(exo_senscritique, make_senscritique_ratings_data(senscritique_mb_deezer_id)),
   tar_target(isei,             make_isei_data(survey_raw)),
@@ -62,8 +66,9 @@ list(
                                       artists_pop, 
                                       exo_radio, 
                                       exo_senscritique, 
-                                      endo_legitimacy,
-                                      exo_press)), #artists_name
+                                      endo_legitimacy
+                                      #exo_press
+                                      )),
   tar_target(artists,     filter_artists(artists_raw)),
   ## Prepare user data ------
   tar_target(survey_raw,  make_survey_data()),
