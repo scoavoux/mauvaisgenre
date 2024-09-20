@@ -30,59 +30,59 @@ list(
   ## Prepare artists data ------
   
   ### Artists names, aliases, ids ------
-  tar_target(manual_search_file,           read_csv("data/manual_search.csv")),
-  tar_target(senscritique_mb_deezer_id,    make_senscritique_pairing_data(manual_search_file)),
-  tar_target(artist_names_and_aliases,     make_aliases(senscritique_mb_deezer_id)),
-  tar_target(artist_names,                 make_artists_names(artist_names_and_aliases)),
+  tar_target(manual_search_file,                 read_csv("data/manual_search.csv")),
+  tar_target(senscritique_mb_deezer_id,          make_senscritique_pairing_data(manual_search_file)),
+  tar_target(artist_names_and_aliases,           make_aliases(senscritique_mb_deezer_id)),
+  tar_target(artist_names,                       make_artists_names(artist_names_and_aliases)),
   
   ### Artists genres ------
-  tar_target(genres_deezer_editorial_playlists, make_genres_data(.source = "deezer_editorial_playlists", senscritique_mb_deezer_id)),
-  tar_target(genres_deezer_maingenre,           make_genres_data(.source = "deezer_maingenre", senscritique_mb_deezer_id)),
-  tar_target(genres_senscritique_tags,          make_genres_data(.source = "senscritique_tags", senscritique_mb_deezer_id)),
-  tar_target(genres,                            merge_genres(genres_deezer_editorial_playlists, genres_deezer_maingenre, genres_senscritique_tags)),
+  tar_target(genres_deezer_editorial_playlists,  make_genres_data(.source = "deezer_editorial_playlists", senscritique_mb_deezer_id)),
+  tar_target(genres_deezer_maingenre,            make_genres_data(.source = "deezer_maingenre", senscritique_mb_deezer_id)),
+  tar_target(genres_senscritique_tags,           make_genres_data(.source = "senscritique_tags", senscritique_mb_deezer_id)),
+  tar_target(genres_deezer_albums,               make_genres_data(.source = "genres_from_deezer_albums", senscritique_mb_deezer_id)),
+  tar_target(genres,                             merge_genres(genres_deezer_editorial_playlists, genres_deezer_maingenre, genres_senscritique_tags, genres_deezer_albums)),
   
   ### Artists popularity ------
-  tar_target(artists_pop, make_artist_popularity_data(user_artist_peryear_merged_artists )),
+  tar_target(artists_pop,                        make_artist_popularity_data(user_artist_peryear_merged_artists )),
   
   ### Press data ------
-  tar_target(corpus_raw,              make_raw_corpus()),
-  tar_target(BERT_corpus,             make_corpus_for_BERT(corpus_raw), format = "file", repository = "local"),
-  tar_target(corpus_filtered,         filter_corpus_raw(corpus_raw, BERT_corpus)),
-  tar_target(corpus_tokenized,        make_corpus_tokenized_sentences(corpus_filtered)),
+  tar_target(corpus_raw,                         make_raw_corpus()),
+  tar_target(BERT_corpus,                        make_corpus_for_BERT(corpus_raw), format = "file", repository = "local"),
+  tar_target(corpus_filtered,                    filter_corpus_raw(corpus_raw, BERT_corpus)),
+  tar_target(corpus_tokenized,                   make_corpus_tokenized_sentences(corpus_filtered)),
 
   ### Legitimacy data ------
-  tar_target(exo_press,        make_press_data(corpus_tokenized, artist_names_and_aliases)),
-  tar_target(radio_leg,        c("France Musique", "Radio Classique", "Jazz Radio", 
-                                 "ABC Lounge Jazz", "TSF Jazz", "France Inter", 
-                                 "Fip", "Radio Nova", "Radio Meuh", "Djam Radio")),
-  tar_target(exo_radio,        compute_exo_radio(senscritique_mb_deezer_id, radio_leg)),
-  tar_target(exo_senscritique, make_senscritique_ratings_data(senscritique_mb_deezer_id)),
-  tar_target(isei,             make_isei_data(survey_raw)),
-  tar_target(endo_legitimacy,  make_endogenous_legitimacy_data(user_artist_peryear_merged_artists, isei, survey_raw)),
+  tar_target(exo_press,                          make_press_data(corpus_tokenized, artist_names_and_aliases)),
+  tar_target(radio_leg,                          c("France Musique", "Radio Classique", "Jazz Radio", 
+                                                   "ABC Lounge Jazz", "TSF Jazz", "France Inter", 
+                                                   "Fip", "Radio Nova", "Radio Meuh", "Djam Radio")),
+  tar_target(exo_radio,                          compute_exo_radio(senscritique_mb_deezer_id, radio_leg)),
+  tar_target(exo_senscritique,                   make_senscritique_ratings_data(senscritique_mb_deezer_id)),
+  tar_target(isei,                               make_isei_data(survey_raw)),
+  tar_target(endo_legitimacy,                    make_endogenous_legitimacy_data(user_artist_peryear_merged_artists, isei, survey_raw)),
 
   ### Put all artists data together and filter ------
-  tar_target(artists_raw, join_artist(artist_names,
-                                      genres, 
-                                      artists_pop, 
-                                      exo_radio, 
-                                      exo_senscritique, 
-                                      endo_legitimacy,
-                                      exo_press)),
-  tar_target(artists,     filter_artists(artists_raw)),
+  tar_target(artists_raw,                        join_artist(artist_names,
+                                                             genres, 
+                                                             artists_pop, 
+                                                             exo_radio, 
+                                                             exo_senscritique, 
+                                                             endo_legitimacy,
+                                                             exo_press)),
+  tar_target(artists,                            filter_artists(artists_raw)),
   ## Prepare user data ------
-  tar_target(survey_raw,  make_survey_data()),
+  tar_target(survey_raw,                         make_survey_data()),
   
   ### Omnivorousness ------
-  tar_target(omni_from_survey,    compute_omnivorourness_from_survey(survey_raw)),
-  tar_target(omni_from_streams,   compute_omnivorourness_from_streams(user_artist_peryear_merged_artists, artists, genres, rescale_by = "user")),
+  tar_target(omni_from_survey,                   compute_omnivorourness_from_survey(survey_raw)),
+  tar_target(omni_from_streams,                  compute_omnivorourness_from_streams(user_artist_peryear_merged_artists, artists, genres, rescale_by = "user")),
   
   ### Latent classes ------
   ## Make many models and then select one
   #### LCA from survey
   tar_target(latent_classes_from_surveys_multiple, 
              compute_latent_classes_from_survey(survey_raw, nclass = 1L:15L)),
-  tar_target(latent_classes_from_surveys, 
-             select_latent_class_model(latent_classes_from_surveys_multiple, 4)),
+  tar_target(latent_classes_from_surveys,        select_latent_class_model(latent_classes_from_surveys_multiple, 4)),
   #### LPA from streams
   tar_target(latent_classes_from_streams_multiple, 
              compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L)),
@@ -96,21 +96,21 @@ list(
            select_latent_class_model(latent_classes_from_streams_multiple_proportion, 5)),
   
   ### Put all user data together ------
-  tar_target(survey, recode_survey_data(survey_raw, 
-                                        omni_from_survey, 
-                                        omni_from_streams,
-                                        latent_classes_from_surveys,
-                                        latent_classes_from_streams,
-                                        latent_classes_from_streams_proportion)),
+  tar_target(survey,                             recode_survey_data(survey_raw, 
+                                                                    omni_from_survey, 
+                                                                    omni_from_streams,
+                                                                    latent_classes_from_surveys,
+                                                                    latent_classes_from_streams,
+                                                                    latent_classes_from_streams_proportion)),
   
   ## Analysis Omni 1 ------
-  tar_target(gg_pca_endoleg,                    plot_endoleg_pca(artists), format = "file", repository = "local"),
-  tar_target(gg_endoleg_bygenre,                plot_endoleg_bygenre(artists), format = "file", repository = "local"),
-  tar_target(gg_exoleg_bygenre,                 plot_exoleg_bygenre(artists), format = "file", repository = "local"),
-  tar_target(gg_endoexoleg_bygenre_density,     plot_endoexoleg_bygenre(artists, type = "density"), format = "file", repository = "local"),
-  tar_target(gg_endoexoleg_bygenre_estimate,    plot_endoexoleg_bygenre(artists, type = "estimate"), format = "file", repository = "local"),
-  tar_target(gg_endoexoleg_genrerank,           plot_endoexoleg_genrerank(artists), format = "file", repository = "local"),
-  tar_target(gg_endoexoleg_correlation,         plot_endoexoleg_correlation(artists), format = "file", repository = "local"),
+  tar_target(gg_pca_endoleg,                     plot_endoleg_pca(artists), format = "file", repository = "local"),
+  tar_target(gg_endoleg_bygenre,                 plot_endoleg_bygenre(artists), format = "file", repository = "local"),
+  tar_target(gg_exoleg_bygenre,                  plot_exoleg_bygenre(artists), format = "file", repository = "local"),
+  tar_target(gg_endoexoleg_bygenre_density,      plot_endoexoleg_bygenre(artists, type = "density"), format = "file", repository = "local"),
+  tar_target(gg_endoexoleg_bygenre_estimate,     plot_endoexoleg_bygenre(artists, type = "estimate"), format = "file", repository = "local"),
+  tar_target(gg_endoexoleg_genrerank,            plot_endoexoleg_genrerank(artists), format = "file", repository = "local"),
+  tar_target(gg_endoexoleg_correlation,          plot_endoexoleg_correlation(artists), format = "file", repository = "local"),
   # tar_target(gg_endoexoleg_correlation_bygenre, plot_endoexoleg_correlation(artists, 
   #                                                                           genrefacets = TRUE, 
   #                                                                           output = "gg_endoexoleg_correlation_bygenre.pdf"),

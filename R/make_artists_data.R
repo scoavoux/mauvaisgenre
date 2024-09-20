@@ -229,6 +229,9 @@ make_genres_data <- function(.source = "deezer_editorial_playlists", senscritiqu
       select(artist_id, genre)
     # TODO: collapse
     
+  } else if(.source == "genres_from_deezer_albums"){
+    genres <- read_csv("data/genres_from_deezer_albums.csv") %>% 
+      mutate(genre = recode_vars(genre, .source))
   } else if(.source == "musicbrainz_tags"){
     # THERE IS SOMETHING WRONG PROBABLY IN MBID. FOR INSTANCE COCTEAU TWINS is
     # "salsa choke" and Death Cab for Cutie is "Non-Music"

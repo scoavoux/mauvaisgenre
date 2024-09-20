@@ -83,6 +83,45 @@ survey_question,"RnB",rnb
 survey_question,"Rock",rock
 survey_question,"Soul / Funk",soulfunk
 survey_question,"Variété française",frenchsongs
+genres_from_deezer_albums,"Sports",
+genres_from_deezer_albums,"Comédie",
+genres_from_deezer_albums,"Livres audio",
+genres_from_deezer_albums,"Récits & fiction",
+genres_from_deezer_albums,"Films/Jeux vidéo",
+genres_from_deezer_albums,"Musiques de films",
+genres_from_deezer_albums,"Jeunesse",
+genres_from_deezer_albums,"Spiritualité & religion",
+genres_from_deezer_albums,"Musique asiatique",
+genres_from_deezer_albums,"Musique indienne",
+genres_from_deezer_albums,"Singer & Songwriter",
+genres_from_deezer_albums,"Alternative","alternative"
+genres_from_deezer_albums,"Pop","pop"
+genres_from_deezer_albums,"R&B","rnb"
+genres_from_deezer_albums,"Rock","rock"
+genres_from_deezer_albums,"Latino","latino"
+genres_from_deezer_albums,"Electro","edm"
+genres_from_deezer_albums,"Rap/Hip Hop","raphiphop"
+genres_from_deezer_albums,"Dance","edm"
+genres_from_deezer_albums,"Jazz","jazz"
+genres_from_deezer_albums,"Classique","classical"
+genres_from_deezer_albums,"Folk","folk"
+genres_from_deezer_albums,"Country","country"
+genres_from_deezer_albums,"Soul","soulfunk"
+genres_from_deezer_albums,"Metal","metal"
+genres_from_deezer_albums,"Musique africaine","african"
+genres_from_deezer_albums,"Musique arabe","african"
+genres_from_deezer_albums,"Soul & Funk","soulfunk"
+genres_from_deezer_albums,"Reggae","reggae"
+genres_from_deezer_albums,"Chanson française","frenchsongs"
+genres_from_deezer_albums,"Musique brésilienne","latino"
+genres_from_deezer_albums,"Pop internationale","pop"
+genres_from_deezer_albums,"Bolero","latino"
+genres_from_deezer_albums,"Disco","pop"
+genres_from_deezer_albums,"Blues","blues"
+genres_from_deezer_albums,"Grime","raphiphop"
+genres_from_deezer_albums,"Ranchera","latino"
+genres_from_deezer_albums,"Soul contemporaine","soulfunk"
+genres_from_deezer_albums,"R&B vieille école","rnb"
 deezer_editorial_playlists,"african","african"
 deezer_editorial_playlists,"alternative","alternative"
 deezer_editorial_playlists,"blues","blues"
