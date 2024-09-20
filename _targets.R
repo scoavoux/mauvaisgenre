@@ -66,9 +66,8 @@ list(
                                       artists_pop, 
                                       exo_radio, 
                                       exo_senscritique, 
-                                      endo_legitimacy
-                                      #exo_press
-                                      )),
+                                      endo_legitimacy,
+                                      exo_press)),
   tar_target(artists,     filter_artists(artists_raw)),
   ## Prepare user data ------
   tar_target(survey_raw,  make_survey_data()),
