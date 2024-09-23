@@ -316,7 +316,7 @@ filter_artists <- function(artists_raw){
   
   artists <- artists %>% 
     # turn NA to 0 in radio plays
-    mutate(across(starts_with("radio"), ~if_else(is.na(.x), 0, .x))) %>% 
+    # mutate(across(starts_with("radio"), ~if_else(is.na(.x), 0, .x))) %>% 
     # Scaling legitimacy variables
     mutate(sc_endo_isei = center_scale(endo_isei_mean_pond),
            sc_endo_educ = center_scale(endo_share_high_education_pond),
@@ -324,17 +324,21 @@ filter_artists <- function(artists_raw){
            sc_exo_score = center_scale(senscritique_meanscore),
            sc_exo_radio = center_scale(log(radio_leg+1))
     ) %>% 
-    rename(endo_isei = "endo_isei_mean_pond",
-           endo_educ = "endo_share_high_education_pond",
-           exo_press = "total_n_pqnt_texte",
-           exo_score = "senscritique_meanscore",
-           exo_radio = "radio_leg")
-  
+    rename(leg_endo_isei = "endo_isei_mean_pond",
+           leg_endo_educ = "endo_share_high_education_pond",
+           leg_exo_press = "total_n_pqnt_texte",
+           leg_exo_score = "senscritique_meanscore",
+           leg_exo_radio = "radio_leg")
 
   # Add PCA
-  x <- compute_pca(artists)
+  # only on full dataset (with all variables from exo)
+  pcad <- filter(artists, !is.na(exo_press), !is.na(exo_score), !is.na(exo_radio))
+  pcar <- compute_pca(pcad)
+  pcad <- pcad %>% 
+    mutate(sc_exo_pca = center_scale(pcar$ind$coord[,1]))
+  
   artists <- artists %>% 
-    mutate(sc_exo_pca = center_scale(x$ind$coord[,1]))
+    left_join(select(pcad, artist_id, sc_exo_pca))
   
   return(artists)
 }
