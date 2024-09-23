@@ -22,8 +22,8 @@ plot_endoleg_bygenre <- function(artists){
   set_ggplot_options()
   g <- artists %>% 
     mutate(genre = recode_vars(genre, "cleangenres"), 
-           genre = fct_reorder(genre, endo_isei_mean_pond, mean)) %>% 
-    select(genre, endo_isei_mean_pond, endo_share_high_education_pond) %>% 
+           genre = fct_reorder(genre, leg_endo_isei, mean)) %>% 
+    select(genre, leg_endo_isei, leg_endo_educ) %>% 
     pivot_longer(-genre) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy"),
            name = str_replace_all(name, "\\\\n", "\n")) %>% 
@@ -40,11 +40,11 @@ plot_exoleg_bygenre <- function(artists){
   require(tidyverse)
   set_ggplot_options()
   g <- artists %>% 
-    mutate(total_n_pqnt_texte = log(total_n_pqnt_texte+1),
-           radio_leg = log(radio_leg+1)) %>%
+    mutate(leg_exo_press = log(leg_exo_press+1),
+           leg_exo_radio = log(leg_exo_radio+1)) %>%
     mutate(genre = recode_vars(genre, "cleangenres"),
-           genre = factor(genre) %>% fct_reorder(senscritique_meanscore, median)) %>% 
-    select(genre, total_n_pqnt_texte, senscritique_meanscore, radio_leg, sc_exo_pca) %>% 
+           genre = factor(genre) %>% fct_reorder(leg_exo_score, median)) %>% 
+    select(genre, leg_exo_press, leg_exo_score, leg_exo_radio, sc_exo_pca) %>% 
     pivot_longer(-genre) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy"),
            name = str_replace_all(name, "\\\\n", "\n")) %>% 
@@ -119,13 +119,13 @@ plot_endoexoleg_genrerank <- function(artists){
     pivot_longer(-genre) %>% 
     mutate(genre = recode_vars(genre, "cleangenres")) %>% 
     ggplot(aes(x=name, y=value, group=genre)) +
-      geom_point() +
-      geom_line() +
-      geom_text(aes(x = 1, label=genre), data = ~ filter(.x, name == "sc_endo_educ"), hjust=1.2) +
-      geom_text(aes(x = 5, label=genre), data = ~ filter(.x, name == "sc_exo_score"), hjust=-0.2) +
-      scale_y_reverse(breaks=1:18, minor_breaks = NULL) +
-      scale_x_discrete(labels = labs) +
-      labs(y = "Rank", x = "Legitimacy scale")
+    geom_point() +
+    geom_line() +
+    geom_text(aes(x = 1, label=genre), data = ~ filter(.x, name == "sc_endo_educ"), hjust=1.2) +
+    geom_text(aes(x = 5, label=genre), data = ~ filter(.x, name == "sc_exo_score"), hjust=-0.2) +
+    scale_y_reverse(breaks=1:18, minor_breaks = NULL) +
+    scale_x_discrete(labels = labs) +
+    labs(y = "Rank", x = "Legitimacy scale")
   ggsave("gg_endoexoleg_genrerank.pdf", g, path = "output/omni1", device = "pdf", width = 10)
   return("output/omni1/gg_endoexoleg_genrerank.pdf")
 }
@@ -400,8 +400,8 @@ plot_example_genre_overlap <- function(artists){
     filter(genre %in% c("frenchrap", "rock", "classical")) %>% 
     mutate(genre = recode_vars(genre, "cleangenres")) %>% 
     ggplot(aes(sc_endo_isei, fill = genre)) +
-      geom_density(alpha=.5) +
-      labs(y = "Density", x = labs, fill = "")
+    geom_density(alpha=.5) +
+    labs(y = "Density", x = labs, fill = "")
   ggsave("example_overlap.pdf", g, path = "output/omni1", device = "pdf", height = 5)
   return("output/omni1/example_overlap.pdf")
 }
@@ -442,7 +442,7 @@ table_mean_sd_leg <- function(artists){
   require(kableExtra)
   artists %>% 
     mutate(genre = recode_vars(genre, "cleangenres"), 
-           genre = fct_reorder(genre, endo_isei_mean_pond, mean)) %>% 
+           genre = fct_reorder(genre, leg_endo_isei, mean)) %>% 
     select(genre, starts_with("sc_e")) %>% 
     pivot_longer(-genre) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy"),
@@ -489,7 +489,7 @@ plot_senscritique_users_from_quentin_survey <- function(){
   ggplot(q, aes(nb_discover, sc)) +
     geom_boxplot()
   ggplot(q, aes(score_sortie, sc)) +
-   geom_boxplot()
+    geom_boxplot()
   ggplot(q, aes(score_passion_culturelle, sc)) + 
     geom_boxplot()
   
@@ -500,5 +500,5 @@ plot_senscritique_users_from_quentin_survey <- function(){
     mutate(f = n / sum(n)) %>% 
     select(-n) %>% 
     pivot_wider(names_from = sc, values_from = f)
-
+  
 }

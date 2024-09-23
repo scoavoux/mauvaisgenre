@@ -296,17 +296,21 @@ join_artist <- function(...){
 }
 
 # Filter artists ------
-## We define here how to 
+## We define here what the sample will be
 filter_artists <- function(artists_raw){
   require(tidyverse)
   
   # Rules of inclusion/exclusion of artists
+  ## We use to be very exclusive: only artists with exo variables 
+  ## (have senscritique score, narrowe botteneck, have been searched in press,
+  ## have genre, have 5 respondents with ISEI listening)
+  ## Now more inclusive: we accept that one variable is missing
   artists <- artists_raw %>% 
     filter(!is.na(genre),
-           !is.na(senscritique_meanscore), # has score on senscritique
+           #!is.na(senscritique_meanscore), # has score on senscritique
            !is.na(endo_isei_mean_pond),
            n_isei > 5,
-           !is.na(total_n_pqnt_texte) # has been searched in the press data
+           #!is.na(total_n_pqnt_texte) # has been searched in the press data
            #parse # has been looked up in press data
     )
   
@@ -319,7 +323,12 @@ filter_artists <- function(artists_raw){
            sc_exo_press = center_scale(log(total_n_pqnt_texte+1)),
            sc_exo_score = center_scale(senscritique_meanscore),
            sc_exo_radio = center_scale(log(radio_leg+1))
-    )
+    ) %>% 
+    rename(endo_isei = "endo_isei_mean_pond",
+           endo_educ = "endo_share_high_education_pond",
+           exo_press = "total_n_pqnt_texte",
+           exo_score = "senscritique_meanscore",
+           exo_radio = "radio_leg")
   
 
   # Add PCA
