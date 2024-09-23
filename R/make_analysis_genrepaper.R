@@ -12,6 +12,25 @@ make_tbl_coverage <- function(artists_pop, artists){
               respondent_f_l_play = sum(respondent_f_l_play, na.rm = TRUE),
               respondent_f_n_play = sum(respondent_f_n_play, na.rm = TRUE), 
               .by = included_in_study)
+
+  tb <- artists %>% 
+    mutate(has_press = !is.na(leg_exo_press),
+           has_score = !is.na(leg_exo_score),
+           has_radio = !is.na(leg_exo_radio),
+           has_press_score = has_press & has_score,
+           has_press_radio = has_press & has_radio,
+           has_score_radio = has_score & has_radio,
+           has_all = has_press & has_score & has_radio) %>%  
+    select(artist_id, genre, starts_with("has")) %>% 
+    pivot_longer(starts_with("has")) %>% 
+    mutate(name = factor(name, levels = unique(name))) %>% 
+    filter(value) %>% 
+    inner_join(artists_pop) %>% 
+    group_by(name) %>% 
+    summarise(n_artists = n(),
+              control_f_l_play = sum(control_f_l_play, na.rm = TRUE),
+              respondent_f_l_play = sum(respondent_f_l_play, na.rm = TRUE))
+  
   kbl(tb, format = "latex", digits = 2, booktabs = TRUE) %>% 
     save_kable(file = "output/omni1/tb_coverage.tex")
   return("output/omni1/tb_coverage.tex")
