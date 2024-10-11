@@ -323,27 +323,33 @@ plot_genre_overlap <- function(artists){
   names(lendo_isei) <- names(lendo_educ) <- names(lexo_score) <- names(lexo_press) <- names(lexo_radio) <- names(lexo_pca) <- unique(artists$genre)
   
   for(ge in unique(artists$genre)){
-    lendo_isei[[ge]] <- filter(artists, genre == ge) %>% pull(sc_endo_isei)
+    lendo_isei[[ge]] <- filter(artists, genre == ge, !is.na(sc_endo_isei)) %>% 
+      pull(sc_endo_isei)
   }
   
   for(ge in unique(artists$genre)){
-    lendo_educ[[ge]] <- filter(artists, genre == ge) %>% pull(sc_endo_educ)
+    lendo_educ[[ge]] <- filter(artists, genre == ge, !is.na(sc_endo_educ)) %>% 
+      pull(sc_endo_educ)
   }
   
   for(ge in unique(artists$genre)){
-    lexo_pca[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_pca)
+    lexo_pca[[ge]] <- filter(artists, genre == ge, !is.na(sc_exo_pca)) %>% 
+      pull(sc_exo_pca)
   }
   
   for(ge in unique(artists$genre)){
-    lexo_score[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_score)
+    lexo_score[[ge]] <- filter(artists, genre == ge, !is.na(sc_exo_score)) %>% 
+      pull(sc_exo_score)
   }
   
   for(ge in unique(artists$genre)){
-    lexo_press[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_press)
+    lexo_press[[ge]] <- filter(artists, genre == ge, !is.na(sc_exo_press)) %>% 
+      pull(sc_exo_press)
   }
   
   for(ge in unique(artists$genre)){
-    lexo_radio[[ge]] <- filter(artists, genre == ge) %>% pull(sc_exo_radio)
+    lexo_radio[[ge]] <- filter(artists, genre == ge, !is.na(sc_exo_radio)) %>% 
+      pull(sc_exo_radio)
   }
   
   # order by mean ENDOGENOUS legitimacy
@@ -363,7 +369,7 @@ plot_genre_overlap <- function(artists){
   
   ol_endo_isei <- overlap(lendo_isei, plot = FALSE)
   ol_endo_educ <- overlap(lendo_educ, plot = FALSE)
-  ol_exo_pca <- overlap(lexo_pca, plot = FALSE)
+  ol_exo_pca   <- overlap(lexo_pca, plot = FALSE)
   ol_exo_score <- overlap(lexo_score, plot = FALSE)
   ol_exo_press <- overlap(lexo_press, plot = FALSE)
   ol_exo_radio <- overlap(lexo_radio, plot = FALSE)

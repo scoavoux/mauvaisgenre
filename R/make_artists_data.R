@@ -332,7 +332,7 @@ filter_artists <- function(artists_raw){
 
   # Add PCA
   # only on full dataset (with all variables from exo)
-  pcad <- filter(artists, !is.na(exo_press), !is.na(exo_score), !is.na(exo_radio))
+  pcad <- filter(artists, !is.na(leg_exo_press), !is.na(leg_exo_score), !is.na(leg_exo_radio))
   pcar <- compute_pca(pcad)
   pcad <- pcad %>% 
     mutate(sc_exo_pca = center_scale(pcar$ind$coord[,1]))
