@@ -456,7 +456,7 @@ plot_endoleg_pca <- function(artists){
   require(tidyverse)
   require(FactoMineR)
   require(factoextra)
-  pcad <- filter(artists, !is.na(exo_press), !is.na(exo_score), !is.na(exo_radio))
+  pcad <- filter(artists, !is.na(leg_exo_press), !is.na(leg_exo_score), !is.na(leg_exo_radio))
   pca_mod <- compute_pca(pcad)
   g <- fviz_pca_var(pca_mod)
   ggsave("pca_var.pdf", g, path = "output/omni1", device="pdf")
