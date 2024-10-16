@@ -54,7 +54,7 @@ list(
 
   ### Legitimacy data ------
   tar_target(regex_fixes_file_path,              "data/regex_fixes.csv"),
-  tar_target(regex_fixes_file,                   read_csv(regex_fixes_file_path)),
+  tar_target(regex_fixes_file,                   read_csv(regex_fixes_file_path, col_types = "nnccc")),
   tar_target(exo_press,                          make_press_data(corpus_tokenized, artist_names_and_aliases, regex_fixes_file)),
   tar_target(radio_leg,                          c("France Musique", "Radio Classique", "Jazz Radio", 
                                                    "ABC Lounge Jazz", "TSF Jazz", "France Inter", 
