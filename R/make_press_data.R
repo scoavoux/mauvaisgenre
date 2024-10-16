@@ -81,10 +81,11 @@ make_raw_corpus <- function(){
   }
 
   lemonde <- lapply(lemonde, function(x) {
-    x$is_article <- as.logical(x$is_article)
-    x$annee <- as.numeric(x$annee)
-    x$publidate <- ymd(x$publidate)
-    x$publidate <- ifelse(is.na(x$publidate), lag(x$publidate), x$publidate)
+    x <- mutate(x,
+           is_article = as.logical(is_article),
+           annee = as.numeric(annee),
+           publidate = ymd(publidate)) %>% 
+      fill(publidate)
     return(x)
   }
   )
@@ -113,11 +114,10 @@ make_raw_corpus <- function(){
   s3$download_file("scoavoux", "french_media/lefigaro-complet-v0.csv", 
                    Filename = "data/temp/lefigaro-complet-v0.csv")
   lefigaro <- read_csv("data/temp/lefigaro-complet-v0.csv")
-  file.remove("data/temp/lefigaro-complet-v0.csv")
   lefigaro <- filter(lefigaro, year > 2009)
   
   lefigaro <- filter(lefigaro, rubrique == "Culture")
-  lefigaro <- mutate(lefigaro, date = str_remove(date, "T.*") %>% ymd())
+  lefigaro <- mutate(lefigaro, date = as.Date(date))
   
   lefigaro <- lefigaro %>% 
     select(date, 
@@ -127,6 +127,7 @@ make_raw_corpus <- function(){
            article_text = "texte"
     ) %>% 
     mutate(source_name = "Le Figaro")
+  file.remove("data/temp/lefigaro-complet-v0.csv")
   
   
   ## Libération
