@@ -347,7 +347,7 @@ make_corpus_tokenized_sentences <- function(corpus_raw){
 
 # Make press data ------
 
-make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases){
+make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, regex_fixes_file){
   require(tidyverse)
   require(parallel)
   require(foreach)
@@ -359,7 +359,7 @@ make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases){
   #   inner_join(select(exo_senscritique, artist_id))
   
   # Apply regex fixes
-  regex_fixes <- read_csv("data/regex_fixes.csv") %>% 
+  regex_fixes <- regex_fixes_file %>% 
     select(-total_n_pqnt_texte)
   
   artist_names_and_aliases <- artist_names_and_aliases %>% 
