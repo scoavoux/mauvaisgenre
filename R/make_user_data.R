@@ -181,8 +181,9 @@ compute_latent_classes_from_streams <- function(user_artist_peryear_merged_artis
     pivot_wider(names_from = genre, values_from = l_play, values_fill = 0)
   
   # Loop and make clustering
-  n.cores = 5 # ok let's try that
-  if(n.cores < 1) n.cores <- 1
+  n.cores = 5 # adapt this to your computing power. No empirical validation but more
+  # cores are not more efficient as there should be a limited number of nclass to
+  # try (currently 1 to 15)
   
   my.cluster <- makeCluster(
     n.cores#, type = "FORK"

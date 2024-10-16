@@ -27,8 +27,25 @@ make_raw_corpus <- function(){
   
   telerama <- rename(telerama, section = DocHeader)
   
+  clean_dates <- function(char){
+    str_replace_all(char, c(
+      "[Jj]anvier"    = "01",
+      "[Ff][ée]vrier" = "02",
+      "[Mm]ars"       = "03",
+      "[Aa]vril" 		= "04",
+      "[Mm]ai" 		= "05",
+      "[Jj]uin" 		= "06",
+      "[Jj]uillet" 	= "07",
+      "[Aa]o[uû]t" 	= "08",
+      "[Ss]eptembre" 	= "09",
+      "[Oo]ctobre" 	= "10",
+      "[Nn]ovembre" 	= "11",
+      "[Dd][ée]cembre"= "12"
+    ))
+  }
+  
   telerama <- mutate(telerama, 
-                     date = str_remove(date, "vendredi|samedi") %>% dmy())
+                     date = str_remove(date, "vendredi|samedi") %>% clean_dates() %>% dmy())
   
   telerama <- mutate(telerama, 
                      Notes = str_remove(Notes, "Note\\(s\\) : ;"),
@@ -57,15 +74,17 @@ make_raw_corpus <- function(){
   
   # Le Monde
   lemonde <- vector("list", length = 12L)
+  # there are some small errors (bad dates in parsed data); we correct them below
   for(i in 1:12){
     lemonde[[i]] <- s3_read(paste0("french_media/lemonde/", paste0("lemonde-20", 10L:22L,".csv"))[i])
     print(i)
   }
-  
+
   lemonde <- lapply(lemonde, function(x) {
     x$is_article <- as.logical(x$is_article)
     x$annee <- as.numeric(x$annee)
     x$publidate <- ymd(x$publidate)
+    x$publidate <- ifelse(is.na(x$publidate), lag(x$publidate), x$publidate)
     return(x)
   }
   )
