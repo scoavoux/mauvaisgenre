@@ -1,0 +1,76 @@
+---
+title: "Press sanity checks"
+format:
+  html: 
+    embed-resources: true
+editor: source
+---
+
+```{r}
+require(targets)
+require(tidyverse)
+library(knitr)
+library(janitor)
+
+tar_config_set(store = "../_targets/")
+
+tar_source()
+tar_load("exo_press")
+tar_load("artists_pop")
+tar_load("artist_names")
+tar_load("artist_names_and_aliases")
+tar_load("regex_fixes_file")
+```
+
+```{r}
+# regex_fixes <- regex_fixes_file %>% 
+#   select(-total_n_pqnt_texte)
+# 
+# artist_names_and_aliases <- artist_names_and_aliases %>% 
+#   anti_join(regex_fixes, by = "artist_id")
+# 
+# regex_fixes <- regex_fixes %>% 
+#   filter(type != "remove")
+# 
+# artist_names_and_aliases <- artist_names_and_aliases %>% 
+#   bind_rows(regex_fixes)
+# 
+# # We clean up the regexes a bit
+# artist_names_and_aliases <- artist_names_and_aliases %>% 
+#   filter(
+#     str_length(name)>1,# remove names of length 1
+#     !str_detect(name, "^\'*[a-zA-Zéèê]{1,2}\'*$"), # remove names of two letters
+#     !str_detect(name, "^\\d+$"),# and those of just numbers
+#     !str_detect(name, "^[\u0621-\u064A]+$"), # those only in arabic
+#     # And those only in non-ascii characters (ie japanese, chinese, 
+#     # arabic, korean, russian, greek alphabets)
+#     !str_detect(name, "^[^ -~]+$")
+#   )
+#   # Finally we group various aliases together to speed up search
+# artist_names_and_aliases <- artist_names_and_aliases %>% 
+#   group_by(artist_id) %>% 
+#   summarise(regex = paste(regex, collapse = "|"),
+#             negative = any(type == "negative"))
+  
+
+e <- exo_press %>% 
+  left_join(select(artists_pop, artist_id, control_n_users, respondent_n_users)) %>% 
+  left_join(select(artist_names, artist_id, name)) %>% 
+  left_join(select(artist_names_and_aliases, artist_id, search_name = "name"))
+```
+
+```{r}
+summary(e$total_n_pqnt_texte)
+e %>% 
+  mutate(control_n_users = ifelse(control_n_users == 0, respondent_n_users, control_n_users),
+         mention_per_user = total_n_pqnt_texte/control_n_users) %>% 
+  filter(!is.na(respondent_n_users), respondent_n_users > 5) %>% # for now because we will discard them anyway
+  arrange(desc(mention_per_user)) %>% 
+  write_csv("artists_to_fix_again.csv")
+  
+```
+
+```{r}
+separate_longer_delim(artist_names, name, ",")
+```
+
