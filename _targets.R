@@ -23,7 +23,7 @@ list(
   tar_target(streaming_data_files,               list_streaming_data_files()),
   tar_target(user_artist_peryear_onefile,        make_user_artist_peryear_table_onefile(streaming_data_files), pattern = streaming_data_files),
   tar_target(user_artist_peryear,                merge_user_artist_peryear_table(user_artist_peryear_onefile)),
-  tar_target(to_remove_file_path,                "data/artists_to_remove.csv"),
+  tar_target(to_remove_file_path,                "data/artists_to_remove.csv", format = "file"),
   tar_target(to_remove_file,                     read_csv(to_remove_file_path)),
   tar_target(user_artist_peryear_merged_artists, merge_duplicate_artists_in_streams(user_artist_peryear, senscritique_mb_deezer_id, to_remove_file)),
   tar_target(user_genre_summary_data_prop,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=TRUE)),
@@ -31,7 +31,8 @@ list(
   ## Prepare artists data ------
   
   ### Artists names, aliases, ids ------
-  tar_target(manual_search_file,                 read_csv("data/manual_search.csv")),
+  tar_target(manual_search_file_path,            "data/manual_search.csv", format = "file"),
+  tar_target(manual_search_file,                 read_csv(manual_search_file_path)),
   tar_target(senscritique_mb_deezer_id,          make_senscritique_pairing_data(manual_search_file)),
   tar_target(artist_names_and_aliases,           make_aliases(senscritique_mb_deezer_id)),
   tar_target(artist_names,                       make_artists_names(artist_names_and_aliases)),
@@ -53,7 +54,7 @@ list(
   tar_target(corpus_tokenized,                   make_corpus_tokenized_sentences(corpus_filtered)),
 
   ### Legitimacy data ------
-  tar_target(regex_fixes_file_path,              "data/regex_fixes.csv"),
+  tar_target(regex_fixes_file_path,              "data/regex_fixes.csv", format = "file"),
   tar_target(regex_fixes_file,                   read_csv(regex_fixes_file_path, col_types = "nnccc")),
   tar_target(exo_press,                          make_press_data(corpus_tokenized, artist_names_and_aliases, regex_fixes_file)),
   tar_target(radio_leg,                          c("France Musique", "Radio Classique", "Jazz Radio", 
