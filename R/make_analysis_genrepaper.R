@@ -20,6 +20,7 @@ make_tbl_coverage <- function(artists_pop, artists){
            has_press_score = has_press & has_score,
            has_press_radio = has_press & has_radio,
            has_score_radio = has_score & has_radio,
+           has_one = has_press | has_score | has_radio,
            has_all = has_press & has_score & has_radio) %>%  
     select(artist_id, genre, starts_with("has")) %>% 
     pivot_longer(starts_with("has")) %>% 
