@@ -138,43 +138,7 @@ plot_lca_socdem <- function(survey, lca_class_interpretation){
     select(cluster_survey, gender, degree, age) %>% 
     filter(!is.na(cluster_survey)) %>% 
     mutate(cluster_survey = fct_recode(paste0("class", cluster_survey), !!!lca_class_interpretation))
-  # gg_gender <- s %>% 
-  #   filter(!is.na(gender)) %>% 
-  #   ggplot(aes(cluster_survey, fill=gender)) +
-  #     geom_bar(position="fill") +
-  #     coord_flip() +
-  #     labs(x="LCA cluster", y="", fill="") +
-  #     theme(legend.position = "bottom")
-  # gg_gender <- s %>% 
-  #   filter(!is.na(gender)) %>% 
-  #   ggplot(aes(cluster_survey, fill=gender)) +
-  #     geom_bar(position="fill") +
-  #     coord_flip() +
-  #     labs(x="", y="", fill="Gender") +
-  #     theme(legend.position = "bottom")
-  # gg_degree <- s %>% 
-  #   filter(!is.na(degree)) %>% 
-  #   ggplot(aes(cluster_survey, fill=degree)) +
-  #     geom_bar(position="fill") +
-  #     scale_fill_brewer() +
-  #     coord_flip() +
-  #     labs(x="", y="", fill="Education") +
-  #     theme(legend.position = "bottom")
-  # gg_age <- s %>% 
-  #   filter(!is.na(age)) %>% 
-  #   ggplot(aes(age, group = cluster_survey, color=cluster_survey)) +
-  #     geom_density() +
-  #     scale_fill_brewer() +
-  # #    coord_flip() +
-  #     labs(x="Age", y="", color = "LCA cluster") +
-  #     scale_x_continuous(limits=c(10, 90), breaks = seq(10, 90, 10)) +
-  #     theme(legend.position = "bottom", base.size=12)
-  # 
-  # ggdraw() +
-  #   draw_plot(gg_gender, x = 0 , y = .5, width = .5, height = .5) +
-  #   draw_plot(gg_degree, x = .5, y = .5, width = .5, height = .5) +
-  #   draw_plot(gg_age,    x = 0 , y = 0 , width =  1, height = .5)
-  
+
   g <- s %>% 
     mutate(age = cut(age, breaks = c(0, 25, 35, 55, 100), labels = c("<25yo", "26-35yo", "36-55yo", ">55yo"))) %>% 
     filter(!is.na(age), !is.na(degree), !is.na(cluster_survey)) %>% 
@@ -201,12 +165,13 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
   s <- survey %>% 
     filter(!is.na(cluster_survey)) %>% 
     select(cluster_survey, 
-           mean_exo_pca,
+           starts_with("mean_sc_exo"),
+           starts_with("sd_sc_exo"),
            omni_survey_cultural_holes_played,
-           omni_stream_genres_hhi, 
-           sd_exo_pca) %>% 
+           omni_stream_genres_hhi) %>% 
     pivot_longer(-cluster_survey) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy"),
+           name = str_replace(name, "\\\\n", "\n"),
            cluster_survey = paste0("class", cluster_survey),
            cluster_survey = fct_recode(cluster_survey, !!!lca_class_interpretation)) %>% 
     filter(!is.na(value)) %>% 
@@ -214,7 +179,8 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
     summarize(m = mean(value, na.rm=TRUE),
               sqrt = sqrt(n()),
               se = 1.96*sd(value, na.rm=TRUE)/sqrt(n())) %>% 
-    ungroup()
+    ungroup() %>% 
+    mutate(name = factor(name, levels = rev(unique(name))))
   
   if(format == "paper"){
     gg <- s %>% 
@@ -238,13 +204,23 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
   } else if(format == "presentation2"){
     # Version for the presentation: separate
     gg <- s %>% 
-      filter(str_detect(name, "leg.")) %>% 
+      filter(str_detect(name, "Mean")) %>% 
       ggplot(aes(x=cluster_survey, y=m, ymin=m-se, ymax=m+se)) +
         geom_point() +
         geom_pointrange() +
         coord_flip() +
         facet_wrap(~name, scales="free_x") +
         labs(x = "", y = "")
+  } else if(format == "presentation3"){
+    # Version for the presentation: separate
+    gg <- s %>% 
+      filter(str_detect(name, "SD")) %>% 
+      ggplot(aes(x=cluster_survey, y=m, ymin=m-se, ymax=m+se)) +
+      geom_point() +
+      geom_pointrange() +
+      coord_flip() +
+      facet_wrap(~name, scales="free_x") +
+      labs(x = "", y = "")
   }
   if(format == "paper"){
     height <- 6
@@ -288,7 +264,7 @@ plot_exoomni_by_otheromni <- function(survey){
       select(hashed_id, 
              omni_survey_cultural_holes_played,
              omni_stream_genres_hhi,
-             sd_exo_pca) %>% 
+             sd_sc_exo_pca) %>% 
     pivot_longer(-hashed_id) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
     pivot_wider(names_from = name, values_from = value)
@@ -322,20 +298,19 @@ plot_exoomni_by_otheromni <- function(survey){
   return("output/omni2/gg_exoomni_by_otheromni.pdf")
 }
 
-plot_omni_socdem <- function(survey){
+plot_omni_socdem_educ <- function(survey){
   require(tidyverse)
-  require(cowplot)
   set_ggplot_options()
   s <- survey %>% 
     select(omni_survey_cultural_holes_played,
            omni_stream_genres_hhi,
-           mean_exo_pca, 
-           sd_exo_pca,
-           gender,
-           degree,
-           age) %>% 
-    pivot_longer(omni_survey_cultural_holes_played:sd_exo_pca) %>% 
-    mutate(name = recode_vars(name, "cleanlegitimacy"))
+           starts_with("mean_sc_exo"),
+           starts_with("sd_sc_exo"  ),
+           degree) %>% 
+    pivot_longer(-degree) %>% 
+    mutate(name = recode_vars(name, "cleanlegitimacy"),
+           name = str_replace(name, "\\\\n", "\n"),
+           name = factor(name, levels = rev(unique(name))))
   g <- s %>% 
     filter(!is.na(degree), !is.na(value)) %>% 
     group_by(name) %>% 
@@ -346,6 +321,36 @@ plot_omni_socdem <- function(survey){
       coord_flip() +
       labs(x = "Education", y="") +
       facet_wrap(~name, scales="free_x")
-  ggsave("gg_omni_socdem.pdf", g, path = "output/omni2", device = "pdf", height = 5)
-  return("output/omni2/gg_omni_socdem.pdf")
+  ggsave("gg_omni_socdem_educ.pdf", g, path = "output/omni2", device = "pdf", height = 5)
+  return("output/omni2/gg_omni_socdem_educ.pdf")
+}
+
+plot_omni_socdem_isei <- function(survey, isei){
+  require(tidyverse)
+  set_ggplot_options()
+  s <- survey %>% 
+    left_join(isei) %>% 
+    select(omni_survey_cultural_holes_played,
+           omni_stream_genres_hhi,
+           #starts_with("mean_sc_exo"),
+           starts_with("sd_sc_exo"  ),
+           isei) %>% 
+    pivot_longer(-isei) %>% 
+    filter(!is.na(isei)) %>% 
+    mutate(isei = cut(isei, breaks = quantile(isei, c(0, .25, .50, .75, 1)), labels = paste0("Q", 1:4)),
+           name = recode_vars(name, "cleanlegitimacy"),
+           name = str_replace(name, "\\\\n", "\n"),
+           name = factor(name, levels = rev(unique(name))))
+  g <- s %>% 
+    filter(!is.na(isei), !is.na(value)) %>% 
+    group_by(name) %>% 
+    filter(value < quantile(value, .95),
+           value > quantile(value, .01)) %>% 
+    ggplot(aes(isei, value)) +
+      geom_boxplot(notch = TRUE) +
+      labs(x = "ISEI", y="Omnivorousness") +
+      coord_flip() +
+      facet_wrap(~name, scales="free_x")
+  ggsave("gg_omni_socdem_isei.pdf", g, path = "output/omni2", device = "pdf", height = 5)
+  return("output/omni2/gg_omni_socdem_isei.pdf")
 }

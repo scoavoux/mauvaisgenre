@@ -153,6 +153,9 @@ list(
   tar_target(gg_lca_omni_presentation2, 
              plot_lca_omni(survey, lca_class_interpretation, format="presentation2"), 
              format = "file", repository = "local"),
+  tar_target(gg_lca_omni_presentation3, 
+             plot_lca_omni(survey, lca_class_interpretation, format="presentation3"), 
+             format = "file", repository = "local"),
   tar_target(gg_lca_diag, 			       plot_lca_diag(latent_classes_from_surveys_multiple), format = "file", repository = "local"),
   tar_target(gg_lca_profile, 			     plot_lca_profile(latent_classes_from_surveys, lca_class_interpretation), format = "file", repository = "local"),
   tar_target(gg_lca_profile_played,    plot_lca_profile_played(latent_classes_from_surveys, 
@@ -161,7 +164,8 @@ list(
                                                                user_genre_summary_data_raw), format = "file", repository = "local"),
   tar_target(gg_lca_omni_bygenre, plot_lca_omni_bygenre(survey, lca_class_interpretation), format = "file", repository = "local"),
   tar_target(gg_exoomni_by_otheromni,	 plot_exoomni_by_otheromni(survey), format = "file", repository = "local"),
-  tar_target(gg_omni_socdem, 			     plot_omni_socdem(survey), format = "file", repository = "local"),
+  tar_target(gg_omni_socdem_educ, 		 plot_omni_socdem_educ(survey), format = "file", repository = "local"),
+  tar_target(gg_omni_socdem_isei, 		 plot_omni_socdem_isei(survey, isei), format = "file", repository = "local"),
   tar_target(gg_lca_socdem,	 		       plot_lca_socdem(survey, lca_class_interpretation), format = "file", repository = "local"),
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
   

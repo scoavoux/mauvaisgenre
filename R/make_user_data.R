@@ -244,15 +244,24 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear_merged_artis
   ## diversity over individual legitimacy
   ### weighted mean and sd of each artist's average legitimacy
   ### as highbrow dim (mean) and omnivorous dim (sd)
-  omni_exo <- user_artist_peryear_merged_artists %>% 
+  tmp <- user_artist_peryear_merged_artists %>% 
     group_by(hashed_id) %>% 
     mutate(f_play = l_play / sum(l_play)) %>% 
-    left_join(select(artists, artist_id, sc_exo_pca)) %>% 
-    filter(!is.na(sc_exo_pca)) %>% 
+    left_join(select(artists, artist_id, starts_with("sc_exo_")))
+  omni_exo <- tmp %>% 
     group_by(hashed_id) %>% 
-    summarize(mean_exo_pca = sum(sc_exo_pca*f_play), 
-              sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2)))
+    summarise(across(starts_with("sc_exo_"), ~sum(.x*f_play, na.rm=TRUE), .names = "mean_{.col}"))
+
+  omni_exo <- tmp %>% 
+    left_join(omni_exo) %>% 
+    group_by(hashed_id) %>% 
+    summarise(sd_sc_exo_radio = sqrt(sum((f_play*(sc_exo_radio - first(mean_sc_exo_radio)))^2, na.rm = TRUE)),
+              sd_sc_exo_press = sqrt(sum((f_play*(sc_exo_press - first(mean_sc_exo_press)))^2, na.rm = TRUE)),
+              sd_sc_exo_score = sqrt(sum((f_play*(sc_exo_score - first(mean_sc_exo_score)))^2, na.rm = TRUE)),
+              sd_sc_exo_pca   = sqrt(sum((f_play*(sc_exo_pca   - first(mean_sc_exo_pca  )))^2, na.rm = TRUE))) %>% 
+    full_join(omni_exo)
   
+  ## TODO: ADAPT FOR ALL MEASURES AND NOT ONLY PCA + ADAPT TO HAVE PROPER WEIGHTED MEAN SUBSTRACYED IN SD MEASURE 
   ## Same by genre
   if(rescale_by == "artist"){
     ## Start by rescaling legitimacy by genre
