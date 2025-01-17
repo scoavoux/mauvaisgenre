@@ -170,5 +170,9 @@ list(
   #tar_quarto(middlebrow_omnivore_report, "middlebrow_omnivore.qmd")  
   
   ## Supplementary analyses ------  
-  tar_target(tbl_coverage, make_tbl_coverage(artists_pop, artists), format = "file", repository = "local")
+  tar_target(tbl_coverage, make_tbl_coverage(artists_pop, artists), format = "file", repository = "local"),
+  
+  ## Export for analyses in other languages (Philippe on STATA)
+  tar_target(artists_csv,              export_artists_csv(artists), format = "file", repository = "local"),
+  tar_target(users_csv,                export_users_csv(survey), format = "file", repository = "local")
 )
