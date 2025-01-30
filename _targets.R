@@ -21,7 +21,8 @@ list(
 
   ## Prepare streaming data ------
   tar_target(streaming_data_files,               list_streaming_data_files()),
-  tar_target(user_artist_peryear_onefile,        make_user_artist_peryear_table_onefile(streaming_data_files), pattern = streaming_data_files),
+  tar_target(items,                              make_items_data()),
+  tar_target(user_artist_peryear_onefile,        make_user_artist_peryear_table_onefile(streaming_data_files, items), pattern = streaming_data_files),
   tar_target(user_artist_peryear,                merge_user_artist_peryear_table(user_artist_peryear_onefile)),
   tar_target(to_remove_file_path,                "data/artists_to_remove.csv", format = "file"),
   tar_target(to_remove_file,                     read_csv(to_remove_file_path)),

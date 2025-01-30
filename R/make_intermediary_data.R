@@ -50,13 +50,34 @@ list_streaming_data_files <- function(){
   stream_data_files <- s3$list_objects_v2(Bucket = "scoavoux", Prefix = "records_w3/streams")$Content %>% map(~.x$Key) %>% 
     unlist()
   stream_data_files <- stream_data_files[str_detect(stream_data_files, "part-")]
+  # the analysis has been done before we got the 2024 data and there has been so
+  # much idiosyncratic work done to clean up artists list, etc. that I really 
+  # don't want to add the newer data now.
+  # So... we exclude it, plain and simple.
+  stream_data_files <- stream_data_files[!str_detect(stream_data_files, "stream_with_context")]
   return(stream_data_files)
 }
+
+make_items_data <- function(){
+  require(tidyverse)
+  require(tidytable)
+
+  s3 <- initialize_s3()
+  
+  items_old <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/items/songs.snappy.parquet")$Body %>% 
+    read_parquet(col_select = c("song_id", "artist_id"))
+  items_new <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/items/song.snappy.parquet")$Body %>% 
+    read_parquet(col_select = c("song_id", "artist_id"))  
+  items <- bind_rows(items_old, items_new) %>% 
+    distinct()
+  return(items)
+}
+
 
 ## Because importing them all at once creates memory problems, we divide
 ## the task. This function loads and preprocesses each streaming data file
 ## which is then turned to the next function for summary.
-make_user_artist_peryear_table_onefile <- function(file){
+make_user_artist_peryear_table_onefile <- function(file, items){
   require(tidyverse)
   require(tidytable)
   require(arrow)
@@ -85,8 +106,6 @@ make_user_artist_peryear_table_onefile <- function(file){
            is_listened == 1) %>% 
     select(-ts_listen, -listening_time)
   
-  items <- s3$get_object(Bucket = "scoavoux", Key = "records_w3/items/songs.snappy.parquet")$Body %>% 
-    read_parquet(col_select = c("song_id", "artist_id"))
   
   user_artist_peryear <- streams %>% 
     left_join(items) %>% 
