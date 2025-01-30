@@ -19,14 +19,14 @@ opts_chunk$set(echo = FALSE,
 ```{r}
 #|label: packages
 library(targets)
-tar_config_set(store = "../_targets/")
-tar_source()
 library(tidyverse)
 library(arrow)
 library(janitor)
 library(kableExtra)
 require(lubridate)
 library(here)
+tar_config_set(store = here("_targets"))
+tar_source(here("R"))
 ```
 
 ```{r}
@@ -56,7 +56,7 @@ summarize(user_artist_peryear,
 ```
 
 ```{r}
-
+s3 <- initialize_s3()
 f <- s3$download_file(Bucket = "scoavoux", 
                       Key = "records_w3/RECORDS_hashed_user_group.parquet", 
                       Filename = here("data", "temp", "RECORDS_hashed_user_group.parquet"))
