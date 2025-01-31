@@ -139,17 +139,7 @@ compute_latent_classes_from_streams <- function(user_artist_peryear_merged_artis
   require(mclust)
   require(tidyverse)
   require(tidytable)
-  require(parallel)
-  require(foreach)
-  require(doParallel)
-  
-  # require(conflicted)
-  # conflict_prefer("ungroup", "tidytable")
-  # conflict_prefer("group_by", "tidytable")
-  # conflict_prefer("summarize", "tidytable")
-  # conflict_prefer("filter", "tidytable")
-  # conflicts_prefer(tidytable::pivot_wider)
-  
+
   # summarize across years
   user_artist_peryear_merged_artists <- user_artist_peryear_merged_artists %>% 
     group_by(hashed_id, artist_id) %>% 
@@ -179,37 +169,15 @@ compute_latent_classes_from_streams <- function(user_artist_peryear_merged_artis
   user_genre_matrix <- user_genre %>% 
     ungroup() %>% 
     pivot_wider(names_from = genre, values_from = l_play, values_fill = 0)
-  
-  # Loop and make clustering
-  n.cores = 5 # adapt this to your computing power. No empirical validation but more
-  # cores are not more efficient as there should be a limited number of nclass to
-  # try (currently 1 to 15)
-  
-  my.cluster <- makeCluster(
-    n.cores#, type = "FORK"
-  )
-  
-  registerDoParallel(cl = my.cluster)
-  
-  iterator <- length(nclass)
-  
-  # Perform search
-  # library(tictoc)
-  # 
-  # tic()
-  mod <- foreach(
-    i = seq_len(iterator),
-    .packages = c("mclust", "tidyverse")
-  ) %dopar% {
-    Mclust(select(user_genre_matrix, -hashed_id), G = i)
+
+  mod <- vector("list", length = length(nclass))
+  names(mod) <- paste0("k", nclass)
+  for(i in nclass){
+    mod[[paste0("k", i)]] <- Mclust(select(user_genre_matrix, -hashed_id), G = i)
+    # pass ids to be able to pair the values afterwards
+    mod[[paste0("k", i)]]$id <- user_genre_matrix$hashed_id
+    print(i)
   }
-  # toc()
-  stopCluster(my.cluster)
-  
-  mod <- map(mod, function(.x){
-    .x$id = user_genre_matrix$hashed_id
-    return(.x)
-  })
   names(mod) <- paste0("k", nclass)
   
   return(mod)
@@ -330,9 +298,10 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear_merged_artis
 recode_survey_data <- function(survey, 
                                omni_from_survey, 
                                omni_from_streams,
-                               latent_classes_from_surveys,
-                               latent_classes_from_streams,
-                               latent_classes_from_streams_proportion){
+                               latent_classes_from_surveys){
+                               # 
+                               # latent_classes_from_streams,
+                               # latent_classes_from_streams_proportion){
   
   # Recode survey questions  
   survey <- survey %>% 
@@ -361,18 +330,18 @@ recode_survey_data <- function(survey,
   # Extract clusters
   lcs <- tibble(cluster_survey = latent_classes_from_surveys$predclass, 
                 hashed_id = latent_classes_from_surveys$id)
-  lcst <- tibble(cluster_streams = latent_classes_from_streams$classification,
-                 hashed_id = latent_classes_from_streams$id)
-  lcstp <- tibble(cluster_streamsprop = latent_classes_from_streams_proportion$classification,
-                  hashed_id = latent_classes_from_streams_proportion$id)
+  # lcst <- tibble(cluster_streams = latent_classes_from_streams$classification,
+  #                hashed_id = latent_classes_from_streams$id)
+  # lcstp <- tibble(cluster_streamsprop = latent_classes_from_streams_proportion$classification,
+  #                 hashed_id = latent_classes_from_streams_proportion$id)
   
   # Now let's aggregate with other datasets
   survey <- survey %>% 
     left_join(omni_from_survey) %>% 
     left_join(omni_from_streams) %>% 
-    left_join(lcs) %>% 
-    left_join(lcst) %>% 
-    left_join(lcstp)
+    left_join(lcs)
+    # left_join(lcst) %>% 
+    # left_join(lcstp)
   
   return(survey)
 }

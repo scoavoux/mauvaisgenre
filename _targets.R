@@ -88,25 +88,32 @@ list(
   tar_target(latent_classes_from_surveys_multiple, 
              compute_latent_classes_from_survey(survey_raw, nclass = 1L:15L)),
   tar_target(latent_classes_from_surveys,        select_latent_class_model(latent_classes_from_surveys_multiple, 4)),
+  
   #### LPA from streams
-  tar_target(latent_classes_from_streams_multiple, 
-             compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L)),
-  tar_target(latent_classes_from_streams, 
-             select_latent_class_model(latent_classes_from_streams_multiple, 5)),
+  # I don't get what's not working because the function runs outside of target. For now
+  # we are not using this
+  # when adding this again, edit recode_survey_data() to merge all user level variables.
+  # tar_target(latent_classes_from_streams_multiple, 
+  #            compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L)),
+  # tar_target(latent_classes_from_streams, 
+  #            select_latent_class_model(latent_classes_from_streams_multiple, 5)),
   
   #### LPA from streams, with proportions
-  tar_target(latent_classes_from_streams_multiple_proportion,
-             compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L, proportion = TRUE)),
-  tar_target(latent_classes_from_streams_proportion,
-           select_latent_class_model(latent_classes_from_streams_multiple_proportion, 5)),
+  # I don't get what's not working because the function runs outside of target. For now
+  # we are not using this
+  # tar_target(latent_classes_from_streams_multiple_proportion,
+  #            compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L, proportion = TRUE)),
+  # tar_target(latent_classes_from_streams_proportion,
+  #          select_latent_class_model(latent_classes_from_streams_multiple_proportion, 5)),
   
   ### Put all user data together ------
   tar_target(survey,                             recode_survey_data(survey_raw, 
                                                                     omni_from_survey, 
                                                                     omni_from_streams,
-                                                                    latent_classes_from_surveys,
-                                                                    latent_classes_from_streams,
-                                                                    latent_classes_from_streams_proportion)),
+                                                                    latent_classes_from_surveys
+                                                                    #latent_classes_from_streams,
+                                                                    #latent_classes_from_streams_proportion
+                                                                    )),
   
   ## Analysis Omni 1 ------
   tar_target(gg_pca_endoleg,                     plot_endoleg_pca(artists), format = "file", repository = "local"),
