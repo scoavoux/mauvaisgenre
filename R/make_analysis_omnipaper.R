@@ -264,33 +264,36 @@ plot_exoomni_by_otheromni <- function(survey){
       select(hashed_id, 
              omni_survey_cultural_holes_played,
              omni_stream_genres_hhi,
-             sd_sc_exo_pca) %>% 
+             starts_with("sd_sc")) %>% 
     pivot_longer(-hashed_id) %>% 
-    mutate(name = recode_vars(name, "cleanlegitimacy")) %>% 
+    mutate(name = recode_vars(name, "cleanlegitimacy"),
+           name = str_replace(name, "\\\\n", "\n")) %>% 
     pivot_wider(names_from = name, values_from = value)
   l <- vector("list", 2L)
   xlim <- c(0, 7)
   ylim <- c(0, .3)
   l[[1]] <- s %>% 
-    # to remove warning
-    filter(`Cultural holes played` < xlim[2], `Cultural holes played` > xlim[1],
-           `SD gatkp. leg.` < ylim[2],          `SD gatkp. leg.` > ylim[1]) %>% 
-    ggplot(aes(`Cultural holes played`, `SD gatkp. leg.`)) +
+    select(`Cultural holes played`, starts_with("SD gatkp")) %>% 
+    pivot_longer(starts_with("SD gatkp")) %>% 
+    ggplot(aes(`Cultural holes played`, value)) +
       #geom_point(shape = ".")
       geom_density_2d_filled() +
       guides(fill = "none") +
+      facet_wrap(~name) +
+      labs(y = "Gatkp. legitimacy") +
       scale_y_continuous(limits = ylim) +
-      scale_x_continuous(limits = xlim)
+      scale_x_continuous(limits = xlim) 
   xlim <- c(.4, 1)
   ylim <- c(0, .3)
   l[[2]] <- s %>% 
-    # to remove warning
-    filter(`HHI genres streamed` < xlim[2], `HHI genres streamed` > xlim[1],
-           `SD gatkp. leg.` < ylim[2],          `SD gatkp. leg.` > ylim[1]) %>% 
-    ggplot(aes(`HHI genres streamed`, `SD gatkp. leg.`)) +
+    select(`HHI genres streamed`, starts_with("SD gatkp")) %>% 
+    pivot_longer(starts_with("SD gatkp")) %>% 
+    ggplot(aes(`HHI genres streamed`, value)) +
       #geom_point(shape = ".")
       geom_density_2d_filled() +
       guides(fill = "none") +
+      facet_wrap(~name) +
+      labs(y = "Gatkp. legitimacy") +
       scale_x_continuous(limits = xlim) +
       scale_y_continuous(limits = ylim)
   g <- plot_grid(l[[1]], l[[2]])
