@@ -40,6 +40,16 @@ tar_load(artists)
 # tar_load("artists_pop", store = "../_targets/")
 ```
 
+# Artists coverage
+
+```{r}
+artists %>% 
+  filter(!(is.na(leg_exo_press) & is.na(leg_exo_radio) & is.na(leg_exo_score))) %>% 
+  summarize(artist_coverage = sum(control_f_l_play, na.rm=TRUE),
+            n_artist = n())
+```
+
+
 # Data
 
 ```{r}
