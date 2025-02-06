@@ -256,7 +256,7 @@ plot_lca_omni_bygenre <- function(survey, lca_class_interpretation){
   return("output/omni2/gg_lca_omni_bygenre.pdf")
 }
 
-plot_exoomni_by_otheromni <- function(survey){
+plot_exoomni_by_otheromni <- function(survey, plot_type = "point_smooth"){
   require(tidyverse, warn.conflicts = FALSE)
   require(cowplot)
   set_ggplot_options()
@@ -276,13 +276,20 @@ plot_exoomni_by_otheromni <- function(survey){
     select(`Cultural holes played`, starts_with("SD gatkp")) %>% 
     pivot_longer(starts_with("SD gatkp")) %>% 
     ggplot(aes(`Cultural holes played`, value)) +
-      #geom_point(shape = ".")
+    facet_wrap(~name) +
+    labs(y = "Gatkp. legitimacy") +
+    scale_y_continuous(limits = ylim) +
+    scale_x_continuous(limits = xlim) 
+  
+  if(plot_type == "density_2d"){
+    l[[1]] <- l[[1]] + 
       geom_density_2d_filled() +
-      guides(fill = "none") +
-      facet_wrap(~name) +
-      labs(y = "Gatkp. legitimacy") +
-      scale_y_continuous(limits = ylim) +
-      scale_x_continuous(limits = xlim) 
+      guides(fill = "none")
+  } else if(plot_type == "point_smooth"){
+    l[[1]] <- l[[1]] + 
+      geom_point(shape = ".") +
+      geom_smooth(method = "lm")
+  }
   xlim <- c(.4, 1)
   ylim <- c(0, .3)
   l[[2]] <- s %>% 
@@ -290,15 +297,23 @@ plot_exoomni_by_otheromni <- function(survey){
     pivot_longer(starts_with("SD gatkp")) %>% 
     ggplot(aes(`HHI genres streamed`, value)) +
       #geom_point(shape = ".")
-      geom_density_2d_filled() +
-      guides(fill = "none") +
       facet_wrap(~name) +
       labs(y = "Gatkp. legitimacy") +
       scale_x_continuous(limits = xlim) +
       scale_y_continuous(limits = ylim)
+  if(plot_type == "density_2d"){
+    l[[2]] <- l[[2]] + 
+      geom_density_2d_filled() +
+      guides(fill = "none")
+  } else if(plot_type == "point_smooth"){
+    l[[2]] <- l[[2]] + 
+      geom_point(shape = ".") +
+      geom_smooth(method = "lm")
+  }
   g <- plot_grid(l[[1]], l[[2]])
-  ggsave("gg_exoomni_by_otheromni.pdf", g, path = "output/omni2", device = "pdf", width = 11, height = 5)
-  return("output/omni2/gg_exoomni_by_otheromni.pdf")
+  file_name <- str_glue("output/omni2/gg_exoomni_by_otheromni_{plot_type}.pdf")
+  ggsave(file_name, g, device = "pdf", width = 11, height = 5)
+  return(file_name)
 }
 
 plot_omni_socdem_educ <- function(survey){
