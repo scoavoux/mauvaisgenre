@@ -223,10 +223,10 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear_merged_artis
   omni_exo <- tmp %>% 
     left_join(omni_exo) %>% 
     group_by(hashed_id) %>% 
-    summarise(sd_sc_exo_radio = sqrt(sum((f_play*(sc_exo_radio - first(mean_sc_exo_radio)))^2, na.rm = TRUE)),
-              sd_sc_exo_press = sqrt(sum((f_play*(sc_exo_press - first(mean_sc_exo_press)))^2, na.rm = TRUE)),
-              sd_sc_exo_score = sqrt(sum((f_play*(sc_exo_score - first(mean_sc_exo_score)))^2, na.rm = TRUE)),
-              sd_sc_exo_pca   = sqrt(sum((f_play*(sc_exo_pca   - first(mean_sc_exo_pca  )))^2, na.rm = TRUE))) %>% 
+    summarise(sd_sc_exo_radio = sqrt(sum((f_play*(sc_exo_radio - first(mean_sc_exo_radio))^2), na.rm = TRUE)),
+              sd_sc_exo_press = sqrt(sum((f_play*(sc_exo_press - first(mean_sc_exo_press))^2), na.rm = TRUE)),
+              sd_sc_exo_score = sqrt(sum((f_play*(sc_exo_score - first(mean_sc_exo_score))^2), na.rm = TRUE)),
+              sd_sc_exo_pca   = sqrt(sum((f_play*(sc_exo_pca   - first(mean_sc_exo_pca  ))^2), na.rm = TRUE))) %>% 
     full_join(omni_exo)
   
   ## TODO: ADAPT FOR ALL MEASURES AND NOT ONLY PCA + ADAPT TO HAVE PROPER WEIGHTED MEAN SUBSTRACYED IN SD MEASURE 
