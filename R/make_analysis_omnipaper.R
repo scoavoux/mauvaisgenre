@@ -231,33 +231,7 @@ plot_lca_omni <- function(survey, lca_class_interpretation, format="paper"){
   return(paste0("output/omni2/gg_lca_omni_", format, ".pdf"))
 }
 
-plot_lca_omni_bygenre <- function(survey, lca_class_interpretation){
-  require(tidyverse)
-  g <- survey %>% 
-    select(cluster_survey, starts_with("mean_exo_pca_")) %>% 
-    pivot_longer(-cluster_survey) %>% 
-    filter(!is.na(cluster_survey), !is.na(value)) %>% 
-    mutate(name = str_remove(name, "mean_exo_pca_"),
-           name = recode_vars(name, "cleangenres"),
-           cluster_survey = paste0("class", cluster_survey),
-           cluster_survey = fct_recode(cluster_survey, !!!lca_class_interpretation)) %>% 
-    # rescale by genre
-    group_by(name) %>% 
-    mutate(value = center_scale(value)) %>% 
-    group_by(cluster_survey, name) %>% 
-    summarize(m = mean(value), se = 1.96 * sd(value) / sqrt(n())) %>% 
-    ggplot(aes(y=m, x=factor(cluster_survey), ymin = m-se, ymax=m+se)) +
-      geom_point() +
-      geom_linerange() +
-      coord_flip() +
-      facet_wrap(~name, scales = "free_x", ncol = 6) +
-      labs(y = "Mean gatkp. leg.", x = "Cluster")
-  ggsave("gg_lca_omni_bygenre.pdf", g, path = "output/omni2", device = "pdf", width = 9, height = 6)
-  return("output/omni2/gg_lca_omni_bygenre.pdf")
-}
-
 plot_exoomni_by_otheromni <- function(survey, plot_type = "point_smooth"){
-  require(tidyverse, warn.conflicts = FALSE)
   require(cowplot)
   set_ggplot_options()
   s <- survey %>% 
@@ -270,17 +244,13 @@ plot_exoomni_by_otheromni <- function(survey, plot_type = "point_smooth"){
            name = str_replace(name, "\\\\n", "\n")) %>% 
     pivot_wider(names_from = name, values_from = value)
   l <- vector("list", 2L)
-  xlim <- c(0, 7)
-  ylim <- c(0, .3)
   l[[1]] <- s %>% 
     select(`Cultural holes played`, starts_with("SD gatkp")) %>% 
     pivot_longer(starts_with("SD gatkp")) %>% 
     ggplot(aes(`Cultural holes played`, value)) +
-    facet_wrap(~name) +
-    labs(y = "Gatkp. legitimacy") +
-    scale_y_continuous(limits = ylim) +
-    scale_x_continuous(limits = xlim) 
-  
+    facet_wrap(~name, scales = "free_y") +
+    labs(y = "Gatkp. legitimacy")
+
   if(plot_type == "density_2d"){
     l[[1]] <- l[[1]] + 
       geom_density_2d_filled() +
@@ -290,17 +260,13 @@ plot_exoomni_by_otheromni <- function(survey, plot_type = "point_smooth"){
       geom_point(shape = ".") +
       geom_smooth(method = "lm")
   }
-  xlim <- c(.4, 1)
-  ylim <- c(0, .3)
   l[[2]] <- s %>% 
     select(`HHI genres streamed`, starts_with("SD gatkp")) %>% 
     pivot_longer(starts_with("SD gatkp")) %>% 
     ggplot(aes(`HHI genres streamed`, value)) +
       #geom_point(shape = ".")
-      facet_wrap(~name) +
-      labs(y = "Gatkp. legitimacy") +
-      scale_x_continuous(limits = xlim) +
-      scale_y_continuous(limits = ylim)
+      facet_wrap(~name, scales = "free_y") +
+      labs(y = "Gatkp. legitimacy")
   if(plot_type == "density_2d"){
     l[[2]] <- l[[2]] + 
       geom_density_2d_filled() +
@@ -311,6 +277,7 @@ plot_exoomni_by_otheromni <- function(survey, plot_type = "point_smooth"){
       geom_smooth(method = "lm")
   }
   g <- plot_grid(l[[1]], l[[2]])
+  g
   file_name <- str_glue("output/omni2/gg_exoomni_by_otheromni_{plot_type}.pdf")
   ggsave(file_name, g, device = "pdf", width = 11, height = 5)
   return(file_name)

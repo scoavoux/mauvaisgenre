@@ -187,6 +187,10 @@ select_latent_class_model <- function(models_list, nclass){
   return(models_list[[paste0("k", nclass)]])
 }
 
+compute_div <- function(.x){
+  return(prod(.x^.x)^-1)
+}
+
 compute_omnivorourness_from_streams <- function(user_artist_peryear_merged_artists, artists, genres, rescale_by = "artist"){
   require(tidyverse)
   require(tidytable)
@@ -207,80 +211,26 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear_merged_artis
     summarize(l_play = sum(l_play)) %>% 
     group_by(hashed_id) %>% 
     mutate(f_play = l_play / sum(l_play)) %>% 
-    summarize(omni_stream_genres_hhi = 1 - sum(f_play^2))
+    summarize(omni_stream_genres_hhi = compute_div(f_play))
   
-  ## diversity over individual legitimacy
-  ### weighted mean and sd of each artist's average legitimacy
-  ### as highbrow dim (mean) and omnivorous dim (sd)
-  tmp <- user_artist_peryear_merged_artists %>% 
-    group_by(hashed_id) %>% 
-    mutate(f_play = l_play / sum(l_play)) %>% 
-    left_join(select(artists, artist_id, starts_with("sc_exo_")))
-  omni_exo <- tmp %>% 
-    group_by(hashed_id) %>% 
-    summarise(across(starts_with("sc_exo_"), ~sum(.x*f_play, na.rm=TRUE), .names = "mean_{.col}"))
-
-  omni_exo <- tmp %>% 
-    left_join(omni_exo) %>% 
-    group_by(hashed_id) %>% 
-    summarise(sd_sc_exo_radio = sqrt(sum((f_play*(sc_exo_radio - first(mean_sc_exo_radio))^2), na.rm = TRUE)),
-              sd_sc_exo_press = sqrt(sum((f_play*(sc_exo_press - first(mean_sc_exo_press))^2), na.rm = TRUE)),
-              sd_sc_exo_score = sqrt(sum((f_play*(sc_exo_score - first(mean_sc_exo_score))^2), na.rm = TRUE)),
-              sd_sc_exo_pca   = sqrt(sum((f_play*(sc_exo_pca   - first(mean_sc_exo_pca  ))^2), na.rm = TRUE))) %>% 
-    full_join(omni_exo)
   
-  ## TODO: ADAPT FOR ALL MEASURES AND NOT ONLY PCA + ADAPT TO HAVE PROPER WEIGHTED MEAN SUBSTRACYED IN SD MEASURE 
-  ## Same by genre
-  if(rescale_by == "artist"){
-    ## Start by rescaling legitimacy by genre
-    artists <- artists %>%
-      group_by(genre) %>%
-      mutate(sc_exo_pca_scbygenre = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca))
-    omni_exo_bygenre <- user_artist_peryear_merged_artists %>%
-      group_by(hashed_id) %>%
-      mutate(f_play = l_play / sum(l_play)) %>%
-      # We must first rescale by genre
-      left_join(select(artists, artist_id, sc_exo_pca_scbygenre)) %>%
-      filter(!is.na(sc_exo_pca_scbygenre), !is.na(genre)) %>%
-      group_by(hashed_id, genre) %>%
-      summarize(n=sum(l_play),
-                mean_exo_pca = sum(sc_exo_pca_scbygenre*f_play),
-                sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca_scbygenre - mean(sc_exo_pca_scbygenre)))^2))
-      ) %>%
-      # one needs to actually have listened to that genre
-      filter(n>100) %>%
-      pivot_longer(ends_with("exo_pca")) %>%
-      mutate(name = paste(name, genre, sep="_")) %>%
-      select(-genre, -n) %>%
-      pivot_wider(names_from = name, values_from=value)
-  } else if(rescale_by == "user"){
-    # or rescale among individuals  
-    omni_exo_bygenre <- user_artist_peryear_merged_artists %>% 
-      group_by(hashed_id) %>% 
-      mutate(f_play = l_play / sum(l_play)) %>% 
-      # We must first rescale by genre
-      left_join(select(artists, artist_id, sc_exo_pca)) %>% 
-      filter(!is.na(sc_exo_pca), !is.na(genre)) %>% 
-      group_by(genre) %>% 
-      mutate(sc_exo_pca = (sc_exo_pca-mean(sc_exo_pca))/sd(sc_exo_pca)) %>% 
-      group_by(hashed_id, genre) %>% 
-      summarize(n=sum(l_play),
-                mean_exo_pca = sum(sc_exo_pca*f_play), 
-                sd_exo_pca   = sqrt(sum((f_play*(sc_exo_pca - mean(sc_exo_pca)))^2))
-      ) %>% 
-      # one needs to actually have listened to that genre
-      filter(n>100) %>% 
-      pivot_longer(ends_with("exo_pca")) %>% 
-      mutate(name = paste(name, genre, sep="_")) %>% 
-      select(-genre, -n) %>% 
-      pivot_wider(names_from = name, values_from=value)
-  }
-
+  omni_exo <- user_artist_peryear_merged_artists %>% 
+    inner_join(select(artists, artist_id, starts_with("sc_exo_"))) %>% 
+    pivot_longer(starts_with("sc_exo")) %>% 
+    filter(!is.na(value), l_play > 0) %>% 
+    add_count(hashed_id, name) %>% 
+    filter(n > 1) %>% 
+    select(-n) %>% 
+    group_by(hashed_id, name) %>% 
+    summarize(mean = Hmisc::wtd.mean(value, l_play),
+              sd = sqrt(Hmisc::wtd.var(value, l_play)), .groups = "drop") %>% 
+    pivot_longer(mean:sd, names_to = "fn") %>% 
+    mutate(name = paste0(fn, "_", name)) %>% 
+    select(-fn) %>% 
+    pivot_wider(names_from = name, values_from = value)
   
-    
   omni <- omni_HHI %>% 
-    full_join(omni_exo) %>% 
-    full_join(omni_exo_bygenre)
+    full_join(omni_exo)
   return(omni)
 }
 

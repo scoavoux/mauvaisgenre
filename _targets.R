@@ -170,7 +170,6 @@ list(
                                                                lca_class_interpretation,
                                                                user_genre_summary_data_prop,
                                                                user_genre_summary_data_raw), format = "file", repository = "local"),
-  tar_target(gg_lca_omni_bygenre, plot_lca_omni_bygenre(survey, lca_class_interpretation), format = "file", repository = "local"),
   tar_target(gg_exoomni_by_otheromni_point, plot_exoomni_by_otheromni(survey, plot_type = "point_smooth"), format = "file", repository = "local"),
   tar_target(gg_exoomni_by_otheromni_dens,  plot_exoomni_by_otheromni(survey, plot_type = "density_2d"), format = "file", repository = "local"),
   tar_target(gg_omni_socdem_educ, 		      plot_omni_socdem_educ(survey), format = "file", repository = "local"),
