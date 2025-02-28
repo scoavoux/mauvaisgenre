@@ -1,11 +1,6 @@
-export_artists_csv <- function(artists){
-  file <- "output/artists.csv"
-  write_csv(artists, file)
-  return(file)
-}
-
-export_users_csv <- function(survey){
-  file <- "output/users.csv"
-  write_csv(survey, file)
+export_to_csv <- function(object){
+  object_char <- deparse(substitute(object))
+  file <- str_glue("{object_char}.csv")
+  write_csv(object, file)
   return(file)
 }
