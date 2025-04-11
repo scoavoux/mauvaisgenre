@@ -123,6 +123,8 @@ list(
   tar_target(gg_endoexoleg_bygenre_estimate,     plot_endoexoleg_bygenre(artists, type = "estimate"), format = "file", repository = "local"),
   tar_target(gg_endoexoleg_genrerank,            plot_endoexoleg_genrerank(artists), format = "file", repository = "local"),
   tar_target(gg_endoexoleg_correlation,          plot_endoexoleg_correlation(artists), format = "file", repository = "local"),
+  tar_target(gg_leg_correlation_coefficient,     plot_leg_correlation_coefficient(artists), format = "file", repository = "local"),
+  
   # tar_target(gg_endoexoleg_correlation_bygenre, plot_endoexoleg_correlation(artists, 
   #                                                                           genrefacets = TRUE, 
   #                                                                           output = "gg_endoexoleg_correlation_bygenre.pdf"),
@@ -141,6 +143,7 @@ list(
   tar_target(gg_genre_overlap,                 plot_genre_overlap(artists), format = "file", repository = "local"),
   tar_target(gg_example_genre_overlap,         plot_example_genre_overlap(artists), format = "file", repository = "local"),
   tar_target(tb_leg_variance,                  table_leg_variance(artists), format = "file", repository = "local"),
+  tar_target(gg_leg_variance,                  plot_sd_leg(artists), format = "file", repository = "local"),
   
   
   # Report Omni1

@@ -192,6 +192,57 @@ plot_endoexoleg_correlation <- function(artists, genremean=FALSE){
   }
 }
 
+plot_leg_correlation_coefficient <- function(artists){
+  require(tidyverse)
+  require(ggrepel)
+  require(kableExtra)
+  set_ggplot_options()
+  x <- select(artists, starts_with("sc_e"), genre, artist_id) %>% 
+    select(-sc_exo_pca) %>% 
+    pivot_longer(starts_with("sc_e")) %>% 
+    filter(!is.na(value))
+  y <- rename(x, name2 = "name", value2 = "value")
+  z <- left_join(x, y, relationship = "many-to-many") %>% 
+    filter(name != name2)
+  z <- mutate(z, 
+              name = recode_vars(name, "cleanlegitimacy") %>% str_replace("\\\\n", "\n"),
+              name2 = recode_vars(name2, "cleanlegitimacy") %>% str_replace("\\\\n", "\n"))
+  r <- z %>% 
+    group_by(name, name2) %>% 
+    summarise(m = cor(value, value2)) %>% 
+    mutate(m = round(m, 2),
+           level = "Artists")
+  
+  x <- x %>% 
+      group_by(genre, name) %>% 
+      summarise(value = mean(value))
+  y <- rename(x, name2 = "name", value2 = "value")
+  z <- left_join(x, y, relationship = "many-to-many") %>% 
+    filter(name != name2)
+  z <- mutate(z, 
+              name = recode_vars(name, "cleanlegitimacy") %>% str_replace("\\\\n", "\n"),
+              name2 = recode_vars(name2, "cleanlegitimacy") %>% str_replace("\\\\n", "\n"))
+  r <- z %>% 
+    group_by(name, name2) %>% 
+    summarise(m = cor(value, value2)) %>% 
+    mutate(m = round(m, 2),
+           level = "Genres") %>% 
+    bind_rows(r)
+  
+  
+  gg <- ggplot(r, aes(name, name2, fill = m, label = m)) +
+    geom_tile() +
+    geom_text() +
+    facet_wrap(~level) +
+    scale_x_discrete(position = "top") +
+    scale_fill_distiller(direction = 1) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 0)) +
+    labs(x = "", y = "", fill = "") +
+    guides(fill = "none")
+  ggsave("gg_leg_correlation_coefficient.pdf", gg, path = "output/omni1", device = "pdf", width = 9, height = 6)
+  return("output/omni1/gg_leg_correlation_coefficient.pdf")
+}
+
 tbl_endoexoleg_correlation <- function(artists, genremean=FALSE){
   require(tidyverse)
   require(ggrepel)
