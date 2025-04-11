@@ -102,15 +102,16 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
              name = str_replace_all(name, "\\\\n", "\n")) %>% 
       group_by(genre, name) %>% 
       summarize(n = n(),
-                m = mean(value),
-                se = 1.96*sd(value)/sqrt(n()))
+                m = mean(value, na.rm=TRUE),
+                se = 1.96*sd(value, na.rm=TRUE)/sqrt(n()))
     g <- ggplot(d, aes(x = genre, y = m, ymin = m-se, ymax=m+se)) +
       geom_point() +
       geom_errorbar(width = 0)
   }
   
   g <- g + 
-    facet_wrap(~name, scales = "free_x") +
+    facet_wrap(~name) +
+    scale_y_continuous(limits = c(-2, 2)) +
     coord_flip() +
     labs(y="", x="")
   ggsave(paste0("gg_endoexoleg_bygenre_", type, ".pdf"), g, path = "output/omni1", device = "pdf", height = 10)
@@ -169,7 +170,7 @@ plot_endoexoleg_correlation <- function(artists, genremean=FALSE){
              str_replace("\\\\n", "\n"))
   
   g <- ggplot(x, aes(exo_value, endo_value)) +
-    geom_point(shape = ".", alpha = .2) +
+    geom_point(shape = ".", alpha = .1) +
     #geom_smooth(method = "lm") +
     facet_grid(endo~exo, scales = "free") +
     labs(x = "Gatekeeper legitimacy", y = "Audience status")
@@ -209,12 +210,12 @@ tbl_endoexoleg_correlation <- function(artists, genremean=FALSE){
   if(genremean){
     x <- x %>% 
       group_by(endo, exo, genre) %>% 
-      summarise(endo_value = mean(endo_value), exo_value = mean(exo_value)) %>% 
+      summarise(endo_value = mean(endo_value, na.rm=TRUE), exo_value = mean(exo_value, na.rm=TRUE)) %>% 
       ungroup()
   }
   al <- x %>% 
     group_by(endo, exo) %>% 
-    summarise(cor = cor(endo_value, exo_value)) %>% 
+    summarise(cor = cor(endo_value, exo_value, use = "complete.obs")) %>% 
     ungroup() %>% 
     rename(`Gatekeeper legitimacy` = "exo")
   
@@ -475,8 +476,8 @@ table_mean_sd_leg <- function(artists){
     mutate(name = recode_vars(name, "cleanlegitimacy"),
            name = str_replace_all(name, "\\\\n", " ")) %>% 
     group_by(genre, name) %>% 
-    summarize(m = mean(value),
-              sd = sd(value)) %>% 
+    summarize(m = mean(value, na.rm=TRUE),
+              sd = sd(value, na.rm=TRUE)) %>% 
     arrange(name, m) %>% 
     mutate(genre = factor(genre, levels = unique(genre)),
            v = paste0(round(m, 2), " (", round(sd, 2), ")")) %>% 
