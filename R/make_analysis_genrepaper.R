@@ -488,6 +488,26 @@ table_mean_sd_leg <- function(artists){
   return("output/omni1/tb_mean_sd_leg.tex")
 }
 
+plot_sd_leg <- function(artists){
+  require(tidyverse)
+  require(kableExtra)
+  x <- artists %>% 
+    mutate(genre = recode_vars(genre, "cleangenres"), 
+           genre = fct_reorder(genre, leg_endo_isei, mean)) %>% 
+    select(genre, starts_with("sc_e")) %>% 
+    pivot_longer(-genre) %>% 
+    mutate(name = recode_vars(name, "cleanlegitimacy"),
+           name = str_replace_all(name, "\\\\n", " ")) %>% 
+    group_by(genre, name) %>% 
+    summarize(m = mean(value, na.rm=TRUE),
+              sd = sd(value, na.rm=TRUE))
+  g <- ggplot(x, aes(sd, name)) +
+    geom_boxplot() +
+    labs(y = "", x = "Standard deviation by genre")
+  ggsave("gg_sd_leg.pdf", g, path = "output/omni1", device="pdf")
+  return("output/omni1/gg_sd_leg.pdf")
+}
+
 plot_senscritique_users_from_quentin_survey <- function(){
   require(tidyverse)
   set_ggplot_options()
