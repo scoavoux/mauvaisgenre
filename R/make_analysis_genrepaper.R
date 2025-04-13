@@ -235,7 +235,9 @@ plot_leg_correlation_coefficient <- function(artists){
     geom_text() +
     facet_wrap(~level) +
     scale_x_discrete(position = "top") +
-    scale_fill_distiller(direction = 1) +
+    scale_fill_distiller(type = "seq",
+                         direction = 1,
+                         palette = "Greys") +
     theme(axis.text.x = element_text(angle = 90, hjust = 0)) +
     labs(x = "", y = "", fill = "") +
     guides(fill = "none")
@@ -519,23 +521,30 @@ plot_endoleg_pca <- function(artists){
 table_mean_sd_leg <- function(artists){
   require(tidyverse)
   require(kableExtra)
-  artists %>% 
-    mutate(genre = recode_vars(genre, "cleangenres"), 
+  x <- artists %>% 
+    mutate(genre = recode_vars(genre, "cleangenres"),
            genre = fct_reorder(genre, leg_endo_isei, mean)) %>% 
     select(genre, starts_with("sc_e")) %>% 
     pivot_longer(-genre) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy"),
-           name = str_replace_all(name, "\\\\n", " ")) %>% 
-    group_by(genre, name) %>% 
+           name = str_replace_all(name, "\\\\n", "\n")) %>% 
+    separate(name, into = c("type", "detail"), sep = "\n") %>% 
+    mutate(detail = str_remove_all(detail, "[\\(\\)]"),
+           detail = factor(detail, levels = unique(detail))) %>% 
+    group_by(genre, detail) %>% 
     summarize(m = mean(value, na.rm=TRUE),
               sd = sd(value, na.rm=TRUE)) %>% 
-    arrange(name, m) %>% 
+    arrange(detail, m) %>% 
     mutate(genre = factor(genre, levels = unique(genre)),
            v = paste0(round(m, 2), " (", round(sd, 2), ")")) %>% 
     select(-m, -sd) %>% 
-    pivot_wider(names_from = name, values_from = v) %>% 
+    pivot_wider(names_from = detail, values_from = v) %>% 
     rename(Genre = "genre") %>% 
-    kbl(format = "latex", booktabs = TRUE) %>% 
+    ungroup()
+  
+  x %>% 
+    kbl(format = "latex", booktabs = TRUE) %>%  
+    add_header_above(c(" ", "Audience status" = 2, "Gatekeeper legitimacy" = 4)) %>% 
     save_kable("output/omni1/tb_mean_sd_leg.tex")
   return("output/omni1/tb_mean_sd_leg.tex")
 }
