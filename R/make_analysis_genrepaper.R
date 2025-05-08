@@ -77,7 +77,7 @@ plot_exoleg_bygenre <- function(artists){
   return("output/omni1/gg_exoleg_bygenre.pdf")
 }
 
-plot_endoexoleg_bygenre <- function(artists, type="density"){
+plot_endoexoleg_bygenre <- function(artists, type="density", format = "paper"){
   set_ggplot_options()
   require(tidyverse)
   require(gghalves)
@@ -110,12 +110,17 @@ plot_endoexoleg_bygenre <- function(artists, type="density"){
   }
   
   g <- g + 
-    facet_wrap(~name) +
     scale_y_continuous(limits = c(-2, 2)) +
     coord_flip() +
     labs(y="", x="")
-  ggsave(paste0("gg_endoexoleg_bygenre_", type, ".pdf"), g, path = "output/omni1", device = "pdf", height = 10)
-  return(paste0("output/omni1/gg_endoexoleg_bygenre_", type, ".pdf"))
+  if(format == "paper"){
+    g <- g + facet_wrap(~name)
+  } else if(format == "presentation"){
+    g <- g + facet_wrap(~name, nrow = 1)
+  }
+  filename <- str_glue("output/omni1/gg_endoexoleg_bygenre_{type}_{format}.pdf")
+  ggsave(filename, g, device = "pdf", height = 10)
+  return(filename)
 }
 
 plot_endoexoleg_genrerank <- function(artists){
