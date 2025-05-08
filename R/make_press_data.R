@@ -356,6 +356,7 @@ make_corpus_tokenized_sentences <- function(corpus_raw){
   require(tidyverse)
   require(quanteda)
   require(spacyr)
+  reticulate::install_python(version = "3.10")
   spacy_install(ask = FALSE, lang_models = "fr_core_news_sm", force=FALSE)
   spacy_initialize(model = "fr_core_news_sm")
   co <- corpus_raw %>%
