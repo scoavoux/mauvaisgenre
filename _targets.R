@@ -48,6 +48,10 @@ list(
   
   ### Artists popularity ------
   tar_target(artists_pop,                        make_artist_popularity_data(user_artist_peryear_merged_artists )),
+  tar_target(artists_language,                   make_artist_language_data()),
+  tar_target(area_country_file,                  "data/area_country.csv", format = "file"),
+  tar_target(country_rank_file,                  "data/country_rank.csv", format = "file"),
+  tar_target(artists_country,                    make_artist_area_data(area_country_file, country_rank_file)),
   
   ### Press data ------
   tar_target(corpus_raw,                         make_raw_corpus()),
@@ -71,6 +75,8 @@ list(
   tar_target(artists_raw,                        join_artist(artist_names,
                                                              genres, 
                                                              artists_pop, 
+                                                             artists_language,
+                                                             artists_country,
                                                              exo_radio, 
                                                              exo_senscritique, 
                                                              endo_legitimacy,
