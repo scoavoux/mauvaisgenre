@@ -57,7 +57,7 @@ list(
   tar_target(corpus_raw,                         make_raw_corpus()),
   tar_target(BERT_corpus,                        make_corpus_for_BERT(corpus_raw), format = "file", repository = "local"),
   tar_target(corpus_filtered,                    filter_corpus_raw(corpus_raw, BERT_corpus)),
-  tar_target(corpus_tokenized,                   make_corpus_tokenized_sentences(corpus_filtered)),
+  tar_target(corpus_tokenized,                   make_corpus_tokenized_paragraphs(corpus_filtered)),
 
   ### Legitimacy data ------
   tar_target(regex_fixes_file_path,              "data/regex_fixes.csv", format = "file"),

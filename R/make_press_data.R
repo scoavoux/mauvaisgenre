@@ -352,23 +352,19 @@ make_artists_names <- function(artist_names_and_aliases){
   return(artist_names)
 }
 
-make_corpus_tokenized_sentences <- function(corpus_raw){
+make_corpus_tokenized_paragraphs <- function(corpus_raw){
   require(tidyverse)
-  require(quanteda)
-  require(spacyr)
-  reticulate::install_python(version = "3.10")
-  spacy_install(ask = FALSE, lang_models = "fr_core_news_sm", force=FALSE)
-  spacy_initialize(model = "fr_core_news_sm")
-  co <- corpus_raw %>%
-    pull(article_text) %>%
-    spacy_tokenize(what = "sentence") %>%
-    unlist()
+  co <- corpus_raw %>% 
+    select(article_text) %>% 
+    separate_rows(article_text, sep = "\n") %>% 
+    mutate(article_text = str_trim(article_text)) %>% 
+    filter(article_text != "")
   return(co)
 }
 
 # Make press data ------
 
-make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, regex_fixes_file){
+make_press_data <- function(corpus_tokenized, artist_names_and_aliases, regex_fixes_file){
   require(tidyverse)
   require(parallel)
   require(foreach)
@@ -417,7 +413,7 @@ make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, rege
     filter(!negative)
   results_negative <- vector("list", length = nrow(artist_names_and_aliases_negative))
   for(i in seq_len(nrow(artist_names_and_aliases_negative))) {
-    x <- str_detect(corpus_raw_tokenized, artist_names_and_aliases_negative$regex[i]) %>% 
+    x <- str_detect(corpus_tokenized, artist_names_and_aliases_negative$regex[i]) %>% 
       sum()
     results_negative[[i]] <- tibble(artist_id = artist_names_and_aliases_negative$artist_id[i],
                                     total_n_pqnt_texte = as.numeric(x))
@@ -426,13 +422,18 @@ make_press_data <- function(corpus_raw_tokenized, artist_names_and_aliases, rege
   
   # Function to search and count (with xan)
   ## Needs rust and xan installed, see init.sh
-  xan_count_matches <- function(.pattern, .corpus = "~/work/mauvaisgenre/data/temp/corpus_raw_tokenized.csv"){
-    system(stringr::str_glue("~/.cargo/bin/xan search '{.pattern}' {.corpus} | ~/.cargo/bin/xan count"),
+  xan_count_matches <- function(.pattern, .corpus = "~/work/mauvaisgenre/data/temp/corpus_tokenized.csv"){
+    system(stringr::str_glue("~/.cargo/bin/xan search -r '{.pattern}' {.corpus} | ~/.cargo/bin/xan count"),
            intern = TRUE)
   }
+  # Tried to speed that up with grep but same performance (checked with microbenchmark) 
+  # grep_search <- function(.pattern, .corpus = "~/work/mauvaisgenre/data/temp/corpus_tokenized.csv"){
+  #   system(stringr::str_glue("grep -E -i '{.pattern}' {.corpus} | wc -l"),
+  #          intern = TRUE)
+  # }
   
   # We need the text as a csv file
-  tidytable::fwrite(tibble(corpus_raw_tokenized), "data/temp/corpus_raw_tokenized.csv")
+  tidytable::fwrite(tibble(corpus_tokenized), "data/temp/corpus_tokenized.csv")
   
   
   # Set up parrallel computing
