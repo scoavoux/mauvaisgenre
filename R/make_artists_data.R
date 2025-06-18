@@ -419,3 +419,29 @@ filter_artists <- function(artists_raw){
   return(artists)
 }
 
+fit_zinflnb_press <- function(){
+  #todo
+  #fit le model avec bonnes variables
+  # comparer les rangs variable residualisée vs. variable brute
+  require(pscl)
+  artists <- artists %>% 
+    mutate(lng = case_when(country == "France" | main_lang == "fr" ~ "fr",
+                           country %in% c("United States", "United Kingdom", 
+                                          "Australia", "Canada", "Ireland")| main_lang == "en" ~ "en",
+                           !is.na(country) | !is.na(main_lang) ~ "other",
+                           TRUE ~ NA))
+  
+  artists <- artists %>% 
+    filter(!is.na(leg_exo_press) & !is.na(control_n_users) & !is.na(lng))
+  fit <- zeroinfl(leg_exo_press ~ lng + control_n_users, data = artists, dist = "negbin")
+  artists <- mutate(artists, leg_press_residuals = residuals(fit, "pearson"))
+  select(artists, leg_press_residuals, name, genre, leg_exo_press) %>% 
+    arrange(desc(leg_exo_press)) %>% 
+    mutate(rank_raw = row_number()) %>% 
+    arrange(desc(leg_press_residuals)) %>% 
+    print(n=100)
+}
+
+fit_zinflnb_radio <- function(){
+  require(pscl)
+}
