@@ -440,6 +440,10 @@ fit_zinflnb_press <- function(){
     mutate(rank_raw = row_number()) %>% 
     arrange(desc(leg_press_residuals)) %>% 
     print(n=100)
+  select(artists, leg_press_residuals, genre) %>% 
+    mutate(genre = fct_reorder(genre, leg_press_residuals, median)) %>% 
+    ggplot(aes(log(leg_press_residuals), genre)) +
+    geom_violin()
 }
 
 fit_zinflnb_radio <- function(){

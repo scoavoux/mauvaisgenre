@@ -63,9 +63,9 @@ list(
   tar_target(regex_fixes_file_path,              "data/regex_fixes.csv", format = "file"),
   tar_target(regex_fixes_file,                   read_csv(regex_fixes_file_path, col_types = "nnccc")),
   tar_target(exo_press,                          make_press_data(corpus_tokenized, artist_names_and_aliases, regex_fixes_file)),
-  tar_target(radio_leg,                          c("France Musique", "Radio Classique", "Jazz Radio", 
-                                                   "ABC Lounge Jazz", "TSF Jazz", "France Inter", 
-                                                   "Fip", "Radio Nova", "Radio Meuh", "Djam Radio")),
+  tar_target(radio_leg,                          c("France Musique", "Radio Classique",
+                                                   "TSF Jazz", "France Inter", 
+                                                   "Fip", "Radio Nova")),
   tar_target(exo_radio,                          compute_exo_radio(senscritique_mb_deezer_id, radio_leg)),
   tar_target(exo_senscritique,                   make_senscritique_ratings_data(senscritique_mb_deezer_id)),
   tar_target(isei,                               make_isei_data(survey_raw)),
@@ -155,6 +155,8 @@ list(
   tar_target(gg_leg_variance,                  plot_sd_leg(artists), format = "file", repository = "local"),
   
   
+  # Omni 1 robustness check ------
+  tar_target(gg_robustness_radio_genres,       plot_robustness_radio_genres(senscritique_mb_deezer_id, exo_senscritique, genres), format = "file", repository = "local"),
   # Report Omni1
   # we remove it for now because it's the longest target to compile
   # (about 30 seconds) and it basically removes the incentive to do cache/targets
