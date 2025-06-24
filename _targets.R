@@ -30,6 +30,7 @@ list(
   tar_target(user_artist_peryear_merged_artists, merge_duplicate_artists_in_streams(user_artist_peryear, senscritique_mb_deezer_id, to_remove_file)),
   tar_target(user_genre_summary_data_prop,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=TRUE)),
   tar_target(user_genre_summary_data_raw ,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=FALSE)),
+  tar_target(radio_artist,                       make_radio_data(senscritique_mb_deezer_id)),
   ## Prepare artists data ------
   
   ### Artists names, aliases, ids ------
@@ -156,9 +157,10 @@ list(
   
   
   # Omni 1 robustness check ------
-  tar_target(gg_robustness_radio_genres,       plot_robustness_radio_genres(senscritique_mb_deezer_id, genres), format = "file", repository = "local"),
-  tar_target(gg_robustness_radio_score ,       plot_robustness_radio_score(senscritique_mb_deezer_id, exo_senscritique), format = "file", repository = "local"),
-  tar_target(gg_robustness_radio_genre_score,  plot_robustness_radio_score(senscritique_mb_deezer_id, exo_senscritique, genres), format = "file", repository = "local"),
+  tar_target(gg_robustness_radio_genres,       plot_robustness_radio_genres(radio_artist, genres), format = "file", repository = "local"),
+  tar_target(gg_robustness_radio_score ,       plot_robustness_radio_score(radio_artist, exo_senscritique), format = "file", repository = "local"),
+  tar_target(gg_robustness_radio_genre_score,  plot_robustness_radio_genre_score(radio_artist, exo_senscritique, genres), format = "file", repository = "local"),
+  tar_target(tb_top_artist_radio,              tbl_top_artists_by_radio(radio_artist, artist_names, genres), format = "file", repository = "local"),
   
    # Report Omni1
   # we remove it for now because it's the longest target to compile
