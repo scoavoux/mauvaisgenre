@@ -156,8 +156,9 @@ list(
   
   
   # Omni 1 robustness check ------
-  tar_target(gg_robustness_radio_genres,       plot_robustness_radio_genres(senscritique_mb_deezer_id, exo_senscritique, genres), format = "file", repository = "local"),
-  tar_target(gg_robustness_radio_score ,       plot_robustness_radio_score(senscritique_mb_deezer_id, exo_senscritique, genres), format = "file", repository = "local"),
+  tar_target(gg_robustness_radio_genres,       plot_robustness_radio_genres(senscritique_mb_deezer_id, genres), format = "file", repository = "local"),
+  tar_target(gg_robustness_radio_score ,       plot_robustness_radio_score(senscritique_mb_deezer_id, exo_senscritique), format = "file", repository = "local"),
+  tar_target(gg_robustness_radio_genre_score,  plot_robustness_radio_score(senscritique_mb_deezer_id, exo_senscritique, genres), format = "file", repository = "local"),
   
    # Report Omni1
   # we remove it for now because it's the longest target to compile
