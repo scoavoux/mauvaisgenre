@@ -419,33 +419,41 @@ filter_artists <- function(artists_raw){
   return(artists)
 }
 
-fit_zinflnb_press <- function(){
+fit_zinflnb_press <- function(exo_press, artists_pop, artists_language, artists_country){
   #todo
   #fit le model avec bonnes variables
   # comparer les rangs variable residualisée vs. variable brute
   require(pscl)
-  artists <- artists %>% 
+  d <- exo_press %>% 
+    left_join(artists_pop) %>% 
+    left_join(artists_language) %>% 
+    left_join(artists_country) %>% 
     mutate(lng = case_when(country == "France" | main_lang == "fr" ~ "fr",
                            country %in% c("United States", "United Kingdom", 
                                           "Australia", "Canada", "Ireland")| main_lang == "en" ~ "en",
                            !is.na(country) | !is.na(main_lang) ~ "other",
-                           TRUE ~ NA))
+                           TRUE ~ NA)) %>% 
+    select(artist_id, total_n_pqnt_texte, control_n_users, lng) %>% 
+    na.omit()
   
-  artists <- artists %>% 
-    filter(!is.na(leg_exo_press) & !is.na(control_n_users) & !is.na(lng))
-  fit <- zeroinfl(leg_exo_press ~ lng + control_n_users, data = artists, dist = "negbin")
-  artists <- mutate(artists, leg_press_residuals = residuals(fit, "pearson"))
-  select(artists, leg_press_residuals, name, genre, leg_exo_press) %>% 
-    arrange(desc(leg_exo_press)) %>% 
-    mutate(rank_raw = row_number()) %>% 
-    arrange(desc(leg_press_residuals)) %>% 
-    print(n=100)
-  select(artists, leg_press_residuals, genre) %>% 
-    mutate(genre = fct_reorder(genre, leg_press_residuals, median)) %>% 
-    ggplot(aes(log(leg_press_residuals), genre)) +
-    geom_violin()
+  press_fit <- zeroinfl(total_n_pqnt_texte ~ lng + control_n_users, data = d, dist = "negbin")
+  d <- mutate(d, press_leg_residuals = residuals(press_fit, "pearson"))
+  res <- list(model = press_fit,
+              residuals = select(d, artist_id, press_leg_residuals))
+  return(res)
 }
 
-fit_zinflnb_radio <- function(){
+fit_zinflnb_radio <- function(exo_radio, artists_pop, artists_language){
   require(pscl)
+  d <- exo_radio %>% 
+    left_join(select(artists_pop, artist_id, control_n_users)) %>% 
+    left_join(artists_language) %>% 
+    na.omit() %>% 
+    mutate(lng = ifelse(main_lang == "fr", "fr", "other"))
+  radio_fit <- zeroinfl(radio_leg ~ lng + control_n_users, data = d, dist = "negbin")
+  d$radio_leg_resid <- 
+    residuals(radio_fit, "pearson")
+  res <- list(model = radio_fit, 
+       residuals = select(d, artist_id, radio_leg_resid))
+  return(res)
 }
