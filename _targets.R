@@ -161,6 +161,7 @@ list(
   tar_target(gg_robustness_radio_score ,       plot_robustness_radio_score(radio_artist, exo_senscritique), format = "file", repository = "local"),
   tar_target(gg_robustness_radio_genre_score,  plot_robustness_radio_genre_score(radio_artist, exo_senscritique, genres), format = "file", repository = "local"),
   tar_target(tb_top_artist_radio,              tbl_top_artists_by_radio(radio_artist, artist_names, genres), format = "file", repository = "local"),
+  tar_target(tbl_top_artist_by_radioleg,       tbl_robustness_top_artist_by_radioleg(radio_artist, artist_names, genres), format = "file", repository = "local"),
   
    # Report Omni1
   # we remove it for now because it's the longest target to compile
