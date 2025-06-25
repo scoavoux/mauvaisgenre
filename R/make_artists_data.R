@@ -396,9 +396,9 @@ filter_artists <- function(artists_raw){
     # Scaling legitimacy variables
     mutate(sc_endo_isei = center_scale(endo_isei_mean_pond),
            sc_endo_educ = center_scale(endo_share_high_education_pond),
-           sc_exo_press = press_leg_residuals,
+           sc_exo_press = center_scale(log(press_leg_residuals+1)),
            sc_exo_score = center_scale(senscritique_meanscore),
-           sc_exo_radio = radio_leg_resid
+           sc_exo_radio = center_scale(log(radio_leg_resid+1))
     ) %>% 
     rename(leg_endo_isei = "endo_isei_mean_pond",
            leg_endo_educ = "endo_share_high_education_pond",

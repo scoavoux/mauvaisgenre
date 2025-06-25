@@ -14,9 +14,9 @@ make_tbl_coverage <- function(artists_pop, artists){
               .by = included_in_study)
 
   tb <- artists %>% 
-    mutate(has_press = !is.na(leg_exo_press),
+    mutate(has_press = !is.na(press_leg_residuals),
            has_score = !is.na(leg_exo_score),
-           has_radio = !is.na(leg_exo_radio),
+           has_radio = !is.na(radio_leg_resid),
            has_press_score = has_press & has_score,
            has_press_radio = has_press & has_radio,
            has_score_radio = has_score & has_radio,
@@ -110,13 +110,13 @@ plot_endoexoleg_bygenre <- function(artists, type="density", format = "paper"){
   }
   
   g <- g + 
-    scale_y_continuous(limits = c(-2, 2)) +
+    #scale_y_continuous(limits = c(-2, 2)) +
     coord_flip() +
     labs(y="", x="")
   if(format == "paper"){
-    g <- g + facet_wrap(~name)
+    g <- g + facet_wrap(~name, scale = "free_x")
   } else if(format == "presentation"){
-    g <- g + facet_wrap(~name, nrow = 1)
+    g <- g + facet_wrap(~name, nrow = 1, scale = "free_x")
   }
   filename <- str_glue("output/omni1/gg_endoexoleg_bygenre_{type}_{format}.pdf")
   ggsave(filename, g, device = "pdf", height = 10)
