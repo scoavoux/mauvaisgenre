@@ -390,6 +390,15 @@ filter_artists <- function(artists_raw){
            #parse # has been looked up in press data
     )
   
+  # correct genre for French rap musician labelled RAP/Hip Hop rather than
+  # french rap
+  artists <- artists %>% 
+    mutate(ml = main_lang == "fr",
+           co = country == "France",
+           across(ml:co, ~ifelse(is.na(.x), FALSE, .x)),
+           genre = ifelse(genre == "raphiphop" & (ml | co), "frenchrap", genre)) %>% 
+    select(-co, -ml)
+
   artists <- artists %>% 
     # turn NA to 0 in radio plays
     # mutate(across(starts_with("radio"), ~if_else(is.na(.x), 0, .x))) %>% 
