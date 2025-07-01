@@ -232,10 +232,20 @@ plot_leg_correlation_coefficient <- function(artists){
     summarise(m = cor(value, value2)) %>% 
     mutate(m = round(m, 2),
            level = "Genres") %>% 
-    bind_rows(r)
+    bind_rows(r) %>% 
+    ungroup()
   
-  
-  gg <- ggplot(r, aes(name, name2, fill = m, label = m)) +
+  d <- r %>% 
+    arrange(name, name2) %>% 
+    mutate(name = factor(name, unique(name)),
+           name2 = factor(name2, unique(name2)),
+           cn = paste0(level,name, name2), cm = paste0(level,name2, name),
+           keep = NA)
+  for(i in 1:nrow(d)){
+    d$keep[i] <- ifelse(d$cm[i] %in% d$cn[1:i], FALSE, TRUE)
+  }
+  d <- filter(d, keep)
+  gg <- ggplot(d, aes(name, name2, fill = m, label = m)) +
     geom_tile() +
     geom_text() +
     facet_wrap(~level) +
@@ -555,6 +565,7 @@ table_mean_sd_leg <- function(artists){
 }
 
 plot_sd_leg <- function(artists){
+  # changer ce graph: half boxplot + dots
   require(tidyverse)
   require(kableExtra)
   x <- artists %>% 
@@ -563,13 +574,18 @@ plot_sd_leg <- function(artists){
     select(genre, starts_with("sc_e")) %>% 
     pivot_longer(-genre) %>% 
     mutate(name = recode_vars(name, "cleanlegitimacy"),
-           name = str_replace_all(name, "\\\\n", " ")) %>% 
+           name = str_replace_all(name, "\\\\n", "\n")) %>% 
     group_by(genre, name) %>% 
     summarize(m = mean(value, na.rm=TRUE),
-              sd = sd(value, na.rm=TRUE))
-  g <- ggplot(x, aes(sd, name)) +
+              sd = sd(value, na.rm=TRUE)) %>% 
+    group_by(name) %>% 
+    mutate(lab = ifelse(sd == min(sd) | sd == max(sd), as.character(genre), ""))
+  g <- ggplot(x, aes(sd, name, label = lab)) +
     geom_boxplot() +
-    labs(y = "", x = "Standard deviation by genre")
+    geom_point(position = "jitter") +
+    geom_text() +
+    scale_x_continuous(breaks = seq(0.2, 1.8, .2)) +
+    labs(y = "", x = "Within-genre standard deviation")
   ggsave("gg_sd_leg.pdf", g, path = "output/omni1", device="pdf")
   return("output/omni1/gg_sd_leg.pdf")
 }
