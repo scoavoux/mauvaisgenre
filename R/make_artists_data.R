@@ -373,7 +373,7 @@ join_artist <- function(...){
 
 # Filter artists ------
 ## We define here what the sample will be
-filter_artists <- function(artists_raw){
+filter_artists <- function(artists_raw, n_isei_min){
   require(tidyverse)
   
   # Rules of inclusion/exclusion of artists
@@ -385,7 +385,7 @@ filter_artists <- function(artists_raw){
     filter(!is.na(genre),
            #!is.na(senscritique_meanscore), # has score on senscritique
            !is.na(endo_isei_mean_pond),
-           n_isei > 5,
+           n_isei >= n_isei_min,
            #!is.na(total_n_pqnt_texte) # has been searched in the press data
            #parse # has been looked up in press data
     )
