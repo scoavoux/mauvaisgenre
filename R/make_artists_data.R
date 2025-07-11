@@ -126,6 +126,125 @@ make_artist_area_data <- function(area_country_file,
   return(deezerid_country)
 }
 
+# Make artists releases by year data ------
+make_artist_releases_data <- function(senscritique_mb_deezer_id, genres){
+  senscritique_mb_deezer_id <- senscritique_mb_deezer_id %>% 
+    filter(!is.na(mbid), mbid != "") %>% 
+    distinct(mbid, consolidated_artist_id) %>% 
+    rename(artist_id = "consolidated_artist_id") %>% 
+    arrange(artist_id) %>% 
+    slice(1, .by = mbid)
+  
+  s3 <- initialize_s3()
+  
+  # Data about dates of release of albums
+  release_group <- s3$get_object(Bucket = "scoavoux", Key = "musicbrainz/mbid_release_group.csv")$Body %>% 
+      rawToChar() %>% 
+      read_csv()
+  release_group <- release_group %>% 
+    right_join(senscritique_mb_deezer_id) %>% 
+    filter(!is.na(first_release_date_year),
+           first_release_date_year < 2026,
+           first_release_date_year > 1900)
+  
+  # Data about dates artists stopped being active
+  dates_active <- s3$get_object(Bucket = "scoavoux", Key = "/musicbrainz/mbid_artist_end_date.csv")$Body %>% 
+    rawToChar() %>% 
+    read_csv()
+  
+  # Some artists have several mbid but not all have a end date.
+  # This leads to the Beatles having a missing end date sometimes
+  # and some albums from 2020 considered as original Beatles.
+  # so: we look for duplicates, when we find some, we attribute
+  # the last know date to duplicated mbid and join this back with dates_active
+  dates_active <- senscritique_mb_deezer_id %>% 
+    add_count(artist_id) %>% 
+    filter(n > 1) %>% 
+    left_join(dates_active) %>% 
+    arrange(artist_id, desc(end_date_year)) %>% 
+    group_by(artist_id) %>% 
+    mutate(end_date_year = ifelse(is.na(end_date_year), lag(end_date_year), end_date_year)) %>% 
+    ungroup() %>% 
+    filter(!is.na(end_date_year)) %>% 
+    select(mbid, end_date_year) %>% 
+    bind_rows(dates_active) %>% 
+    distinct()
+  
+  # We need genres: remove end dates for classical (because composers die but
+  # their music is still played)
+  # We remove albums released after the group ceased collaborating
+  release_group <- release_group %>% 
+    left_join(dates_active) %>% 
+    left_join(genres) %>% 
+    mutate(end_date_year = ifelse(is.na(end_date_year) | genre == "classical", 9999, end_date_year)) %>% 
+    filter(first_release_date_year < end_date_year + 2)
+  
+  # We remove unrelevant album types
+  # We only keep missing secondary_type_name because they are mostly compilations,
+  # remixes, etc.
+  release_group <- release_group %>% 
+    filter(primary_type_name %in% c("Album", "EP", "Single"),
+           is.na(secondary_type_name))
+  
+  # We remove albums where artist is not in first position
+  # might be too harsh but 90% of all albums
+  release_group <- release_group %>% 
+    filter(artist_position == 0)
+  
+  # Now single and EP count only if there were no album a given year;
+  # We give them a weight of respectively .5 and .2 album
+  release_group <- release_group %>% 
+    group_by(artist_id, first_release_date_year) %>% 
+    mutate(keep = ifelse(any(primary_type_name == "Album") & primary_type_name != "Album", FALSE, TRUE)) %>% 
+    ungroup() %>% 
+    filter(keep) %>% 
+    mutate(weight = c("Single" = .2, "EP" = .5, "Album" = 1)[primary_type_name])
+
+  # Now we compute no of albums per year
+  rg_artist_year <- group_by(release_group, artist_id, first_release_date_year) %>% 
+    summarize(n = sum(weight)) %>% 
+    ungroup()
+
+  # Finally, we compute various metrics about this
+  # For now:
+  
+  # Year of last release: last time an artist was active
+  year_last_release <- rg_artist_year %>% 
+    arrange(artist_id, desc(first_release_date_year)) %>% 
+    slice(1, .by = artist_id) %>% 
+    select(artist_id, year_last_release = "first_release_date_year")
+  
+  # No of releases between 2010-2022 (press corpus)
+  no_releases_press <- rg_artist_year %>% 
+    filter(first_release_date_year > 2009, first_release_date_year < 2023) %>% 
+    group_by(artist_id) %>% 
+    summarise(n_releases_2010_2022 = sum(n)) %>% 
+    ungroup()
+
+  no_releases_radio <- rg_artist_year %>% 
+    filter(first_release_date_year >= 2019, first_release_date_year <= 2023) %>% 
+    group_by(artist_id) %>% 
+    summarise(n_releases_2019_2023 = sum(n)) %>% 
+    ungroup()
+  
+  # Total releases (just because)
+  # also barycenter as weighted average of album release date
+  # not computing for now, too expensive.
+  no_releases_total <- rg_artist_year %>% 
+    group_by(artist_id) %>% 
+    summarise(n_releases_total = sum(n)) %>% 
+#              career_barycenter = sum(n*year_last_release)/n_releases_total) %>% 
+    ungroup()
+  
+  no_releases <- year_last_release %>% 
+    full_join(no_releases_press) %>% 
+    full_join(no_releases_radio) %>% 
+    full_join(no_releases_total) %>% 
+    mutate(across(starts_with("no_releases"), ~ifelse(is.na(.x), 0, .x)))
+  
+  return(no_releases)
+}
+
 # Make endogenenous legitimacy data ------
 # For each artist, compute mean ISEI and share of audience with a 
 # high education
@@ -428,7 +547,9 @@ filter_artists <- function(artists_raw, n_isei_min){
   return(artists)
 }
 
-fit_zinflnb_press <- function(exo_press, artists_pop, artists_language, artists_country){
+# Residualizing press and radio counts ------
+
+fit_zinflnb_press <- function(exo_press, artists_pop, artists_language, artists_country, artist_releases){
   #todo
   #fit le model avec bonnes variables
   # comparer les rangs variable residualisée vs. variable brute
@@ -437,29 +558,33 @@ fit_zinflnb_press <- function(exo_press, artists_pop, artists_language, artists_
     left_join(artists_pop) %>% 
     left_join(artists_language) %>% 
     left_join(artists_country) %>% 
+    left_join(artist_releases) %>% 
     mutate(lng = case_when(country == "France" | main_lang == "fr" ~ "fr",
                            country %in% c("United States", "United Kingdom", 
                                           "Australia", "Canada", "Ireland")| main_lang == "en" ~ "en",
                            !is.na(country) | !is.na(main_lang) ~ "other",
-                           TRUE ~ NA)) %>% 
-    select(artist_id, total_n_pqnt_texte, control_n_users, lng) %>% 
+                           TRUE ~ NA),
+           age_last_release = 2023 - year_last_release) %>% 
+    select(artist_id, total_n_pqnt_texte, control_n_users, lng, age_last_release, n_releases_2010_2022) %>% 
     na.omit()
   
-  press_fit <- zeroinfl(total_n_pqnt_texte ~ lng + control_n_users, data = d, dist = "negbin")
+  press_fit <- zeroinfl(total_n_pqnt_texte ~ lng + control_n_users + age_last_release + n_releases_2010_2022, data = d, dist = "negbin")
   d <- mutate(d, press_leg_residuals = residuals(press_fit, "pearson"))
   res <- list(model = press_fit,
               residuals = select(d, artist_id, press_leg_residuals))
   return(res)
 }
 
-fit_zinflnb_radio <- function(exo_radio, artists_pop, artists_language){
+fit_zinflnb_radio <- function(exo_radio, artists_pop, artists_language, artist_releases){
   require(pscl)
   d <- exo_radio %>% 
     left_join(select(artists_pop, artist_id, control_n_users)) %>% 
     left_join(artists_language) %>% 
+    left_join(artist_releases) %>% 
     na.omit() %>% 
-    mutate(lng = ifelse(main_lang == "fr", "fr", "other"))
-  radio_fit <- zeroinfl(radio_leg ~ lng + control_n_users, data = d, dist = "negbin")
+    mutate(lng = ifelse(main_lang == "fr", "fr", "other"),
+           age_last_release = 2023 - year_last_release)
+  radio_fit <- zeroinfl(radio_leg ~ lng + control_n_users + age_last_release + n_releases_2019_2023, data = d, dist = "negbin")
   d$radio_leg_resid <- 
     residuals(radio_fit, "pearson")
   res <- list(model = radio_fit, 

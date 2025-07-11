@@ -31,7 +31,11 @@ list(
   tar_target(user_genre_summary_data_prop,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=TRUE)),
   tar_target(user_genre_summary_data_raw ,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=FALSE)),
   tar_target(radio_artist,                       make_radio_data(senscritique_mb_deezer_id)),
+
   ## Prepare artists data ------
+  
+  ### Artists production ------
+  tar_target(artist_releases,                    make_artist_releases_data(senscritique_mb_deezer_id, genres)),
   
   ### Artists names, aliases, ids ------
   tar_target(manual_search_file_path,            "data/manual_search.csv", format = "file"),
@@ -60,14 +64,14 @@ list(
   tar_target(corpus_filtered,                    filter_corpus_raw(corpus_raw, BERT_corpus)),
   tar_target(corpus_tokenized,                   make_corpus_tokenized_paragraphs(corpus_filtered)),
 
-  ### Legitimacy data ------
+  ### Cultural hierarchies data ------
   tar_target(regex_fixes_file_path,              "data/regex_fixes.csv", format = "file"),
   tar_target(regex_fixes_file,                   read_csv(regex_fixes_file_path, col_types = "nnccc")),
   tar_target(exo_press,                          make_press_data(corpus_tokenized, artist_names_and_aliases, regex_fixes_file)),
-  tar_target(exo_press_zinb,                     fit_zinflnb_press(exo_press, artists_pop, artists_language, artists_country), format = "qs"),
+  tar_target(exo_press_zinb,                     fit_zinflnb_press(exo_press, artists_pop, artists_language, artists_country, artist_releases), format = "qs"),
   tar_target(radio_leg,                          c("France Musique", "France Inter", "Fip")),
   tar_target(exo_radio,                          compute_exo_radio(senscritique_mb_deezer_id, radio_leg)),
-  tar_target(exo_radio_zinb,                     fit_zinflnb_radio(exo_radio, artists_pop, artists_language), format = "qs"),
+  tar_target(exo_radio_zinb,                     fit_zinflnb_radio(exo_radio, artists_pop, artists_language, artist_releases), format = "qs"),
   tar_target(exo_senscritique,                   make_senscritique_ratings_data(senscritique_mb_deezer_id)),
   tar_target(isei,                               make_isei_data(survey_raw)),
   tar_target(endo_legitimacy,                    make_endogenous_legitimacy_data(user_artist_peryear_merged_artists, isei, survey_raw)),
@@ -78,6 +82,7 @@ list(
                                                              artists_pop, 
                                                              artists_language,
                                                              artists_country,
+                                                             artist_releases,
                                                              exo_radio, 
                                                              exo_senscritique, 
                                                              endo_legitimacy,

@@ -6,7 +6,7 @@ SELECT
     release_count,
     first_release_date_year,
     artist_position,
-    artist_id,
+    mbid,
     primary_type_name,
     secondary_type_name
 FROM(
@@ -20,7 +20,7 @@ FROM(
 	FROM release_group
 ) as rg
 
-JOIN
+LEFT JOIN
 --Artists
 (
 	SELECT 
@@ -30,7 +30,15 @@ JOIN
 	FROM artist_credit_name
 ) as acn
 ON rg.ac_id = acn.ac_id
-JOIN
+LEFT JOIN
+(
+    SELECT
+        id as artist_id,
+        gid as mbid
+    FROM artist
+) as ar
+ON acn.artist_id = ar.artist_id
+LEFT JOIN
 -- First dates
 (
 	SELECT
@@ -40,7 +48,7 @@ JOIN
 	FROM release_group_meta
 ) as rgm
 ON rg.rg_id = rgm.rg_id
-JOIN
+LEFT JOIN
 --Primary type meaning
 (
 	SELECT 
@@ -49,7 +57,7 @@ JOIN
 	FROM release_group_primary_type
 ) as rgpt
 ON rg.pt_id = rgpt.pt_id
-JOIN
+LEFT JOIN
 
 --Secondary type affiliation
 (
@@ -59,7 +67,7 @@ JOIN
 	FROM release_group_secondary_type_join
 ) as rgstj
 ON rg.rg_id = rgstj.rg_id 
-JOIN
+LEFT JOIN
 
 --Secondary type meaning
 (
@@ -71,4 +79,4 @@ JOIN
 ON rgstj.st_id = rgst.st_id
 )
     )
-TO '/tmp/release_dates.csv' WITH CSV DELIMITER ',' HEADER;
+TO '/tmp/mbid_release_group.csv' WITH CSV DELIMITER ',' HEADER;
