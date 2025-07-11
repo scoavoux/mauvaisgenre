@@ -580,10 +580,11 @@ plot_sd_leg <- function(artists){
               sd = sd(value, na.rm=TRUE)) %>% 
     group_by(name) %>% 
     mutate(lab = ifelse(sd == min(sd) | sd == max(sd), as.character(genre), ""))
+  jitterer <- position_jitter(seed = 1979)
   g <- ggplot(x, aes(sd, name, label = lab)) +
     geom_boxplot() +
-    geom_point(position = "jitter") +
-    geom_text() +
+    geom_point(position = jitterer) +
+    geom_text(position = jitterer, vjust = 1) +
     scale_x_continuous(breaks = seq(0.2, 1.8, .2)) +
     labs(y = "", x = "Within-genre standard deviation")
   ggsave("gg_sd_leg.pdf", g, path = "output/omni1", device="pdf")
