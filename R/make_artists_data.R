@@ -240,7 +240,7 @@ make_artist_releases_data <- function(senscritique_mb_deezer_id, genres){
     full_join(no_releases_press) %>% 
     full_join(no_releases_radio) %>% 
     full_join(no_releases_total) %>% 
-    mutate(across(starts_with("no_releases"), ~ifelse(is.na(.x), 0, .x)))
+    mutate(across(starts_with("n_releases"), ~ifelse(is.na(.x), 0, .x)))
   
   return(no_releases)
 }
