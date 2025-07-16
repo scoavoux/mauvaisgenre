@@ -8,13 +8,6 @@ make_artist_popularity_data <- function(user_artist_peryear, to_remove_file){
   library(arrow)
   s3 <- initialize_s3()
   
-  # compute artist/hashed_id pairs (collapse years)
-  pop_raw <- user_artist_peryear %>% 
-    filter(!is.na(artist_id)) %>% 
-    group_by(artist_id, hashed_id) %>% 
-    summarise(l_play = sum(l_play, na.rm=TRUE),
-              n_play = sum(n_play, na.rm=TRUE))
-  
   # separate between survey respondants and control group
   f <- s3$download_file(Bucket = "scoavoux", 
                         Key = "records_w3/RECORDS_hashed_user_group.parquet", 
@@ -25,7 +18,7 @@ make_artist_popularity_data <- function(user_artist_peryear, to_remove_file){
   pop_control <- us %>% 
     filter(is_in_control_group) %>% 
     select(hashed_id) %>% 
-    inner_join(pop_raw) %>% 
+    inner_join(user_artist_peryear) %>% 
     group_by(artist_id) %>% 
     summarise(l_play = sum(l_play, na.rm=TRUE),
               n_play = sum(n_play, na.rm=TRUE),
@@ -37,7 +30,7 @@ make_artist_popularity_data <- function(user_artist_peryear, to_remove_file){
   pop_respondants <- us %>% 
     filter(is_respondent) %>% 
     select(hashed_id) %>% 
-    inner_join(pop_raw) %>% 
+    inner_join(user_artist_peryear) %>% 
     group_by(artist_id) %>% 
     summarise(l_play = sum(l_play, na.rm=TRUE),
               n_play = sum(n_play, na.rm=TRUE),
@@ -254,12 +247,7 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei, survey_ra
   
   isei <- filter(isei, !is.na(isei))
 
-  pop <- user_artist_peryear %>% 
-    filter(!is.na(artist_id)) %>% 
-    group_by(artist_id, hashed_id) %>% 
-    summarise(l_play = sum(l_play, na.rm=TRUE))
-  
-  artist_mean_isei <- pop %>% 
+  artist_mean_isei <- user_artist_peryear %>% 
     inner_join(isei) %>% 
     group_by(artist_id) %>% 
     mutate(f = l_play / sum(l_play)) %>% 
@@ -273,7 +261,7 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei, survey_ra
     select(hashed_id, higher_ed) %>% 
     filter(!is.na(higher_ed))
   
-  artist_share_higher_education <- pop %>% 
+  artist_share_higher_education <- user_artist_peryear %>% 
     inner_join(ed) %>% 
     group_by(artist_id) %>% 
     mutate(f = l_play / sum(l_play)) %>% 

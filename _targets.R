@@ -21,15 +21,21 @@ tar_source("R")
 list(
 
   ## Prepare streaming data ------
-  tar_target(streaming_data_files,               list_streaming_data_files()),
   tar_target(items,                              make_items_data()),
-  tar_target(user_artist_peryear_onefile,        make_user_artist_peryear_table_onefile(streaming_data_files, items), pattern = streaming_data_files),
-  tar_target(user_artist_peryear,                merge_user_artist_peryear_table(user_artist_peryear_onefile)),
   tar_target(to_remove_file_path,                "data/artists_to_remove.csv", format = "file"),
   tar_target(to_remove_file,                     read_csv(to_remove_file_path)),
-  tar_target(user_artist_peryear_merged_artists, merge_duplicate_artists_in_streams(user_artist_peryear, senscritique_mb_deezer_id, to_remove_file)),
-  tar_target(user_genre_summary_data_prop,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=TRUE)),
-  tar_target(user_genre_summary_data_raw ,       make_user_genre_summary_data(user_artist_peryear_merged_artists, genres, proportion=FALSE)),
+  
+  # old
+  # tar_target(streaming_data_files,               list_streaming_data_files()),
+  # tar_target(user_artist_peryear_onefile,        make_user_artist_peryear_table_onefile(streaming_data_files, items), pattern = streaming_data_files),
+  # tar_target(user_artist_peryear,                merge_user_artist_peryear_table(user_artist_peryear_onefile)),
+  # tar_target(user_artist_peryear_merged_artists, merge_duplicate_artists_in_streams(user_artist_peryear, senscritique_mb_deezer_id, to_remove_file)),
+  
+  # new
+  tar_target(user_artist_2022,                   make_user_artist_2022(items, senscritique_mb_deezer_id, to_remove_file)),
+  
+  tar_target(user_genre_summary_data_prop,       make_user_genre_summary_data(user_artist_2022, genres, proportion=TRUE)),
+  tar_target(user_genre_summary_data_raw ,       make_user_genre_summary_data(user_artist_2022, genres, proportion=FALSE)),
   tar_target(radio_artist,                       make_radio_data(senscritique_mb_deezer_id)),
 
   ## Prepare artists data ------
@@ -52,7 +58,7 @@ list(
   tar_target(genres,                             merge_genres(genres_deezer_editorial_playlists, genres_deezer_maingenre, genres_senscritique_tags, genres_deezer_albums)),
   
   ### Artists popularity ------
-  tar_target(artists_pop,                        make_artist_popularity_data(user_artist_peryear_merged_artists )),
+  tar_target(artists_pop,                        make_artist_popularity_data(user_artist_2022 )),
   tar_target(artists_language,                   make_artist_language_data()),
   tar_target(area_country_file,                  "data/area_country.csv", format = "file"),
   tar_target(country_rank_file,                  "data/country_rank.csv", format = "file"),
@@ -74,7 +80,7 @@ list(
   tar_target(exo_radio_zinb,                     fit_zinflnb_radio(exo_radio, artists_pop, artists_language, artist_releases), format = "qs"),
   tar_target(exo_senscritique,                   make_senscritique_ratings_data(senscritique_mb_deezer_id)),
   tar_target(isei,                               make_isei_data(survey_raw)),
-  tar_target(endo_legitimacy,                    make_endogenous_legitimacy_data(user_artist_peryear_merged_artists, isei, survey_raw)),
+  tar_target(endo_legitimacy,                    make_endogenous_legitimacy_data(user_artist_2022, isei, survey_raw)),
 
   ### Put all artists data together and filter ------
   tar_target(artists_raw,                        join_artist(artist_names,
@@ -95,7 +101,7 @@ list(
   
   ### Omnivorousness ------
   tar_target(omni_from_survey,                   compute_omnivorourness_from_survey(survey_raw)),
-  tar_target(omni_from_streams,                  compute_omnivorourness_from_streams(user_artist_peryear_merged_artists, artists, genres, rescale_by = "user")),
+  tar_target(omni_from_streams,                  compute_omnivorourness_from_streams(user_artist_2022, artists, genres, rescale_by = "user")),
   
   ### Latent classes ------
   ## Make many models and then select one
@@ -109,7 +115,7 @@ list(
   # we are not using this
   # when adding this again, edit recode_survey_data() to merge all user level variables.
   # tar_target(latent_classes_from_streams_multiple, 
-  #            compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L)),
+  #            compute_latent_classes_from_streams(user_artist_2022, genres, nclass = 1L:15L)),
   # tar_target(latent_classes_from_streams, 
   #            select_latent_class_model(latent_classes_from_streams_multiple, 5)),
   
@@ -117,7 +123,7 @@ list(
   # I don't get what's not working because the function runs outside of target. For now
   # we are not using this
   # tar_target(latent_classes_from_streams_multiple_proportion,
-  #            compute_latent_classes_from_streams(user_artist_peryear_merged_artists, genres, nclass = 1L:15L, proportion = TRUE)),
+  #            compute_latent_classes_from_streams(user_artist_2022, genres, nclass = 1L:15L, proportion = TRUE)),
   # tar_target(latent_classes_from_streams_proportion,
   #          select_latent_class_model(latent_classes_from_streams_multiple_proportion, 5)),
   

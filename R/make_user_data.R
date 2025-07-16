@@ -196,11 +196,6 @@ compute_omnivorourness_from_streams <- function(user_artist_peryear_merged_artis
   require(tidytable)
   
   user_artist_peryear_merged_artists <- user_artist_peryear_merged_artists %>% 
-    filter(!is.na(artist_id)) %>% 
-    group_by(hashed_id, artist_id) %>% 
-    # we use number of play
-    summarize(l_play = sum(l_play)) %>% 
-    ungroup() %>% 
     left_join(genres)
   
   ## diversity over genres actually listened
