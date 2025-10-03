@@ -214,7 +214,7 @@ filter_corpus_raw <- function(corpus_raw, BERT_corpus){
 }
 
 # Make aliases ------
-make_aliases <- function(senscritique_mb_deezer_id){
+make_aliases <- function(senscritique_mb_deezer_id, artists_pop){
   require(tidyverse)
   require(tidytable)
   require(arrow)
@@ -229,7 +229,9 @@ make_aliases <- function(senscritique_mb_deezer_id){
   
   artists <- artists %>% 
     left_join(senscritique_mb_deezer_id) %>% 
-    filter(!is.na(consolidated_artist_id)) %>% 
+    left_join(select(artists_pop, artist_id, control_n_users, respondent_n_users)) %>% 
+    filter(!is.na(control_n_users) & is.na(respondent_n_users)) %>% 
+    mutate(consolidated_artist_id = ifelse(is.na(consolidated_artist_id), artist_id, consolidated_artist_id)) %>% 
     select(consolidated_artist_id, name, type)
   
   ## Names and aliases from musicbrainz

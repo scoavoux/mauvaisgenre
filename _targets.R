@@ -47,7 +47,7 @@ list(
   tar_target(manual_search_file_path,            "data/manual_search.csv", format = "file"),
   tar_target(manual_search_file,                 read_csv(manual_search_file_path)),
   tar_target(senscritique_mb_deezer_id,          make_senscritique_pairing_data(manual_search_file)),
-  tar_target(artist_names_and_aliases,           make_aliases(senscritique_mb_deezer_id)),
+  tar_target(artist_names_and_aliases,           make_aliases(senscritique_mb_deezer_id, artists_pop)),
   tar_target(artist_names,                       make_artists_names(artist_names_and_aliases)),
   
   ### Artists genres ------
