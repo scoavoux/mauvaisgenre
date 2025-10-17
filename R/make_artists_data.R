@@ -238,6 +238,22 @@ make_artist_releases_data <- function(senscritique_mb_deezer_id, genres){
   return(no_releases)
 }
 
+# Make artists gender data -----
+make_artist_gender <- function(){
+  # 
+  s3 <- initialize_s3()
+  gender <- s3$get_object(Bucket = "scoavoux", Key = "musicbrainz/mbz_gender.csv")$Body %>% 
+    read_csv() %>% 
+    rename(mbid = "gid")
+  mbid <- s3$get_object(Bucket = "scoavoux", Key = "musicbrainz/mbid_deezerid.csv")$Body %>% 
+    read_csv()
+  res <- inner_join(mbid, gender) %>% 
+    select(artist_id, gender) %>% 
+    slice(1, .by = artist_id)
+  return(res)
+}
+
+
 # Make endogenenous legitimacy data ------
 # For each artist, compute mean ISEI and share of audience with a 
 # high education

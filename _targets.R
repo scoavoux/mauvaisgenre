@@ -42,7 +42,7 @@ list(
   
   ### Artists production ------
   tar_target(artist_releases,                    make_artist_releases_data(senscritique_mb_deezer_id, genres)),
-  
+  tar_target(artist_gender,                      make_artist_gender()),
   ### Artists names, aliases, ids ------
   tar_target(manual_search_file_path,            "data/manual_search.csv", format = "file"),
   tar_target(manual_search_file,                 read_csv(manual_search_file_path)),
@@ -85,6 +85,7 @@ list(
   ### Put all artists data together and filter ------
   tar_target(artists_raw,                        join_artist(artist_names,
                                                              genres, 
+                                                             artist_gender,
                                                              artists_pop, 
                                                              artists_language,
                                                              artists_country,
