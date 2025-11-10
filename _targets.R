@@ -218,3 +218,4 @@ list(
   tar_target(artists_csv,              export_to_csv(artists), format = "file"),
   tar_target(users_csv,                export_to_csv(survey), format = "file")
 )
+
