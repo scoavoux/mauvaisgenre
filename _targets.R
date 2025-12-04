@@ -96,7 +96,7 @@ list(
                                                              exo_press,
                                                              exo_press_zinb$residuals,
                                                              exo_radio_zinb$residuals)),
-  tar_target(artists,                            filter_artists(artists_raw, n_isei_min = 10, n_control_users_min = 50)),
+  tar_target(artists,                            filter_artists(artists_raw, n_isei_min = 10, n_control_users_min = 10)),
   ## Prepare user data ------
   tar_target(survey_raw,                         make_survey_data()),
   
