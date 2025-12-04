@@ -113,13 +113,16 @@ plot_endoexoleg_bygenre <- function(artists, type="density", format = "paper"){
     #scale_y_continuous(limits = c(-2, 2)) +
     coord_flip() +
     labs(y="", x="")
+  
+  filename <- str_glue("output/omni1/gg_endoexoleg_bygenre_{type}_{format}.pdf")
+  
   if(format == "paper"){
     g <- g + facet_wrap(~name, scale = "free_x")
+    ggsave(filename, g, device = "pdf", height = 10)
   } else if(format == "presentation"){
     g <- g + facet_wrap(~name, nrow = 1, scale = "free_x")
+    ggsave(filename, g, device = "pdf", width = 11, height=8)
   }
-  filename <- str_glue("output/omni1/gg_endoexoleg_bygenre_{type}_{format}.pdf")
-  ggsave(filename, g, device = "pdf", height = 10)
   return(filename)
 }
 
