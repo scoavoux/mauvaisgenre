@@ -49,6 +49,7 @@ list(
   tar_target(senscritique_mb_deezer_id,          make_senscritique_pairing_data(manual_search_file)),
   tar_target(artist_names_and_aliases,           make_aliases(senscritique_mb_deezer_id, artists_pop)),
   tar_target(artist_names,                       make_artists_names(artist_names_and_aliases)),
+  tar_target(audience_demographics,              make_audience_demographics_data(user_artist_2022, survey_raw)),
   
   ### Artists genres ------
   tar_target(genres_deezer_editorial_playlists,  make_genres_data(.source = "deezer_editorial_playlists", senscritique_mb_deezer_id)),
@@ -81,6 +82,8 @@ list(
   tar_target(exo_senscritique,                   make_senscritique_ratings_data(senscritique_mb_deezer_id)),
   tar_target(isei,                               make_isei_data(survey_raw)),
   tar_target(endo_legitimacy,                    make_endogenous_legitimacy_data(user_artist_2022, isei, survey_raw)),
+  
+  
 
   ### Put all artists data together and filter ------
   tar_target(artists_raw,                        join_artist(artist_names,
@@ -90,6 +93,7 @@ list(
                                                              artists_language,
                                                              artists_country,
                                                              artist_releases,
+                                                             audience_demographics,
                                                              exo_radio, 
                                                              exo_senscritique, 
                                                              endo_legitimacy,

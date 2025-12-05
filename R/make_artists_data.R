@@ -200,6 +200,12 @@ make_artist_releases_data <- function(senscritique_mb_deezer_id, genres){
 
   # Finally, we compute various metrics about this
   # For now:
+
+  # Year of first release: first time an artist was active
+  year_first_release <- rg_artist_year %>% 
+    arrange(artist_id, first_release_date_year) %>% 
+    slice(1, .by = artist_id) %>% 
+    select(artist_id, year_first_release = "first_release_date_year")
   
   # Year of last release: last time an artist was active
   year_last_release <- rg_artist_year %>% 
@@ -213,11 +219,19 @@ make_artist_releases_data <- function(senscritique_mb_deezer_id, genres){
     group_by(artist_id) %>% 
     summarise(n_releases_2010_2022 = sum(n)) %>% 
     ungroup()
-
+  
+  # No of releases between 2019-2023 (radio corpus)
   no_releases_radio <- rg_artist_year %>% 
     filter(first_release_date_year >= 2019, first_release_date_year <= 2023) %>% 
     group_by(artist_id) %>% 
     summarise(n_releases_2019_2023 = sum(n)) %>% 
+    ungroup()
+  
+  # No of releases between 2021-2022 (pop)
+  no_releases_pop <- rg_artist_year %>% 
+    filter(first_release_date_year >= 2021, first_release_date_year <= 2022) %>% 
+    group_by(artist_id) %>% 
+    summarise(n_releases_2021_2022 = sum(n)) %>% 
     ungroup()
   
   # Total releases (just because)
@@ -230,9 +244,11 @@ make_artist_releases_data <- function(senscritique_mb_deezer_id, genres){
     ungroup()
   
   no_releases <- year_last_release %>% 
+    full_join(year_first_release) %>% 
     full_join(no_releases_press) %>% 
     full_join(no_releases_radio) %>% 
     full_join(no_releases_total) %>% 
+    full_join(no_releases_pop) %>% 
     mutate(across(starts_with("n_releases"), ~ifelse(is.na(.x), 0, .x)))
   
   return(no_releases)
@@ -285,6 +301,33 @@ make_endogenous_legitimacy_data <- function(user_artist_peryear, isei, survey_ra
     filter(!is.na(endo_share_high_education_pond))
   
   return(full_join(artist_mean_isei, artist_share_higher_education))
+}
+
+make_audience_demographics_data <- function(user_artist_peryear, survey_raw){
+  ages <- survey_raw %>% 
+    mutate(age = 2023 - E_birth_year) %>% 
+    filter(!is.na(age), age < 100) %>% 
+    select(hashed_id, age) 
+  
+  genders <- survey_raw %>% 
+    filter(E_gender %in% c("Un homme", "Une femme")) %>% 
+    select(hashed_id, E_gender)
+    
+  audience_ages <- user_artist_peryear %>% 
+    inner_join(ages) %>% 
+    group_by(artist_id) %>% 
+    mutate(f = l_play / sum(l_play)) %>% 
+    summarise(average_audience_age = sum(f*age))
+
+  audience_share_female <- user_artist_peryear %>% 
+    inner_join(genders) %>% 
+    group_by(artist_id) %>% 
+    mutate(f = l_play / sum(l_play)) %>% 
+    filter(E_gender == "Une femme") %>% 
+    summarise(share_women_in_audience = sum(f))
+  
+  art <- full_join(audience_ages, audience_share_female)
+  return(art)
 }
 
 # Make senscritique ratings ------
