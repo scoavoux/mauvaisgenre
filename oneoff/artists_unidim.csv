@@ -1,0 +1,48 @@
+name,leg_endo_isei,leg_exo_score,genre,control_n_users,keep
+André Rieu,"47,97","2,26",classical,360,x
+Andrea Bocelli,"56,79","7,05",classical,3182,x
+Arthur Rubinstein,"70,76","8,80",classical,358,x
+Yo‐Yo Ma,"66,47","8,20",classical,673,x
+Armin van Buuren,"49,69","6,78",edm,3179,x
+Bob Sinclar,"55,26","5,46",edm,5100,x
+David Guetta,"55,28","5,02",edm,11134,x
+Discobitch,"53,69","2,81",edm,2301,x
+Massive Attack,"62,56","7,36",edm,1917,x
+Diam’s,"53,12","4,98",frenchrap,7213,x
+Jul,"45,56","4,32",frenchrap,10404,x
+Lacrim,"45,41","5,63",frenchrap,5714,x
+Suprême NTM,"54,75","7,10",frenchrap,5043,x
+Wejdene,"52,94","2,74",frenchrap,5015,x
+Christophe Maé,"51,96","2,45",frenchsongs,5751,x
+Garou,"50,84","4,89",frenchsongs,3320,x
+Jacques Brel,"58,39","8,12",frenchsongs,4180,x
+Julien Doré,"59,80","6,69",frenchsongs,7356,x
+Kendji Girac,"51,62","3,51",frenchsongs,9613,x
+Patrick Bruel,"55,47","5,40",frenchsongs,6264,x
+Stephan Eicher,"61,25","7,39",frenchsongs,3257,x
+Avishai Cohen,"70,16","7,48",jazz,523,x
+Benjamin Siksou,"62,49","5,62",jazz,460,x
+Billie Holiday,"61,87","8,15",jazz,1494,x
+Miles Davis,"67,66","7,79",jazz,1216,x
+Norah Jones,"59,05","7,17",jazz,3497,x
+Gojira,"61,44","7,60",metal,392,x
+Mass Hysteria,"52,64","7,03",metal,266,x
+Megadeth,"61,01","7,40",metal,466,x
+Pantera,"50,75","7,34",metal,496,x
+Sepultura,"55,80","6,53",metal,294,x
+Aya Nakamura,"53,30","3,68",pop,9572,x
+Britney Spears,"57,97","5,97",pop,7306,x
+Justin Bieber,"58,00","4,70",pop,8372,x
+Taylor Swift,"62,15","6,89",pop,7056,x
+twenty one pilots,"56,45","7,82",pop,6672,x
+Cardi B,"56,94","5,87",raphiphop,3528,x
+Flo Rida,"54,03","5,13",raphiphop,6377,x
+Fugees,"54,23","7,69",raphiphop,4060,x
+Kanye West,"59,10","6,98",raphiphop,6103,x
+Lil Nas X,"57,00","6,58",raphiphop,9539,x
+BB Brunes,"58,04","5,97",rock,4294,x
+Feu! Chatterton,"63,36","7,71",rock,2830,x
+Led Zeppelin,"58,37","8,14",rock,4198,x
+Neil Young,"62,36","7,19",rock,3300,x
+Nickelback,"54,27","6,68",rock,2936,x
+Saez,"52,65","7,42",rock,4326,x
