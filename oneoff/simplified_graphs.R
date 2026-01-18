@@ -1,4 +1,5 @@
 # Graph artistes
+library(targets)
 tar_load(artists)
 library(tidyverse)
 set_ggplot_options()
