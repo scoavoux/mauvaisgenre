@@ -351,6 +351,19 @@ make_artists_names <- function(artist_names_and_aliases){
     arrange(type) %>% 
     slice(1, .by = artist_id) %>% 
     select(artist_id, name)
+  s3 <- initialize_s3()
+  
+  ## Names from deezer
+  s3$download_file(Bucket = "scoavoux", 
+                   Key = "records_w3/items/artists_data.snappy.parquet",
+                   Filename = "data/temp/artists_data.snappy.parquet")
+  
+  dz_names <- read_parquet("data/temp/artists_data.snappy.parquet", col_select = 1:2) %>% 
+    rename(dz_name = "name")
+  artist_names <- left_join(artist_names, dz_names) %>% 
+    mutate(name = ifelse(!is.na(dz_name), dz_name, name)) %>% 
+    select(-dz_name)
+  
   return(artist_names)
 }
 
